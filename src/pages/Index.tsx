@@ -4,9 +4,10 @@ import { EstatisticasPublicas } from "@/components/portal/EstatisticasPublicas";
 import { ObraCard } from "@/components/portal/ObraCard";
 import { MapaObras } from "@/components/portal/MapaObras";
 import { FiltroObras } from "@/components/portal/FiltroObras";
-import { ObrasPorStatusChart } from "@/components/charts/ObrasPorStatusChart";
-import { InvestimentoPorTipoChart } from "@/components/charts/InvestimentoPorTipoChart";
-import { EvolucaoTemporalChart } from "@/components/charts/EvolucaoTemporalChart";
+// Temporarily disabled due to Recharts compatibility issue
+// import { ObrasPorStatusChart } from "@/components/charts/ObrasPorStatusChart";
+// import { InvestimentoPorTipoChart } from "@/components/charts/InvestimentoPorTipoChart";
+// import { EvolucaoTemporalChart } from "@/components/charts/EvolucaoTemporalChart";
 import { mockObras } from "@/lib/mockData";
 import { Building2, Eye, TrendingUp } from "lucide-react";
 
