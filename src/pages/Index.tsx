@@ -4,8 +4,11 @@ import { EstatisticasPublicas } from "@/components/portal/EstatisticasPublicas";
 import { ObraCard } from "@/components/portal/ObraCard";
 import { MapaObras } from "@/components/portal/MapaObras";
 import { FiltroObras } from "@/components/portal/FiltroObras";
+import { ObrasPorStatusChart } from "@/components/charts/ObrasPorStatusChart";
+import { InvestimentoPorTipoChart } from "@/components/charts/InvestimentoPorTipoChart";
+import { EvolucaoTemporalChart } from "@/components/charts/EvolucaoTemporalChart";
 import { mockObras } from "@/lib/mockData";
-import { Building2, Eye } from "lucide-react";
+import { Building2, Eye, TrendingUp } from "lucide-react";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -56,6 +59,30 @@ const Index = () => {
         {/* Map Section */}
         <section className="container mx-auto px-4 py-12">
           <MapaObras obras={obrasPublicas} />
+        </section>
+
+        {/* Charts Section */}
+        <section className="bg-gradient-to-b from-background to-primary/5 border-y">
+          <div className="container mx-auto px-4 py-12">
+            <div className="mb-8 text-center">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <TrendingUp className="h-6 w-6 text-primary" />
+                <h2 className="text-3xl font-bold text-foreground">Análises e Estatísticas</h2>
+              </div>
+              <p className="text-muted-foreground">
+                Acompanhe a evolução e distribuição dos investimentos públicos
+              </p>
+            </div>
+            
+            <div className="space-y-6">
+              <EvolucaoTemporalChart />
+              
+              <div className="grid gap-6 md:grid-cols-2">
+                <ObrasPorStatusChart obras={obrasPublicas} />
+                <InvestimentoPorTipoChart obras={obrasPublicas} />
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* Filter and Obras List Section */}
