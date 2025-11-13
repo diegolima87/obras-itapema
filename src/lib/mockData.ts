@@ -14,6 +14,8 @@ export const mockObras = [
     data_inicio: "2024-01-15",
     data_fim_prevista: "2024-12-30",
     percentual_executado: 45,
+    tipo_obra: "Infraestrutura",
+    publico_portal: true,
   },
   {
     id: "2",
@@ -30,6 +32,8 @@ export const mockObras = [
     data_inicio: "2024-06-01",
     data_fim_prevista: "2025-12-31",
     percentual_executado: 0,
+    tipo_obra: "Educação",
+    publico_portal: true,
   },
   {
     id: "3",
@@ -47,6 +51,8 @@ export const mockObras = [
     data_fim_prevista: "2023-11-30",
     data_fim_real: "2023-11-28",
     percentual_executado: 100,
+    tipo_obra: "Urbanismo",
+    publico_portal: true,
   },
 ];
 
