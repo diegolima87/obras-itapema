@@ -99,29 +99,17 @@ const PortalPublico = () => {
               </p>
             </div>
             
-            <Tabs defaultValue="evolucao" className="w-full">
-              <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3 mb-8">
-                <TabsTrigger value="evolucao">Evolução</TabsTrigger>
-                <TabsTrigger value="distribuicao">Distribuição</TabsTrigger>
-                <TabsTrigger value="comparativo">Comparativo</TabsTrigger>
-              </TabsList>
+            <div className="space-y-6">
+              <EvolucaoTemporalChart />
+              
+              <div className="grid gap-6 md:grid-cols-2">
+                <ObrasPorStatusChart obras={obrasPublicas} />
+                <InvestimentoPorTipoChart obras={obrasPublicas} />
+              </div>
 
-              <TabsContent value="evolucao" className="space-y-6">
-                <EvolucaoTemporalChart />
-                <InvestimentoMensalChart />
-              </TabsContent>
-
-              <TabsContent value="distribuicao" className="space-y-6">
-                <div className="grid gap-6 md:grid-cols-2">
-                  <ObrasPorStatusChart obras={obrasPublicas} />
-                  <InvestimentoPorTipoChart obras={obrasPublicas} />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="comparativo" className="space-y-6">
-                <ComparativoAnualChart />
-              </TabsContent>
-            </Tabs>
+              <InvestimentoMensalChart />
+              <ComparativoAnualChart />
+            </div>
           </div>
         </section>
 
