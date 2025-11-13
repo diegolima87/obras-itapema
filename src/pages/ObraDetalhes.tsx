@@ -203,14 +203,24 @@ export default function ObraDetalhes() {
                   />
                 </div>
                 {publicoPortal && (
-                  <div className="p-4 bg-muted rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Eye className="h-4 w-4 text-primary" />
-                      <span className="font-medium">Esta obra está pública</span>
+                  <div className="space-y-3">
+                    <div className="p-4 bg-muted rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Eye className="h-4 w-4 text-primary" />
+                        <span className="font-medium">Esta obra está pública</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Cidadãos podem visualizar informações desta obra no portal de transparência
+                      </p>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Cidadãos podem visualizar informações desta obra no portal de transparência
-                    </p>
+                    <div className="flex gap-2">
+                      <a href={`/obra/${obra.id}`} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline">
+                          <Eye className="mr-2 h-4 w-4" />
+                          Ver no Portal Público
+                        </Button>
+                      </a>
+                    </div>
                   </div>
                 )}
                 {!publicoPortal && (
