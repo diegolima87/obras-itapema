@@ -1,0 +1,316 @@
+import { useState } from "react";
+import { MainLayout } from "@/components/layout/MainLayout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, Check, X, Download, FileText, Image } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
+export default function MedicaoDetalhes() {
+  const { id } = useParams();
+  const { toast } = useToast();
+  const [parecer, setParecer] = useState("");
+
+  // Mock data
+  const medicao = {
+    id: id,
+    numero: "001/2025",
+    obra: "Construção de Ponte sobre o Rio Verde",
+    fornecedor: "Construtora ABC Ltda",
+    periodo_inicio: "2025-01-01",
+    periodo_fim: "2025-01-31",
+    valor: 500000,
+    percentual: 20,
+    status: "pendente",
+    observacoes: "Primeira medição do projeto conforme cronograma previsto",
+    data_envio: "2025-02-05",
+  };
+
+  const itens = [
+    { id: 1, descricao: "Terraplanagem", quantidade: 1000, unidade: "m³", valor_unitario: 50, valor_total: 50000 },
+    { id: 2, descricao: "Fundações", quantidade: 50, unidade: "m³", valor_unitario: 800, valor_total: 40000 },
+    { id: 3, descricao: "Estrutura de Concreto", quantidade: 200, unidade: "m³", valor_unitario: 1200, valor_total: 240000 },
+    { id: 4, descricao: "Forma e Escoramento", quantidade: 1500, unidade: "m²", valor_unitario: 45, valor_total: 67500 },
+    { id: 5, descricao: "Armação de Aço", quantidade: 15, unidade: "ton", valor_unitario: 6700, valor_total: 100500 },
+  ];
+
+  const fotos = [
+    { id: 1, titulo: "Vista Geral da Obra", data: "2025-01-15" },
+    { id: 2, titulo: "Terraplanagem Concluída", data: "2025-01-20" },
+    { id: 3, titulo: "Início das Fundações", data: "2025-01-28" },
+  ];
+
+  const handleAprovar = () => {
+    toast({
+      title: "Medição aprovada!",
+      description: "A medição foi aprovada com sucesso",
+    });
+  };
+
+  const handleReprovar = () => {
+    if (!parecer) {
+      toast({
+        title: "Erro",
+        description: "Informe o motivo da reprovação",
+        variant: "destructive",
+      });
+      return;
+    }
+    toast({
+      title: "Medição reprovada",
+      description: "O fornecedor será notificado sobre a reprovação",
+      variant: "destructive",
+    });
+  };
+
+  return (
+    <MainLayout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link to="/medicoes">
+              <Button variant="outline" size="icon">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </Link>
+            <div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold">Medição {medicao.numero}</h1>
+                <Badge variant={medicao.status === "pendente" ? "secondary" : medicao.status === "aprovado" ? "default" : "destructive"}>
+                  {medicao.status === "pendente" ? "Pendente" : medicao.status === "aprovado" ? "Aprovada" : "Reprovada"}
+                </Badge>
+              </div>
+              <p className="text-muted-foreground">{medicao.obra}</p>
+            </div>
+          </div>
+          {medicao.status === "pendente" && (
+            <div className="flex gap-2">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="default">
+                    <Check className="mr-2 h-4 w-4" />
+                    Aprovar
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Aprovar Medição</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tem certeza que deseja aprovar esta medição? Esta ação não poderá ser desfeita.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleAprovar}>Confirmar Aprovação</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive">
+                    <X className="mr-2 h-4 w-4" />
+                    Reprovar
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Reprovar Medição</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Informe o motivo da reprovação desta medição.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="py-4">
+                    <Textarea
+                      placeholder="Descreva o motivo da reprovação..."
+                      value={parecer}
+                      onChange={(e) => setParecer(e.target.value)}
+                      rows={4}
+                    />
+                  </div>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleReprovar} className="bg-destructive hover:bg-destructive/90">
+                      Confirmar Reprovação
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
+        </div>
+
+        <Tabs defaultValue="dados" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="dados">Dados Gerais</TabsTrigger>
+            <TabsTrigger value="itens">Itens Medidos</TabsTrigger>
+            <TabsTrigger value="fotos">Fotos</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dados">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Informações da Medição</CardTitle>
+                  <Button variant="outline">
+                    <Download className="mr-2 h-4 w-4" />
+                    Gerar Relatório PDF
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label className="text-muted-foreground">Número da Medição</Label>
+                    <p className="font-medium">{medicao.numero}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Status</Label>
+                    <p className="font-medium">
+                      <Badge variant={medicao.status === "pendente" ? "secondary" : medicao.status === "aprovado" ? "default" : "destructive"}>
+                        {medicao.status === "pendente" ? "Pendente de Análise" : medicao.status === "aprovado" ? "Aprovada" : "Reprovada"}
+                      </Badge>
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Obra</Label>
+                    <p className="font-medium">{medicao.obra}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Fornecedor</Label>
+                    <p className="font-medium">{medicao.fornecedor}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Período</Label>
+                    <p className="font-medium">
+                      {new Date(medicao.periodo_inicio).toLocaleDateString("pt-BR")} até{" "}
+                      {new Date(medicao.periodo_fim).toLocaleDateString("pt-BR")}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Data de Envio</Label>
+                    <p className="font-medium">{new Date(medicao.data_envio).toLocaleDateString("pt-BR")}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Valor da Medição</Label>
+                    <p className="font-medium text-lg">
+                      {new Intl.NumberFormat("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      }).format(medicao.valor)}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Percentual Executado</Label>
+                    <p className="font-medium text-lg">{medicao.percentual}%</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label className="text-muted-foreground">Observações</Label>
+                    <p className="font-medium">{medicao.observacoes}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="itens">
+            <Card>
+              <CardHeader>
+                <CardTitle>Itens da Medição</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {itens.map((item) => (
+                    <div key={item.id} className="border rounded-lg p-4">
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div className="md:col-span-2">
+                          <Label className="text-muted-foreground">Descrição</Label>
+                          <p className="font-medium">{item.descricao}</p>
+                        </div>
+                        <div>
+                          <Label className="text-muted-foreground">Quantidade</Label>
+                          <p className="font-medium">
+                            {item.quantidade} {item.unidade}
+                          </p>
+                        </div>
+                        <div>
+                          <Label className="text-muted-foreground">Valor Unitário</Label>
+                          <p className="font-medium">
+                            {new Intl.NumberFormat("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            }).format(item.valor_unitario)}
+                          </p>
+                        </div>
+                        <div>
+                          <Label className="text-muted-foreground">Valor Total</Label>
+                          <p className="font-medium text-lg">
+                            {new Intl.NumberFormat("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            }).format(item.valor_total)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="border-t pt-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-semibold">Total da Medição:</span>
+                      <span className="text-2xl font-bold text-primary">
+                        {new Intl.NumberFormat("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        }).format(medicao.valor)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="fotos">
+            <Card>
+              <CardHeader>
+                <CardTitle>Registro Fotográfico</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {fotos.map((foto) => (
+                    <Card key={foto.id} className="overflow-hidden">
+                      <div className="aspect-video bg-muted flex items-center justify-center">
+                        <Image className="h-16 w-16 text-muted-foreground" />
+                      </div>
+                      <CardContent className="p-4">
+                        <p className="font-medium">{foto.titulo}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(foto.data).toLocaleDateString("pt-BR")}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </MainLayout>
+  );
+}
