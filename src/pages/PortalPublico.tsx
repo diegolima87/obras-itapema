@@ -2,10 +2,9 @@ import { useState } from "react";
 import { PortalHeader } from "@/components/portal/PortalHeader";
 import { EstatisticasPublicas } from "@/components/portal/EstatisticasPublicas";
 import { ObraCard } from "@/components/portal/ObraCard";
-import { MapaObras } from "@/components/portal/MapaObras";
 import { FiltroObras } from "@/components/portal/FiltroObras";
 import { mockObras } from "@/lib/mockData";
-import { Building2, Eye, TrendingUp, BarChart3, FileText, Shield } from "lucide-react";
+import { Building2, Eye, TrendingUp, BarChart3, FileText, Shield, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -112,7 +111,16 @@ const PortalPublico = () => {
             <h2 className="text-3xl font-bold text-foreground mb-2">Mapa de Obras</h2>
             <p className="text-muted-foreground">Localização geográfica de todas as obras públicas</p>
           </div>
-          <MapaObras obras={obrasPublicas} />
+          
+          <Card className="p-8 text-center">
+            <CardContent>
+              <MapPin className="h-16 w-16 mx-auto mb-4 text-primary" />
+              <h3 className="text-xl font-semibold mb-2">Mapa Interativo</h3>
+              <p className="text-muted-foreground">
+                Em breve você poderá visualizar a localização de todas as obras no mapa interativo.
+              </p>
+            </CardContent>
+          </Card>
         </section>
 
         {/* Filter and Obras List Section */}
