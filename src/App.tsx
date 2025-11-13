@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Obras from "./pages/Obras";
 import ObraDetalhes from "./pages/ObraDetalhes";
 import ObraPublica from "./pages/ObraPublica";
+import PortalPublico from "./pages/PortalPublico";
 import NovaObra from "./pages/NovaObra";
 import Contratos from "./pages/Contratos";
 import Medicoes from "./pages/Medicoes";
@@ -27,6 +28,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/obra/:id" element={<ObraPublica />} />
+          <Route path="/portal-publico" element={<PortalPublico />} />
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/obras" element={<Obras />} />
