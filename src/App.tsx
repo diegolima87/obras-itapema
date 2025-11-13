@@ -27,6 +27,11 @@ import Usuarios from "./pages/Usuarios";
 import Configuracoes from "./pages/Configuracoes";
 import Relatorios from "./pages/Relatorios";
 import LogAuditoria from "./pages/LogAuditoria";
+import ESfinge from "./pages/ESfinge";
+import ESfingeExportacao from "./pages/ESfingeExportacao";
+import ESfingeEnvio from "./pages/ESfingeEnvio";
+import ESfingeLogs from "./pages/ESfingeLogs";
+import ESfingeMapeamento from "./pages/ESfingeMapeamento";
 import LoginFornecedor from "./pages/fornecedor/LoginFornecedor";
 import DashboardFornecedor from "./pages/fornecedor/DashboardFornecedor";
 import ObrasFornecedor from "./pages/fornecedor/ObrasFornecedor";
@@ -78,6 +83,13 @@ const App = () => (
           <Route path="/configuracoes" element={<Configuracoes />} />
           <Route path="/relatorios" element={<Relatorios />} />
           <Route path="/auditoria" element={<LogAuditoria />} />
+          
+          {/* e-Sfinge Integration */}
+          <Route path="/e-sfinge" element={<ESfinge />} />
+          <Route path="/e-sfinge/exportacao" element={<ESfingeExportacao />} />
+          <Route path="/e-sfinge/envio" element={<ESfingeEnvio />} />
+          <Route path="/e-sfinge/logs" element={<ESfingeLogs />} />
+          <Route path="/e-sfinge/mapeamento" element={<ESfingeMapeamento />} />
           
           {/* Fornecedor Portal Routes */}
           <Route path="/fornecedor/login" element={<LoginFornecedor />} />
