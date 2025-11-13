@@ -61,8 +61,8 @@ const Index = () => {
           <MapaObras obras={obrasPublicas} />
         </section>
 
-        {/* Charts Section */}
-        <section className="bg-gradient-to-b from-background to-primary/5 border-y">
+        {/* Charts Section - Temporarily disabled due to Recharts compatibility issue */}
+        {/* <section className="bg-gradient-to-b from-background to-primary/5 border-y">
           <div className="container mx-auto px-4 py-12">
             <div className="mb-8 text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
@@ -83,7 +83,7 @@ const Index = () => {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
 
         {/* Filter and Obras List Section */}
         <section className="container mx-auto px-4 py-12">
