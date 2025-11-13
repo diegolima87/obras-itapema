@@ -8,6 +8,8 @@ import Login from "./pages/Login";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import Perfil from "./pages/Perfil";
 import Dashboard from "./pages/Dashboard";
+import DashboardEngenheiro from "./pages/DashboardEngenheiro";
+import DashboardFinanceiro from "./pages/DashboardFinanceiro";
 import Obras from "./pages/Obras";
 import ObraDetalhes from "./pages/ObraDetalhes";
 import ObraPublica from "./pages/ObraPublica";
@@ -19,7 +21,16 @@ import NovoContrato from "./pages/NovoContrato";
 import ContratoDetalhes from "./pages/ContratoDetalhes";
 import Medicoes from "./pages/Medicoes";
 import NovaMedicao from "./pages/NovaMedicao";
+import MedicaoDetalhes from "./pages/MedicaoDetalhes";
 import Fornecedores from "./pages/Fornecedores";
+import Usuarios from "./pages/Usuarios";
+import Configuracoes from "./pages/Configuracoes";
+import Relatorios from "./pages/Relatorios";
+import LogAuditoria from "./pages/LogAuditoria";
+import LoginFornecedor from "./pages/fornecedor/LoginFornecedor";
+import DashboardFornecedor from "./pages/fornecedor/DashboardFornecedor";
+import ObrasFornecedor from "./pages/fornecedor/ObrasFornecedor";
+import DocumentosFornecedor from "./pages/fornecedor/DocumentosFornecedor";
 import Mapa from "./pages/Mapa";
 import NotFound from "./pages/NotFound";
 
@@ -35,21 +46,49 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/obra/:id" element={<ObraPublica />} />
           <Route path="/portal-publico" element={<PortalPublico />} />
+          
+          {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/recuperar-senha" element={<RecuperarSenha />} />
           <Route path="/perfil" element={<Perfil />} />
+          
+          {/* Dashboard Routes */}
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/engenheiro" element={<DashboardEngenheiro />} />
+          <Route path="/dashboard/financeiro" element={<DashboardFinanceiro />} />
+          
+          {/* Obras Routes */}
           <Route path="/obras" element={<Obras />} />
           <Route path="/obras/nova" element={<NovaObra />} />
           <Route path="/obras/:id" element={<ObraDetalhes />} />
           <Route path="/obras/:id/editar" element={<EditarObra />} />
+          
+          {/* Contratos Routes */}
           <Route path="/contratos" element={<Contratos />} />
           <Route path="/contratos/novo" element={<NovoContrato />} />
           <Route path="/contratos/:id" element={<ContratoDetalhes />} />
+          
+          {/* Medições Routes */}
           <Route path="/medicoes" element={<Medicoes />} />
           <Route path="/medicoes/nova" element={<NovaMedicao />} />
+          <Route path="/medicoes/:id" element={<MedicaoDetalhes />} />
+          
+          {/* Admin Routes */}
+          <Route path="/usuarios" element={<Usuarios />} />
+          <Route path="/configuracoes" element={<Configuracoes />} />
+          <Route path="/relatorios" element={<Relatorios />} />
+          <Route path="/auditoria" element={<LogAuditoria />} />
+          
+          {/* Fornecedor Portal Routes */}
+          <Route path="/fornecedor/login" element={<LoginFornecedor />} />
+          <Route path="/fornecedor/dashboard" element={<DashboardFornecedor />} />
+          <Route path="/fornecedor/obras" element={<ObrasFornecedor />} />
+          <Route path="/fornecedor/documentos" element={<DocumentosFornecedor />} />
+          
+          {/* Other Routes */}
           <Route path="/fornecedores" element={<Fornecedores />} />
           <Route path="/mapa" element={<Mapa />} />
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
