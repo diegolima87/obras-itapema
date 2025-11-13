@@ -4,16 +4,10 @@ import { EstatisticasPublicas } from "@/components/portal/EstatisticasPublicas";
 import { ObraCard } from "@/components/portal/ObraCard";
 import { MapaObras } from "@/components/portal/MapaObras";
 import { FiltroObras } from "@/components/portal/FiltroObras";
-import { ObrasPorStatusChart } from "@/components/charts/ObrasPorStatusChart";
-import { InvestimentoPorTipoChart } from "@/components/charts/InvestimentoPorTipoChart";
-import { EvolucaoTemporalChart } from "@/components/charts/EvolucaoTemporalChart";
-import { InvestimentoMensalChart } from "@/components/charts/InvestimentoMensalChart";
-import { ComparativoAnualChart } from "@/components/charts/ComparativoAnualChart";
 import { mockObras } from "@/lib/mockData";
 import { Building2, Eye, TrendingUp, BarChart3, FileText, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const PortalPublico = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -95,21 +89,20 @@ const PortalPublico = () => {
                 <h2 className="text-3xl font-bold text-foreground">Análises e Estatísticas</h2>
               </div>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Acompanhe a evolução temporal, distribuição de investimentos e comparativos entre diferentes períodos
+                Gráficos e análises estatísticas estarão disponíveis em breve
               </p>
             </div>
             
-            <div className="space-y-6">
-              <EvolucaoTemporalChart />
-              
-              <div className="grid gap-6 md:grid-cols-2">
-                <ObrasPorStatusChart obras={obrasPublicas} />
-                <InvestimentoPorTipoChart obras={obrasPublicas} />
-              </div>
-
-              <InvestimentoMensalChart />
-              <ComparativoAnualChart />
-            </div>
+            <Card className="p-8 text-center">
+              <CardContent>
+                <BarChart3 className="h-16 w-16 mx-auto mb-4 text-primary" />
+                <h3 className="text-xl font-semibold mb-2">Análises em Desenvolvimento</h3>
+                <p className="text-muted-foreground">
+                  Em breve você poderá acompanhar gráficos de evolução temporal, 
+                  distribuição de investimentos e comparativos anuais.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </section>
 
