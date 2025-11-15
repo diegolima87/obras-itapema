@@ -17,11 +17,11 @@ interface SelectWrapperProps {
 export function SelectWrapper({
   value,
   onValueChange,
-  placeholder,
+  placeholder = "Selecione",
   options,
 }: SelectWrapperProps) {
   return (
-    <Select value={value} onValueChange={onValueChange}>
+    <Select value={value || undefined} onValueChange={onValueChange}>
       <SelectTrigger>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
