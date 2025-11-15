@@ -8,17 +8,31 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus, Search, Shield, Loader2 } from "lucide-react";
-import { useUsuarios, UserRole } from "@/hooks/useUsuarios";
+import { UserPlus, Search, Shield, Loader2, Edit, Trash2 } from "lucide-react";
+import { useUsuarios, UserRole, UserProfile } from "@/hooks/useUsuarios";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function Usuarios() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<UserRole['role']>('cidadao');
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const [editFormData, setEditFormData] = useState({ nome: "", telefone: "", crea: "" });
 
-  const { usuarios, isLoading, assignRole, removeRole } = useUsuarios();
+  const { usuarios, isLoading, assignRole, removeRole, updateProfile } = useUsuarios();
 
   const filteredUsuarios = usuarios?.filter(
     (usuario) =>
@@ -37,6 +51,46 @@ export default function Usuarios() {
 
   const handleRemoveRole = async (userId: string, role: UserRole['role']) => {
     await removeRole.mutateAsync({ userId, role });
+  };
+
+  const openEditDialog = (usuario: UserProfile) => {
+    setEditingUser(usuario);
+    setEditFormData({
+      nome: usuario.nome,
+      telefone: usuario.telefone || "",
+      crea: usuario.crea || "",
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = async () => {
+    if (!editingUser) return;
+    
+    await updateProfile.mutateAsync({
+      userId: editingUser.id,
+      data: editFormData,
+    });
+    setIsEditDialogOpen(false);
+    setEditingUser(null);
+  };
+
+  const openDeleteDialog = (usuario: UserProfile) => {
+    setEditingUser(usuario);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!editingUser) return;
+    
+    // Remove all roles first
+    if (editingUser.roles) {
+      for (const role of editingUser.roles) {
+        await removeRole.mutateAsync({ userId: editingUser.id, role: role.role });
+      }
+    }
+    
+    setIsDeleteDialogOpen(false);
+    setEditingUser(null);
   };
 
   const roleLabels: Record<UserRole['role'], string> = {
@@ -63,10 +117,6 @@ export default function Usuarios() {
             <h1 className="text-3xl font-bold">Gerenciar Usuários</h1>
             <p className="text-muted-foreground">Gerencie usuários e seus papéis no sistema</p>
           </div>
-          <Button onClick={() => window.location.href = '/login'} variant="outline">
-            <UserPlus className="mr-2 h-4 w-4" />
-            Página de Cadastro
-          </Button>
         </div>
 
         <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
@@ -111,8 +161,12 @@ export default function Usuarios() {
         </Dialog>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Usuários Cadastrados</CardTitle>
+            <Button onClick={() => window.location.href = '/login'} size="sm">
+              <UserPlus className="mr-2 h-4 w-4" />
+              Novo Usuário
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="mb-4 flex gap-4">
@@ -180,17 +234,33 @@ export default function Usuarios() {
                             {new Date(usuario.created_at).toLocaleDateString('pt-BR')}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => {
-                                setSelectedUser(usuario.id);
-                                setIsRoleDialogOpen(true);
-                              }}
-                            >
-                              <Shield className="mr-2 h-4 w-4" />
-                              Atribuir Papel
-                            </Button>
+                            <div className="flex justify-end gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedUser(usuario.id);
+                                  setIsRoleDialogOpen(true);
+                                }}
+                              >
+                                <Shield className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => openEditDialog(usuario)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => openDeleteDialog(usuario)}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))
@@ -201,6 +271,76 @@ export default function Usuarios() {
             )}
           </CardContent>
         </Card>
+
+        {/* Edit User Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Usuário</DialogTitle>
+              <DialogDescription>Atualize as informações do usuário</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-nome">Nome Completo</Label>
+                <Input
+                  id="edit-nome"
+                  value={editFormData.nome}
+                  onChange={(e) => setEditFormData({ ...editFormData, nome: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-telefone">Telefone</Label>
+                <Input
+                  id="edit-telefone"
+                  value={editFormData.telefone}
+                  onChange={(e) => setEditFormData({ ...editFormData, telefone: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-crea">CREA (Opcional)</Label>
+                <Input
+                  id="edit-crea"
+                  value={editFormData.crea}
+                  onChange={(e) => setEditFormData({ ...editFormData, crea: e.target.value })}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleEditSubmit}
+                disabled={updateProfile.isPending}
+              >
+                {updateProfile.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Salvar Alterações
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete User Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta ação removerá todos os papéis de <strong>{editingUser?.nome}</strong>.
+                O usuário não será deletado do sistema, mas perderá todos os acessos.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Remover Acessos
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </MainLayout>
   );
