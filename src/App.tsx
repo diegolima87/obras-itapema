@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import RecuperarSenha from "./pages/RecuperarSenha";
@@ -55,51 +56,51 @@ const App = () => (
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/recuperar-senha" element={<RecuperarSenha />} />
-          <Route path="/perfil" element={<Perfil />} />
+          <Route path="/perfil" element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
           
-          {/* Dashboard Routes */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/dashboard/engenheiro" element={<DashboardEngenheiro />} />
-          <Route path="/dashboard/financeiro" element={<DashboardFinanceiro />} />
+          {/* Dashboard Routes - Protected */}
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/dashboard/engenheiro" element={<ProtectedRoute><DashboardEngenheiro /></ProtectedRoute>} />
+          <Route path="/dashboard/financeiro" element={<ProtectedRoute><DashboardFinanceiro /></ProtectedRoute>} />
           
-          {/* Obras Routes */}
-          <Route path="/obras" element={<Obras />} />
-          <Route path="/obras/nova" element={<NovaObra />} />
-          <Route path="/obras/:id" element={<ObraDetalhes />} />
-          <Route path="/obras/:id/editar" element={<EditarObra />} />
+          {/* Obras Routes - Protected */}
+          <Route path="/obras" element={<ProtectedRoute><Obras /></ProtectedRoute>} />
+          <Route path="/obras/nova" element={<ProtectedRoute><NovaObra /></ProtectedRoute>} />
+          <Route path="/obras/:id" element={<ProtectedRoute><ObraDetalhes /></ProtectedRoute>} />
+          <Route path="/obras/:id/editar" element={<ProtectedRoute><EditarObra /></ProtectedRoute>} />
           
-          {/* Contratos Routes */}
-          <Route path="/contratos" element={<Contratos />} />
-          <Route path="/contratos/novo" element={<NovoContrato />} />
-          <Route path="/contratos/:id" element={<ContratoDetalhes />} />
+          {/* Contratos Routes - Protected */}
+          <Route path="/contratos" element={<ProtectedRoute><Contratos /></ProtectedRoute>} />
+          <Route path="/contratos/novo" element={<ProtectedRoute><NovoContrato /></ProtectedRoute>} />
+          <Route path="/contratos/:id" element={<ProtectedRoute><ContratoDetalhes /></ProtectedRoute>} />
           
-          {/* Medições Routes */}
-          <Route path="/medicoes" element={<Medicoes />} />
-          <Route path="/medicoes/nova" element={<NovaMedicao />} />
-          <Route path="/medicoes/:id" element={<MedicaoDetalhes />} />
+          {/* Medições Routes - Protected */}
+          <Route path="/medicoes" element={<ProtectedRoute><Medicoes /></ProtectedRoute>} />
+          <Route path="/medicoes/nova" element={<ProtectedRoute><NovaMedicao /></ProtectedRoute>} />
+          <Route path="/medicoes/:id" element={<ProtectedRoute><MedicaoDetalhes /></ProtectedRoute>} />
           
-          {/* Admin Routes */}
-          <Route path="/usuarios" element={<Usuarios />} />
-          <Route path="/configuracoes" element={<Configuracoes />} />
-          <Route path="/relatorios" element={<Relatorios />} />
-          <Route path="/auditoria" element={<LogAuditoria />} />
+          {/* Admin Routes - Protected */}
+          <Route path="/usuarios" element={<ProtectedRoute><Usuarios /></ProtectedRoute>} />
+          <Route path="/configuracoes" element={<ProtectedRoute><Configuracoes /></ProtectedRoute>} />
+          <Route path="/relatorios" element={<ProtectedRoute><Relatorios /></ProtectedRoute>} />
+          <Route path="/auditoria" element={<ProtectedRoute><LogAuditoria /></ProtectedRoute>} />
           
-          {/* e-Sfinge Integration */}
-          <Route path="/e-sfinge" element={<ESfinge />} />
-          <Route path="/e-sfinge/exportacao" element={<ESfingeExportacao />} />
-          <Route path="/e-sfinge/envio" element={<ESfingeEnvio />} />
-          <Route path="/e-sfinge/logs" element={<ESfingeLogs />} />
-          <Route path="/e-sfinge/mapeamento" element={<ESfingeMapeamento />} />
+          {/* e-Sfinge Integration - Protected */}
+          <Route path="/e-sfinge" element={<ProtectedRoute><ESfinge /></ProtectedRoute>} />
+          <Route path="/e-sfinge/exportacao" element={<ProtectedRoute><ESfingeExportacao /></ProtectedRoute>} />
+          <Route path="/e-sfinge/envio" element={<ProtectedRoute><ESfingeEnvio /></ProtectedRoute>} />
+          <Route path="/e-sfinge/logs" element={<ProtectedRoute><ESfingeLogs /></ProtectedRoute>} />
+          <Route path="/e-sfinge/mapeamento" element={<ProtectedRoute><ESfingeMapeamento /></ProtectedRoute>} />
           
           {/* Fornecedor Portal Routes */}
           <Route path="/fornecedor/login" element={<LoginFornecedor />} />
-          <Route path="/fornecedor/dashboard" element={<DashboardFornecedor />} />
-          <Route path="/fornecedor/obras" element={<ObrasFornecedor />} />
-          <Route path="/fornecedor/documentos" element={<DocumentosFornecedor />} />
+          <Route path="/fornecedor/dashboard" element={<ProtectedRoute><DashboardFornecedor /></ProtectedRoute>} />
+          <Route path="/fornecedor/obras" element={<ProtectedRoute><ObrasFornecedor /></ProtectedRoute>} />
+          <Route path="/fornecedor/documentos" element={<ProtectedRoute><DocumentosFornecedor /></ProtectedRoute>} />
           
-          {/* Other Routes */}
-          <Route path="/fornecedores" element={<Fornecedores />} />
-          <Route path="/mapa" element={<Mapa />} />
+          {/* Other Protected Routes */}
+          <Route path="/fornecedores" element={<ProtectedRoute><Fornecedores /></ProtectedRoute>} />
+          <Route path="/mapa" element={<ProtectedRoute><Mapa /></ProtectedRoute>} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
