@@ -88,22 +88,22 @@ export function MapaObras({ obras }: MapaObrasProps) {
   );
 
   // Memoize center calculation
-  const { centerLat, centerLng, isValid } = useMemo(() => {
+  const mapCenter = useMemo(() => {
     if (obrasComLocalizacao.length === 0) {
-      return { centerLat: 0, centerLng: 0, isValid: false };
+      return null;
     }
 
     const lat = obrasComLocalizacao.reduce((sum, o) => sum + (o.latitude || 0), 0) / obrasComLocalizacao.length;
     const lng = obrasComLocalizacao.reduce((sum, o) => sum + (o.longitude || 0), 0) / obrasComLocalizacao.length;
 
-    return {
-      centerLat: lat,
-      centerLng: lng,
-      isValid: isFinite(lat) && isFinite(lng),
-    };
+    if (!isFinite(lat) || !isFinite(lng)) {
+      return null;
+    }
+
+    return [lat, lng] as [number, number];
   }, [obrasComLocalizacao]);
 
-  if (obrasComLocalizacao.length === 0 || !isValid) {
+  if (!mapCenter || obrasComLocalizacao.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -111,9 +111,7 @@ export function MapaObras({ obras }: MapaObrasProps) {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            {obrasComLocalizacao.length === 0 
-              ? "Nenhuma obra com localização disponível." 
-              : "Erro ao calcular localização central."}
+            Nenhuma obra com localização disponível.
           </p>
         </CardContent>
       </Card>
@@ -128,7 +126,8 @@ export function MapaObras({ obras }: MapaObrasProps) {
       <CardContent className="p-0">
         <div className="h-[500px] w-full rounded-b-lg overflow-hidden">
           <MapContainer
-            center={[centerLat, centerLng]}
+            key={`map-${obrasComLocalizacao.length}-${mapCenter[0]}-${mapCenter[1]}`}
+            center={mapCenter}
             zoom={12}
             className="h-full w-full"
             scrollWheelZoom={false}
