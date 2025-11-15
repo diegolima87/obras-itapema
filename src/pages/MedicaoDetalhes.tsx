@@ -20,6 +20,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { DocumentoUpload } from "@/components/documentos/DocumentoUpload";
+import { DocumentoLista } from "@/components/documentos/DocumentoLista";
 
 export default function MedicaoDetalhes() {
   const { id } = useParams();
@@ -286,28 +288,16 @@ export default function MedicaoDetalhes() {
           </TabsContent>
 
           <TabsContent value="fotos">
-            <Card>
-              <CardHeader>
-                <CardTitle>Registro Fotográfico</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {fotos.map((foto) => (
-                    <Card key={foto.id} className="overflow-hidden">
-                      <div className="aspect-video bg-muted flex items-center justify-center">
-                        <Image className="h-16 w-16 text-muted-foreground" />
-                      </div>
-                      <CardContent className="p-4">
-                        <p className="font-medium">{foto.titulo}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(foto.data).toLocaleDateString("pt-BR")}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              <DocumentoUpload
+                bucketName="documentos_medicoes"
+                tipo="medicao"
+                medicaoId={id}
+                allowedTypes=".pdf,.jpg,.jpeg,.png,.webp"
+                maxSize="10MB"
+              />
+              <DocumentoLista medicaoId={id} showDelete={false} />
+            </div>
           </TabsContent>
         </Tabs>
       </div>

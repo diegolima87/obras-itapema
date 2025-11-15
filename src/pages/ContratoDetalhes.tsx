@@ -7,6 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ArrowLeft, Edit, FileText, Plus, Download } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Label } from "@/components/ui/label";
+import { DocumentoUpload } from "@/components/documentos/DocumentoUpload";
+import { DocumentoLista } from "@/components/documentos/DocumentoLista";
 
 export default function ContratoDetalhes() {
   const { id } = useParams();
@@ -226,39 +228,16 @@ export default function ContratoDetalhes() {
           </TabsContent>
 
           <TabsContent value="documentos">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Documentos do Contrato</CardTitle>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Adicionar Documento
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[
-                    { nome: "Contrato Assinado.pdf", data: "2025-01-15", tamanho: "2.5 MB" },
-                    { nome: "Projeto Executivo.pdf", data: "2025-01-10", tamanho: "15.8 MB" },
-                    { nome: "Planilha Orçamentária.xlsx", data: "2025-01-10", tamanho: "850 KB" },
-                  ].map((doc, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-8 w-8 text-primary" />
-                        <div>
-                          <p className="font-medium">{doc.nome}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {doc.tamanho} • {new Date(doc.data).toLocaleDateString("pt-BR")}
-                          </p>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="sm">
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              <DocumentoUpload
+                bucketName="documentos_contratos"
+                tipo="contrato"
+                contratoId={id}
+                allowedTypes=".pdf,.doc,.docx"
+                maxSize="10MB"
+              />
+              <DocumentoLista contratoId={id} showDelete={true} />
+            </div>
           </TabsContent>
 
           <TabsContent value="obras">

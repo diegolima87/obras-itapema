@@ -159,40 +159,55 @@ export type Database = {
       }
       documentos: {
         Row: {
+          arquivo_path: string | null
+          arquivo_url: string | null
           contrato_id: string | null
           created_at: string | null
+          fornecedor_id: string | null
           id: string
           medicao_id: string | null
+          mime_type: string | null
           nome: string
+          nome_original: string | null
           obra_id: string | null
           tamanho: number | null
           tipo: Database["public"]["Enums"]["tipo_documento"]
           uploaded_by: string | null
-          url: string
+          url: string | null
         }
         Insert: {
+          arquivo_path?: string | null
+          arquivo_url?: string | null
           contrato_id?: string | null
           created_at?: string | null
+          fornecedor_id?: string | null
           id?: string
           medicao_id?: string | null
+          mime_type?: string | null
           nome: string
+          nome_original?: string | null
           obra_id?: string | null
           tamanho?: number | null
           tipo: Database["public"]["Enums"]["tipo_documento"]
           uploaded_by?: string | null
-          url: string
+          url?: string | null
         }
         Update: {
+          arquivo_path?: string | null
+          arquivo_url?: string | null
           contrato_id?: string | null
           created_at?: string | null
+          fornecedor_id?: string | null
           id?: string
           medicao_id?: string | null
+          mime_type?: string | null
           nome?: string
+          nome_original?: string | null
           obra_id?: string | null
           tamanho?: number | null
           tipo?: Database["public"]["Enums"]["tipo_documento"]
           uploaded_by?: string | null
-          url?: string
+          url?: string | null
         }
         Relationships: [
           {
@@ -200,6 +215,13 @@ export type Database = {
             columns: ["contrato_id"]
             isOneToOne: false
             referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
             referencedColumns: ["id"]
           },
           {
