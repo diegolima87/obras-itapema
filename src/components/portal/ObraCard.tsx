@@ -10,13 +10,13 @@ interface ObraCardProps {
   obra: {
     id: string;
     nome: string;
-    descricao: string;
+    descricao: string | null;
     status: string;
-    endereco?: string;
+    endereco?: string | null;
     valor_total: number;
     percentual_executado: number;
-    data_inicio?: string;
-    tipo_obra?: string;
+    data_inicio?: string | null;
+    tipo_obra?: string | null;
   };
 }
 
@@ -38,7 +38,7 @@ export function ObraCard({ obra }: ObraCardProps) {
       </CardHeader>
 
       <CardContent className="flex-1 space-y-4">
-        <p className="text-sm text-muted-foreground line-clamp-2">{obra.descricao}</p>
+        <p className="text-sm text-muted-foreground line-clamp-2">{obra.descricao || 'Sem descrição'}</p>
 
         <div className="space-y-2">
           {obra.endereco && (

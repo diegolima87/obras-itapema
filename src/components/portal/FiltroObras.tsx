@@ -1,14 +1,8 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search } from "lucide-react";
+import { SelectWrapper } from "@/components/ui/select-wrapper";
 
 interface FiltroObrasProps {
   searchTerm: string;
@@ -47,33 +41,33 @@ export function FiltroObras({
 
           <div className="space-y-2">
             <Label>Status</Label>
-            <Select value={statusFilter} onValueChange={onStatusChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Todos os status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os status</SelectItem>
-                <SelectItem value="planejada">Planejada</SelectItem>
-                <SelectItem value="andamento">Em Andamento</SelectItem>
-                <SelectItem value="concluida">Concluída</SelectItem>
-                <SelectItem value="paralisada">Paralisada</SelectItem>
-              </SelectContent>
-            </Select>
+            <SelectWrapper
+              value={statusFilter}
+              onValueChange={onStatusChange}
+              placeholder="Todos os status"
+              options={[
+                { value: "todos", label: "Todos os status" },
+                { value: "planejada", label: "Planejada" },
+                { value: "andamento", label: "Em Andamento" },
+                { value: "concluida", label: "Concluída" },
+                { value: "paralisada", label: "Paralisada" },
+              ]}
+            />
           </div>
 
           <div className="space-y-2">
             <Label>Tipo de Obra</Label>
-            <Select value={tipoFilter} onValueChange={onTipoChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Todos os tipos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os tipos</SelectItem>
-                <SelectItem value="Infraestrutura">Infraestrutura</SelectItem>
-                <SelectItem value="Educação">Educação</SelectItem>
-                <SelectItem value="Urbanismo">Urbanismo</SelectItem>
-              </SelectContent>
-            </Select>
+            <SelectWrapper
+              value={tipoFilter}
+              onValueChange={onTipoChange}
+              placeholder="Todos os tipos"
+              options={[
+                { value: "todos", label: "Todos os tipos" },
+                { value: "Infraestrutura", label: "Infraestrutura" },
+                { value: "Educação", label: "Educação" },
+                { value: "Urbanismo", label: "Urbanismo" },
+              ]}
+            />
           </div>
         </div>
       </CardContent>
