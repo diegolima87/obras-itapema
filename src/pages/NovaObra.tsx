@@ -34,7 +34,7 @@ const formSchema = z.object({
   descricao: z.string().min(10, "Descrição deve ter no mínimo 10 caracteres"),
   tipo_obra: z.string().min(1, "Selecione o tipo de obra"),
   unidade_gestora: z.string().min(1, "Selecione a unidade gestora"),
-  engenheiro_id: z.string().min(1, "Selecione o engenheiro responsável"),
+  engenheiro_id: z.string().optional(),
   valor_total: z.string().min(1, "Informe o valor total"),
   data_inicio: z.string().min(1, "Informe a data de início"),
   data_previsao_termino: z.string().min(1, "Informe a previsão de término"),
@@ -54,7 +54,7 @@ export default function NovaObra() {
       descricao: "",
       tipo_obra: "",
       unidade_gestora: "",
-      engenheiro_id: "",
+      engenheiro_id: undefined,
       valor_total: "",
       data_inicio: "",
       data_previsao_termino: "",
@@ -75,7 +75,7 @@ export default function NovaObra() {
           descricao: values.descricao,
           tipo_obra: values.tipo_obra,
           unidade_gestora: values.unidade_gestora,
-          engenheiro_fiscal_id: values.engenheiro_id || null,
+          engenheiro_fiscal_id: values.engenheiro_id && values.engenheiro_id.trim() !== "" ? values.engenheiro_id : null,
           valor_total: parseFloat(values.valor_total),
           valor_executado: 0,
           percentual_executado: 0,
@@ -217,7 +217,7 @@ export default function NovaObra() {
                   name="engenheiro_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Engenheiro Responsável *</FormLabel>
+                      <FormLabel>Engenheiro Responsável</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -225,6 +225,7 @@ export default function NovaObra() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                          <SelectItem value="">Não definido</SelectItem>
                           <SelectItem value="eng1">João Silva - CREA 12345</SelectItem>
                           <SelectItem value="eng2">Maria Santos - CREA 67890</SelectItem>
                           <SelectItem value="eng3">Pedro Costa - CREA 11223</SelectItem>
