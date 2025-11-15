@@ -4,31 +4,28 @@ import { EstatisticasPublicas } from "@/components/portal/EstatisticasPublicas";
 import { ObraCard } from "@/components/portal/ObraCard";
 import { MapaObras } from "@/components/portal/MapaObras";
 import { FiltroObras } from "@/components/portal/FiltroObras";
-// Temporarily disabled due to Recharts compatibility issue
-// import { ObrasPorStatusChart } from "@/components/charts/ObrasPorStatusChart";
-// import { InvestimentoPorTipoChart } from "@/components/charts/InvestimentoPorTipoChart";
-// import { EvolucaoTemporalChart } from "@/components/charts/EvolucaoTemporalChart";
-import { mockObras } from "@/lib/mockData";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
 import { Building2, Eye, TrendingUp } from "lucide-react";
+import { useObrasPublicas } from "@/hooks/useObras";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
   const [tipoFilter, setTipoFilter] = useState("todos");
 
-  // Filter only public obras
-  const obrasPublicas = mockObras.filter((obra) => obra.publico_portal === true);
+  const { data: obrasPublicas, isLoading } = useObrasPublicas();
 
   // Apply filters
-  const obrasFiltradas = obrasPublicas.filter((obra) => {
+  const obrasFiltradas = obrasPublicas?.filter((obra) => {
     const matchSearch =
       obra.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      obra.descricao.toLowerCase().includes(searchTerm.toLowerCase());
+      (obra.descricao?.toLowerCase() || "").includes(searchTerm.toLowerCase());
     const matchStatus = statusFilter === "todos" || obra.status === statusFilter;
     const matchTipo = tipoFilter === "todos" || obra.tipo_obra === tipoFilter;
 
     return matchSearch && matchStatus && matchTipo;
-  });
+  }) || [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -54,12 +51,34 @@ const Index = () => {
 
         {/* Statistics Section */}
         <section className="container mx-auto px-4 py-12">
-          <EstatisticasPublicas obras={obrasPublicas} />
+          {isLoading ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[1, 2, 3, 4].map((i) => (
+                <Card key={i}>
+                  <CardContent className="p-6">
+                    <Skeleton className="h-12 w-12 rounded-lg mb-4" />
+                    <Skeleton className="h-4 w-24 mb-2" />
+                    <Skeleton className="h-8 w-16" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <EstatisticasPublicas obras={obrasPublicas || []} />
+          )}
         </section>
 
         {/* Map Section */}
         <section className="container mx-auto px-4 py-12">
-          <MapaObras obras={obrasPublicas} />
+          {isLoading ? (
+            <Card>
+              <CardContent className="p-6">
+                <Skeleton className="h-[500px] w-full" />
+              </CardContent>
+            </Card>
+          ) : (
+            <MapaObras obras={obrasPublicas || []} />
+          )}
         </section>
 
         {/* Charts Section - Temporarily disabled due to Recharts compatibility issue */}
@@ -105,7 +124,20 @@ const Index = () => {
               onTipoChange={setTipoFilter}
             />
 
-            {obrasFiltradas.length === 0 ? (
+            {isLoading ? (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i}>
+                    <CardContent className="p-6">
+                      <Skeleton className="h-6 w-3/4 mb-4" />
+                      <Skeleton className="h-4 w-full mb-2" />
+                      <Skeleton className="h-4 w-full mb-4" />
+                      <Skeleton className="h-10 w-full" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : obrasFiltradas.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">
                   Nenhuma obra encontrada com os filtros selecionados.
