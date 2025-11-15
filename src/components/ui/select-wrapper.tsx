@@ -21,7 +21,7 @@ export function SelectWrapper({
   options,
 }: SelectWrapperProps) {
   return (
-    <Select value={value || undefined} onValueChange={onValueChange}>
+    <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
