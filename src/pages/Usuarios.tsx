@@ -8,50 +8,51 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus, Search, Edit, Trash2, Shield } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { UserPlus, Search, Shield, Loader2 } from "lucide-react";
+import { useUsuarios, UserRole } from "@/hooks/useUsuarios";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Usuarios() {
-  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [selectedRole, setSelectedRole] = useState<UserRole['role']>('cidadao');
 
-  const [formData, setFormData] = useState({
-    nome: "",
-    email: "",
-    perfil: "",
-    unidade: "",
-  });
+  const { usuarios, isLoading, assignRole, removeRole } = useUsuarios();
 
-  // Mock data
-  const usuarios = [
-    { id: 1, nome: "João Silva", email: "joao.silva@prefeitura.gov.br", perfil: "Administrador", unidade: "Secretaria de Obras", ativo: true },
-    { id: 2, nome: "Maria Santos", email: "maria.santos@prefeitura.gov.br", perfil: "Engenheiro", unidade: "Secretaria de Educação", ativo: true },
-    { id: 3, nome: "Pedro Oliveira", email: "pedro.oliveira@prefeitura.gov.br", perfil: "Fiscal", unidade: "Secretaria de Obras", ativo: true },
-    { id: 4, nome: "Ana Costa", email: "ana.costa@prefeitura.gov.br", perfil: "Consulta", unidade: "Secretaria de Planejamento", ativo: false },
-  ];
-
-  const filteredUsuarios = usuarios.filter(
+  const filteredUsuarios = usuarios?.filter(
     (usuario) =>
       usuario.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       usuario.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) || [];
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast({
-      title: "Usuário criado!",
-      description: "O novo usuário foi cadastrado com sucesso",
-    });
-    setIsDialogOpen(false);
-    setFormData({ nome: "", email: "", perfil: "", unidade: "" });
+  const handleAssignRole = async () => {
+    if (!selectedUser || !selectedRole) return;
+    
+    await assignRole.mutateAsync({ userId: selectedUser, role: selectedRole });
+    setIsRoleDialogOpen(false);
+    setSelectedUser(null);
+    setSelectedRole('cidadao');
   };
 
-  const perfilColors: Record<string, string> = {
-    Administrador: "bg-red-500",
-    Engenheiro: "bg-blue-500",
-    Fiscal: "bg-green-500",
-    Consulta: "bg-gray-500",
+  const handleRemoveRole = async (userId: string, role: UserRole['role']) => {
+    await removeRole.mutateAsync({ userId, role });
+  };
+
+  const roleLabels: Record<UserRole['role'], string> = {
+    admin: 'Administrador',
+    gestor: 'Gestor',
+    fiscal: 'Fiscal',
+    fornecedor: 'Fornecedor',
+    cidadao: 'Cidadão',
+  };
+
+  const roleColors: Record<UserRole['role'], string> = {
+    admin: 'bg-red-500',
+    gestor: 'bg-blue-500',
+    fiscal: 'bg-green-500',
+    fornecedor: 'bg-purple-500',
+    cidadao: 'bg-gray-500',
   };
 
   return (
@@ -60,15 +61,18 @@ export default function Usuarios() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">Gerenciar Usuários</h1>
-            <p className="text-muted-foreground">Cadastre e gerencie os usuários do sistema</p>
+            <p className="text-muted-foreground">Gerencie usuários e seus papéis no sistema</p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <UserPlus className="mr-2 h-4 w-4" />
-                Novo Usuário
-              </Button>
-            </DialogTrigger>
+          <Button onClick={() => window.location.href = '/login'} variant="outline">
+            <UserPlus className="mr-2 h-4 w-4" />
+            Página de Cadastro
+          </Button>
+        </div>
+
+        <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
+          <DialogTrigger asChild>
+            <div></div>
+          </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Cadastrar Novo Usuário</DialogTitle>
