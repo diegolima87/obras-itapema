@@ -71,156 +71,136 @@ export default function Usuarios() {
 
         <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
           <DialogTrigger asChild>
-            <div></div>
+            <div style={{ display: 'none' }}></div>
           </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Cadastrar Novo Usuário</DialogTitle>
-                <DialogDescription>Preencha os dados do novo usuário do sistema</DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit}>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="nome">Nome Completo *</Label>
-                    <Input
-                      id="nome"
-                      value={formData.nome}
-                      onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="perfil">Perfil de Acesso *</Label>
-                    <Select value={formData.perfil} onValueChange={(value) => setFormData({ ...formData, perfil: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o perfil" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Administrador">Administrador</SelectItem>
-                        <SelectItem value="Engenheiro">Engenheiro</SelectItem>
-                        <SelectItem value="Fiscal">Fiscal</SelectItem>
-                        <SelectItem value="Consulta">Consulta</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="unidade">Unidade Gestora *</Label>
-                    <Input
-                      id="unidade"
-                      value={formData.unidade}
-                      onChange={(e) => setFormData({ ...formData, unidade: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Cancelar
-                  </Button>
-                  <Button type="submit">Salvar Usuário</Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Atribuir Papel ao Usuário</DialogTitle>
+              <DialogDescription>Selecione o papel que deseja atribuir</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="role">Papel</Label>
+                <Select
+                  value={selectedRole}
+                  onValueChange={(value) => setSelectedRole(value as UserRole['role'])}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o papel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                    <SelectItem value="gestor">Gestor</SelectItem>
+                    <SelectItem value="fiscal">Fiscal</SelectItem>
+                    <SelectItem value="fornecedor">Fornecedor</SelectItem>
+                    <SelectItem value="cidadao">Cidadão</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                onClick={handleAssignRole}
+                disabled={assignRole.isPending}
+              >
+                {assignRole.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Atribuir Papel
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Usuários do Sistema</CardTitle>
-              <div className="flex items-center gap-2">
-                <Search className="h-4 w-4 text-muted-foreground" />
+            <CardTitle>Usuários Cadastrados</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-4 flex gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar usuários..."
+                  placeholder="Buscar por nome ou email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-64"
+                  className="pl-9"
                 />
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Perfil</TableHead>
-                  <TableHead>Unidade</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsuarios.map((usuario) => (
-                  <TableRow key={usuario.id}>
-                    <TableCell className="font-medium">{usuario.nome}</TableCell>
-                    <TableCell>{usuario.email}</TableCell>
-                    <TableCell>
-                      <Badge className={perfilColors[usuario.perfil]}>
-                        <Shield className="h-3 w-3 mr-1" />
-                        {usuario.perfil}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{usuario.unidade}</TableCell>
-                    <TableCell>
-                      <Badge variant={usuario.ativo ? "default" : "secondary"}>
-                        {usuario.ativo ? "Ativo" : "Inativo"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+
+            {isLoading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+              </div>
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Papéis</TableHead>
+                      <TableHead>Data de Cadastro</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsuarios.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                          Nenhum usuário encontrado. Os usuários aparecerão aqui após o primeiro cadastro.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredUsuarios.map((usuario) => (
+                        <TableRow key={usuario.id}>
+                          <TableCell className="font-medium">{usuario.nome}</TableCell>
+                          <TableCell>{usuario.email}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {usuario.roles && usuario.roles.length > 0 ? (
+                                usuario.roles.map((userRole) => (
+                                  <Badge 
+                                    key={userRole.id} 
+                                    className={roleColors[userRole.role]}
+                                    onClick={() => handleRemoveRole(usuario.id, userRole.role)}
+                                    style={{ cursor: 'pointer' }}
+                                    title="Clique para remover"
+                                  >
+                                    {roleLabels[userRole.role]}
+                                  </Badge>
+                                ))
+                              ) : (
+                                <Badge variant="secondary">Sem papéis</Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(usuario.created_at).toLocaleDateString('pt-BR')}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedUser(usuario.id);
+                                setIsRoleDialogOpen(true);
+                              }}
+                            >
+                              <Shield className="mr-2 h-4 w-4" />
+                              Atribuir Papel
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
-
-        <div className="grid gap-6 md:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>Total de Usuários</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-bold">{usuarios.length}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Usuários Ativos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-bold text-green-600">{usuarios.filter((u) => u.ativo).length}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Administradores</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-bold text-blue-600">{usuarios.filter((u) => u.perfil === "Administrador").length}</p>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </MainLayout>
   );
