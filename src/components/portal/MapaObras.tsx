@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { statusColors, statusLabels } from "@/lib/mockData";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { useMemo } from "react";
 
 // Fix for default marker icon in react-leaflet
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -41,41 +42,79 @@ interface MapaObrasProps {
   }>;
 }
 
+// Separate component for markers to avoid React 18 Context issues
+function MapMarkers({ obras }: { obras: MapaObrasProps['obras'] }) {
+  return (
+    <>
+      {obras.map((obra) => (
+        <Marker key={obra.id} position={[obra.latitude!, obra.longitude!]}>
+          <Popup>
+            <div className="space-y-2 p-2">
+              <h3 className="font-semibold text-sm">{obra.nome}</h3>
+              <Badge className={statusColors[obra.status as keyof typeof statusColors]}>
+                {statusLabels[obra.status as keyof typeof statusLabels]}
+              </Badge>
+              <p className="text-xs text-muted-foreground">
+                Progresso: {obra.percentual_executado}%
+              </p>
+              <p className="text-xs font-medium">
+                {new Intl.NumberFormat("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                }).format(obra.valor_total)}
+              </p>
+              <Link to={`/obra/${obra.id}`}>
+                <Button size="sm" className="w-full mt-2">
+                  Ver Detalhes
+                </Button>
+              </Link>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+    </>
+  );
+}
+
 export function MapaObras({ obras }: MapaObrasProps) {
-  // Ensure obras is always an array
-  const obrasArray = Array.isArray(obras) ? obras : [];
-  const obrasComLocalizacao = obrasArray.filter(
-    (o) => o && typeof o.latitude === 'number' && typeof o.longitude === 'number'
+  // Ensure obras is always an array and memoize
+  const obrasArray = useMemo(() => Array.isArray(obras) ? obras : [], [obras]);
+  
+  const obrasComLocalizacao = useMemo(
+    () => obrasArray.filter(
+      (o) => o && typeof o.latitude === 'number' && typeof o.longitude === 'number'
+    ),
+    [obrasArray]
   );
 
-  if (obrasComLocalizacao.length === 0) {
+  // Memoize center calculation
+  const { centerLat, centerLng, isValid } = useMemo(() => {
+    if (obrasComLocalizacao.length === 0) {
+      return { centerLat: 0, centerLng: 0, isValid: false };
+    }
+
+    const lat = obrasComLocalizacao.reduce((sum, o) => sum + (o.latitude || 0), 0) / obrasComLocalizacao.length;
+    const lng = obrasComLocalizacao.reduce((sum, o) => sum + (o.longitude || 0), 0) / obrasComLocalizacao.length;
+
+    return {
+      centerLat: lat,
+      centerLng: lng,
+      isValid: isFinite(lat) && isFinite(lng),
+    };
+  }, [obrasComLocalizacao]);
+
+  if (obrasComLocalizacao.length === 0 || !isValid) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Localização das Obras</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">Nenhuma obra com localização disponível.</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Calculate center based on all markers
-  const centerLat =
-    obrasComLocalizacao.reduce((sum, o) => sum + (o.latitude || 0), 0) / obrasComLocalizacao.length;
-  const centerLng =
-    obrasComLocalizacao.reduce((sum, o) => sum + (o.longitude || 0), 0) / obrasComLocalizacao.length;
-
-  // Validate center coordinates
-  if (!isFinite(centerLat) || !isFinite(centerLng)) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Localização das Obras</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">Erro ao calcular localização central.</p>
+          <p className="text-muted-foreground">
+            {obrasComLocalizacao.length === 0 
+              ? "Nenhuma obra com localização disponível." 
+              : "Erro ao calcular localização central."}
+          </p>
         </CardContent>
       </Card>
     );
@@ -92,38 +131,13 @@ export function MapaObras({ obras }: MapaObrasProps) {
             center={[centerLat, centerLng]}
             zoom={12}
             className="h-full w-full"
-            key={`map-${obrasComLocalizacao.length}`}
+            scrollWheelZoom={false}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            {obrasComLocalizacao.map((obra) => (
-              <Marker key={obra.id} position={[obra.latitude!, obra.longitude!]}>
-                <Popup>
-                  <div className="space-y-2 p-2">
-                    <h3 className="font-semibold text-sm">{obra.nome}</h3>
-                    <Badge className={statusColors[obra.status as keyof typeof statusColors]}>
-                      {statusLabels[obra.status as keyof typeof statusLabels]}
-                    </Badge>
-                    <p className="text-xs text-muted-foreground">
-                      Progresso: {obra.percentual_executado}%
-                    </p>
-                    <p className="text-xs font-medium">
-                      {new Intl.NumberFormat("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      }).format(obra.valor_total)}
-                    </p>
-                    <Link to={`/obra/${obra.id}`}>
-                      <Button size="sm" className="w-full mt-2">
-                        Ver Detalhes
-                      </Button>
-                    </Link>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
+            <MapMarkers obras={obrasComLocalizacao} />
           </MapContainer>
         </div>
       </CardContent>
