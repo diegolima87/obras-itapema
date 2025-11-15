@@ -10,6 +10,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { ItensLista } from "@/components/obra/ItensLista";
+import { DocumentoUpload } from "@/components/documentos/DocumentoUpload";
+import { DocumentoLista } from "@/components/documentos/DocumentoLista";
 
 export default function ObraDetalhes() {
   const { id } = useParams();
@@ -131,17 +133,16 @@ export default function ObraDetalhes() {
           </TabsContent>
 
           <TabsContent value="fotos">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Galeria de Fotos</CardTitle>
-                  <Button>Upload de Fotos</Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Nenhuma foto cadastrada.</p>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              <DocumentoUpload
+                bucketName="fotos_obras"
+                tipo="foto_obra"
+                obraId={id}
+                allowedTypes=".jpg,.jpeg,.png,.webp"
+                maxSize="5MB"
+              />
+              <DocumentoLista obraId={id} showDelete={true} />
+            </div>
           </TabsContent>
 
           <TabsContent value="aditivos">
@@ -159,17 +160,16 @@ export default function ObraDetalhes() {
           </TabsContent>
 
           <TabsContent value="checklists">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Documentos e Checklists</CardTitle>
-                  <Button>Upload de Documento</Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Nenhum documento cadastrado.</p>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              <DocumentoUpload
+                bucketName="documentos_obras"
+                tipo="relatorio_tecnico"
+                obraId={id}
+                allowedTypes=".pdf,.doc,.docx"
+                maxSize="10MB"
+              />
+              <DocumentoLista obraId={id} showDelete={true} />
+            </div>
           </TabsContent>
 
           <TabsContent value="historico">
