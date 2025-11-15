@@ -221,8 +221,8 @@ export default function NovaObra() {
                       <FormItem>
                         <FormLabel>Engenheiro Responsável</FormLabel>
                         <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
+                          value={field.value || ""}
+                          onValueChange={field.onChange}
                           disabled={loadingEngenheiros}
                         >
                           <FormControl>
