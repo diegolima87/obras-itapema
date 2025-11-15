@@ -93,6 +93,8 @@ export default function Usuarios() {
     setEditingUser(null);
   };
 
+  const SUPER_ADMIN_EMAIL = 'deklima@gmail.com';
+
   const roleLabels: Record<UserRole['role'], string> = {
     admin: 'Administrador',
     gestor: 'Gestor',
@@ -108,6 +110,8 @@ export default function Usuarios() {
     fornecedor: 'bg-purple-500',
     cidadao: 'bg-gray-500',
   };
+
+  const isSuperAdmin = (email: string) => email === SUPER_ADMIN_EMAIL;
 
   return (
     <MainLayout>
@@ -209,22 +213,33 @@ export default function Usuarios() {
                     ) : (
                       filteredUsuarios.map((usuario) => (
                         <TableRow key={usuario.id}>
-                          <TableCell className="font-medium">{usuario.nome}</TableCell>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              {usuario.nome}
+                              {isSuperAdmin(usuario.email) && (
+                                <span className="text-yellow-500" title="Super Administrador">👑</span>
+                              )}
+                            </div>
+                          </TableCell>
                           <TableCell>{usuario.email}</TableCell>
                           <TableCell>
                             <div className="flex flex-wrap gap-1">
                               {usuario.roles && usuario.roles.length > 0 ? (
-                                usuario.roles.map((userRole) => (
-                                  <Badge 
-                                    key={userRole.id} 
-                                    className={roleColors[userRole.role]}
-                                    onClick={() => handleRemoveRole(usuario.id, userRole.role)}
-                                    style={{ cursor: 'pointer' }}
-                                    title="Clique para remover"
-                                  >
-                                    {roleLabels[userRole.role]}
-                                  </Badge>
-                                ))
+                                usuario.roles.map((userRole) => {
+                                  const isAdminAndSuperAdmin = isSuperAdmin(usuario.email) && userRole.role === 'admin';
+                                  return (
+                                    <Badge 
+                                      key={userRole.id} 
+                                      className={roleColors[userRole.role]}
+                                      onClick={() => !isAdminAndSuperAdmin && handleRemoveRole(usuario.id, userRole.role)}
+                                      style={{ cursor: isAdminAndSuperAdmin ? 'not-allowed' : 'pointer', opacity: isAdminAndSuperAdmin ? 0.8 : 1 }}
+                                      title={isAdminAndSuperAdmin ? "Não é possível remover papel de Super Admin" : "Clique para remover"}
+                                    >
+                                      {roleLabels[userRole.role]}
+                                      {isAdminAndSuperAdmin && <span className="ml-1 text-xs">(Super Admin)</span>}
+                                    </Badge>
+                                  );
+                                })
                               ) : (
                                 <Badge variant="secondary">Sem papéis</Badge>
                               )}
@@ -257,6 +272,8 @@ export default function Usuarios() {
                                 size="sm"
                                 onClick={() => openDeleteDialog(usuario)}
                                 className="text-red-600 hover:text-red-700"
+                                disabled={isSuperAdmin(usuario.email) && usuario.roles?.some(r => r.role === 'admin')}
+                                title={isSuperAdmin(usuario.email) ? "Não é possível remover papéis do Super Admin" : ""}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
