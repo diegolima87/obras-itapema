@@ -28,6 +28,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
+import { useEngenheiros } from "@/hooks/useEngenheiros";
 
 const formSchema = z.object({
   nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
@@ -46,6 +47,7 @@ const formSchema = z.object({
 export default function NovaObra() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { data: engenheiros, isLoading: loadingEngenheiros } = useEngenheiros();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -212,29 +214,35 @@ export default function NovaObra() {
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="engenheiro_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Engenheiro Responsável</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o engenheiro" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="">Não definido</SelectItem>
-                          <SelectItem value="eng1">João Silva - CREA 12345</SelectItem>
-                          <SelectItem value="eng2">Maria Santos - CREA 67890</SelectItem>
-                          <SelectItem value="eng3">Pedro Costa - CREA 11223</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="engenheiro_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Engenheiro Responsável</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                          disabled={loadingEngenheiros}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={loadingEngenheiros ? "Carregando..." : "Selecione o engenheiro"} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="">Não definido</SelectItem>
+                            {engenheiros?.map((eng) => (
+                              <SelectItem key={eng.id} value={eng.id}>
+                                {eng.nome}{eng.crea ? ` - CREA ${eng.crea}` : ""}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
               </CardContent>
             </Card>
 
