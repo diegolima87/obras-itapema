@@ -1,14 +1,12 @@
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 import { statusColors, statusLabels } from "@/lib/mockData";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { useMemo } from "react";
 
-// Fix for default marker icon in react-leaflet
+// Fix for default marker icon
 import icon from "leaflet/dist/images/marker-icon.png";
 import icon2x from "leaflet/dist/images/marker-icon-2x.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
@@ -23,12 +21,7 @@ const DefaultIcon = L.icon({
   shadowSize: [41, 41]
 });
 
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: icon2x,
-  iconUrl: icon,
-  shadowUrl: iconShadow,
-});
+L.Marker.prototype.options.icon = DefaultIcon;
 
 interface MapaObrasProps {
   obras: Array<{
@@ -42,68 +35,82 @@ interface MapaObrasProps {
   }>;
 }
 
-// Separate component for markers to avoid React 18 Context issues
-function MapMarkers({ obras }: { obras: MapaObrasProps['obras'] }) {
-  return (
-    <>
-      {obras.map((obra) => (
-        <Marker key={obra.id} position={[obra.latitude!, obra.longitude!]}>
-          <Popup>
-            <div className="space-y-2 p-2">
-              <h3 className="font-semibold text-sm">{obra.nome}</h3>
-              <Badge className={statusColors[obra.status as keyof typeof statusColors]}>
-                {statusLabels[obra.status as keyof typeof statusLabels]}
-              </Badge>
-              <p className="text-xs text-muted-foreground">
-                Progresso: {obra.percentual_executado}%
-              </p>
-              <p className="text-xs font-medium">
-                {new Intl.NumberFormat("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                }).format(obra.valor_total)}
-              </p>
-              <Link to={`/obra/${obra.id}`}>
-                <Button size="sm" className="w-full mt-2">
-                  Ver Detalhes
-                </Button>
-              </Link>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
-    </>
-  );
-}
-
 export function MapaObras({ obras }: MapaObrasProps) {
-  // Ensure obras is always an array and memoize
-  const obrasArray = useMemo(() => Array.isArray(obras) ? obras : [], [obras]);
-  
-  const obrasComLocalizacao = useMemo(
-    () => obrasArray.filter(
-      (o) => o && typeof o.latitude === 'number' && typeof o.longitude === 'number'
-    ),
-    [obrasArray]
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const mapInstance = useRef<L.Map | null>(null);
+
+  // Filter obras with valid location
+  const obrasComLocalizacao = obras.filter(
+    (o) => o && typeof o.latitude === 'number' && typeof o.longitude === 'number'
   );
 
-  // Memoize center calculation
-  const mapCenter = useMemo(() => {
-    if (obrasComLocalizacao.length === 0) {
-      return null;
-    }
+  useEffect(() => {
+    if (!mapContainer.current || obrasComLocalizacao.length === 0) return;
 
+    // Calculate center
     const lat = obrasComLocalizacao.reduce((sum, o) => sum + (o.latitude || 0), 0) / obrasComLocalizacao.length;
     const lng = obrasComLocalizacao.reduce((sum, o) => sum + (o.longitude || 0), 0) / obrasComLocalizacao.length;
 
-    if (!isFinite(lat) || !isFinite(lng)) {
-      return null;
+    if (!isFinite(lat) || !isFinite(lng)) return;
+
+    // Initialize map only once
+    if (!mapInstance.current) {
+      mapInstance.current = L.map(mapContainer.current).setView([lat, lng], 12);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      }).addTo(mapInstance.current);
     }
 
-    return [lat, lng] as [number, number];
+    // Clear existing markers
+    mapInstance.current.eachLayer((layer) => {
+      if (layer instanceof L.Marker) {
+        mapInstance.current?.removeLayer(layer);
+      }
+    });
+
+    // Add markers
+    obrasComLocalizacao.forEach((obra) => {
+      if (!mapInstance.current) return;
+
+      const marker = L.marker([obra.latitude!, obra.longitude!]).addTo(mapInstance.current);
+
+      const popupContent = `
+        <div style="min-width: 200px;">
+          <h3 style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.5rem;">${obra.nome}</h3>
+          <div style="margin-bottom: 0.5rem;">
+            <span style="display: inline-block; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; background: ${statusColors[obra.status as keyof typeof statusColors]?.includes('green') ? '#22c55e' : statusColors[obra.status as keyof typeof statusColors]?.includes('yellow') ? '#eab308' : statusColors[obra.status as keyof typeof statusColors]?.includes('blue') ? '#3b82f6' : '#6b7280'}; color: white;">
+              ${statusLabels[obra.status as keyof typeof statusLabels]}
+            </span>
+          </div>
+          <p style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">
+            Progresso: ${obra.percentual_executado}%
+          </p>
+          <p style="font-size: 0.75rem; font-weight: 500; margin-bottom: 0.5rem;">
+            ${new Intl.NumberFormat("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            }).format(obra.valor_total)}
+          </p>
+          <a href="/obra/${obra.id}" style="display: inline-block; padding: 0.375rem 0.75rem; background: #0ea5e9; color: white; border-radius: 0.375rem; text-decoration: none; font-size: 0.875rem; width: 100%; text-align: center; margin-top: 0.5rem;">
+            Ver Detalhes
+          </a>
+        </div>
+      `;
+
+      marker.bindPopup(popupContent);
+    });
+
+    // Cleanup
+    return () => {
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
+    };
   }, [obrasComLocalizacao]);
 
-  if (!mapCenter || obrasComLocalizacao.length === 0) {
+  if (obrasComLocalizacao.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -124,21 +131,7 @@ export function MapaObras({ obras }: MapaObrasProps) {
         <CardTitle>Localização das Obras</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="h-[500px] w-full rounded-b-lg overflow-hidden">
-          <MapContainer
-            key={`map-${obrasComLocalizacao.length}-${mapCenter[0]}-${mapCenter[1]}`}
-            center={mapCenter}
-            zoom={12}
-            className="h-full w-full"
-            scrollWheelZoom={false}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <MapMarkers obras={obrasComLocalizacao} />
-          </MapContainer>
-        </div>
+        <div ref={mapContainer} className="h-[500px] w-full rounded-b-lg" />
       </CardContent>
     </Card>
   );
