@@ -42,7 +42,11 @@ interface MapaObrasProps {
 }
 
 export function MapaObras({ obras }: MapaObrasProps) {
-  const obrasComLocalizacao = obras.filter((o) => o.latitude && o.longitude);
+  // Ensure obras is always an array
+  const obrasArray = Array.isArray(obras) ? obras : [];
+  const obrasComLocalizacao = obrasArray.filter(
+    (o) => o && typeof o.latitude === 'number' && typeof o.longitude === 'number'
+  );
 
   if (obrasComLocalizacao.length === 0) {
     return (
@@ -63,6 +67,20 @@ export function MapaObras({ obras }: MapaObrasProps) {
   const centerLng =
     obrasComLocalizacao.reduce((sum, o) => sum + (o.longitude || 0), 0) / obrasComLocalizacao.length;
 
+  // Validate center coordinates
+  if (!isFinite(centerLat) || !isFinite(centerLng)) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Localização das Obras</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">Erro ao calcular localização central.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -74,6 +92,7 @@ export function MapaObras({ obras }: MapaObrasProps) {
             center={[centerLat, centerLng]}
             zoom={12}
             className="h-full w-full"
+            key={`map-${obrasComLocalizacao.length}`}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
