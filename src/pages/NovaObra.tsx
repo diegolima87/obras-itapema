@@ -26,6 +26,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 
 const formSchema = z.object({
   nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
@@ -43,6 +45,7 @@ const formSchema = z.object({
 
 export default function NovaObra() {
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -61,10 +64,42 @@ export default function NovaObra() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    toast.success("Obra criada com sucesso!");
-    navigate("/obras");
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from("obras")
+        .insert({
+          nome: values.nome,
+          descricao: values.descricao,
+          tipo_obra: values.tipo_obra,
+          unidade_gestora: values.unidade_gestora,
+          engenheiro_fiscal_id: values.engenheiro_id || null,
+          valor_total: parseFloat(values.valor_total),
+          valor_executado: 0,
+          percentual_executado: 0,
+          data_inicio: values.data_inicio,
+          data_fim_prevista: values.data_previsao_termino,
+          endereco: values.endereco,
+          latitude: values.latitude ? parseFloat(values.latitude) : null,
+          longitude: values.longitude ? parseFloat(values.longitude) : null,
+          status: "planejada",
+          publico_portal: false, // Por padrão não é público
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success("Obra criada com sucesso!");
+      navigate("/obras");
+    } catch (error) {
+      console.error("Erro ao criar obra:", error);
+      toast.error("Erro ao criar obra. Verifique os dados e tente novamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -334,13 +369,13 @@ export default function NovaObra() {
 
             <div className="flex justify-end gap-4">
               <Link to="/obras">
-                <Button type="button" variant="outline">
+                <Button type="button" variant="outline" disabled={isSubmitting}>
                   Cancelar
                 </Button>
               </Link>
-              <Button type="submit">
+              <Button type="submit" disabled={isSubmitting}>
                 <Save className="mr-2 h-4 w-4" />
-                Salvar Obra
+                {isSubmitting ? "Salvando..." : "Salvar Obra"}
               </Button>
             </div>
           </form>
