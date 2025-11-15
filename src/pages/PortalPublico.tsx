@@ -3,29 +3,29 @@ import { PortalHeader } from "@/components/portal/PortalHeader";
 import { EstatisticasPublicas } from "@/components/portal/EstatisticasPublicas";
 import { ObraCard } from "@/components/portal/ObraCard";
 import { FiltroObras } from "@/components/portal/FiltroObras";
-import { mockObras } from "@/lib/mockData";
 import { Building2, Eye, TrendingUp, BarChart3, FileText, Shield, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useObrasPublicas } from "@/hooks/useObras";
 
 const PortalPublico = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
   const [tipoFilter, setTipoFilter] = useState("todos");
 
-  // Filter only public obras
-  const obrasPublicas = mockObras.filter((obra) => obra.publico_portal === true);
+  const { data: obrasPublicas, isLoading } = useObrasPublicas();
 
   // Apply filters
-  const obrasFiltradas = obrasPublicas.filter((obra) => {
+  const obrasFiltradas = obrasPublicas?.filter((obra) => {
     const matchSearch =
       obra.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      obra.descricao.toLowerCase().includes(searchTerm.toLowerCase());
+      (obra.descricao?.toLowerCase() || "").includes(searchTerm.toLowerCase());
     const matchStatus = statusFilter === "todos" || obra.status === statusFilter;
     const matchTipo = tipoFilter === "todos" || obra.tipo_obra === tipoFilter;
 
     return matchSearch && matchStatus && matchTipo;
-  });
+  }) || [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -76,7 +76,21 @@ const PortalPublico = () => {
             <h2 className="text-3xl font-bold text-foreground mb-2">Visão Geral</h2>
             <p className="text-muted-foreground">Números atualizados das obras públicas</p>
           </div>
-          <EstatisticasPublicas obras={obrasPublicas} />
+          {isLoading ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[1, 2, 3, 4].map((i) => (
+                <Card key={i}>
+                  <CardContent className="p-6">
+                    <Skeleton className="h-12 w-12 rounded-lg mb-4" />
+                    <Skeleton className="h-4 w-24 mb-2" />
+                    <Skeleton className="h-8 w-16" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <EstatisticasPublicas obras={obrasPublicas || []} />
+          )}
         </section>
 
         {/* Charts and Analytics Section */}
@@ -143,7 +157,20 @@ const PortalPublico = () => {
                 onTipoChange={setTipoFilter}
               />
 
-              {obrasFiltradas.length === 0 ? (
+              {isLoading ? (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i}>
+                      <CardContent className="p-6">
+                        <Skeleton className="h-6 w-3/4 mb-4" />
+                        <Skeleton className="h-4 w-full mb-2" />
+                        <Skeleton className="h-4 w-full mb-4" />
+                        <Skeleton className="h-10 w-full" />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : obrasFiltradas.length === 0 ? (
                 <Card className="p-12 text-center">
                   <CardContent>
                     <Building2 className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
