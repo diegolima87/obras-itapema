@@ -533,6 +533,8 @@ export type Database = {
       }
       obras: {
         Row: {
+          bairro: string | null
+          cidade: string | null
           created_at: string | null
           data_fim_prevista: string | null
           data_fim_real: string | null
@@ -548,12 +550,15 @@ export type Database = {
           publico_portal: boolean | null
           status: Database["public"]["Enums"]["status_obra"] | null
           tipo_obra: string | null
+          uf: string | null
           unidade_gestora: string
           updated_at: string | null
           valor_executado: number | null
           valor_total: number | null
         }
         Insert: {
+          bairro?: string | null
+          cidade?: string | null
           created_at?: string | null
           data_fim_prevista?: string | null
           data_fim_real?: string | null
@@ -569,12 +574,15 @@ export type Database = {
           publico_portal?: boolean | null
           status?: Database["public"]["Enums"]["status_obra"] | null
           tipo_obra?: string | null
+          uf?: string | null
           unidade_gestora: string
           updated_at?: string | null
           valor_executado?: number | null
           valor_total?: number | null
         }
         Update: {
+          bairro?: string | null
+          cidade?: string | null
           created_at?: string | null
           data_fim_prevista?: string | null
           data_fim_real?: string | null
@@ -590,6 +598,7 @@ export type Database = {
           publico_portal?: boolean | null
           status?: Database["public"]["Enums"]["status_obra"] | null
           tipo_obra?: string | null
+          uf?: string | null
           unidade_gestora?: string
           updated_at?: string | null
           valor_executado?: number | null
