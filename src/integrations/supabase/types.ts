@@ -64,6 +64,56 @@ export type Database = {
           },
         ]
       }
+      anexos_medicao: {
+        Row: {
+          arquivo_path: string | null
+          created_at: string
+          criado_por: string | null
+          descricao: string | null
+          id: string
+          medicao_id: string
+          mime_type: string | null
+          nome_original: string | null
+          tamanho: number | null
+          tipo: string
+          url: string
+        }
+        Insert: {
+          arquivo_path?: string | null
+          created_at?: string
+          criado_por?: string | null
+          descricao?: string | null
+          id?: string
+          medicao_id: string
+          mime_type?: string | null
+          nome_original?: string | null
+          tamanho?: number | null
+          tipo: string
+          url: string
+        }
+        Update: {
+          arquivo_path?: string | null
+          created_at?: string
+          criado_por?: string | null
+          descricao?: string | null
+          id?: string
+          medicao_id?: string
+          mime_type?: string | null
+          nome_original?: string | null
+          tamanho?: number | null
+          tipo?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anexos_medicao_medicao_id_fkey"
+            columns: ["medicao_id"]
+            isOneToOne: false
+            referencedRelation: "medicoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       configuracoes_sistema: {
         Row: {
           chave: string
@@ -413,8 +463,10 @@ export type Database = {
       medicoes: {
         Row: {
           aprovado_por: string | null
+          competencia: string | null
           contrato_id: string
           created_at: string | null
+          criado_por: string | null
           data_aprovacao: string | null
           data_envio: string | null
           descricao: string | null
@@ -425,14 +477,19 @@ export type Database = {
           obra_id: string
           observacoes: string | null
           percentual_executado: number | null
+          percentual_financeiro: number | null
+          percentual_fisico: number | null
           status: Database["public"]["Enums"]["status_medicao"] | null
           updated_at: string | null
           valor_executado: number | null
+          valor_medido: number | null
         }
         Insert: {
           aprovado_por?: string | null
+          competencia?: string | null
           contrato_id: string
           created_at?: string | null
+          criado_por?: string | null
           data_aprovacao?: string | null
           data_envio?: string | null
           descricao?: string | null
@@ -443,14 +500,19 @@ export type Database = {
           obra_id: string
           observacoes?: string | null
           percentual_executado?: number | null
+          percentual_financeiro?: number | null
+          percentual_fisico?: number | null
           status?: Database["public"]["Enums"]["status_medicao"] | null
           updated_at?: string | null
           valor_executado?: number | null
+          valor_medido?: number | null
         }
         Update: {
           aprovado_por?: string | null
+          competencia?: string | null
           contrato_id?: string
           created_at?: string | null
+          criado_por?: string | null
           data_aprovacao?: string | null
           data_envio?: string | null
           descricao?: string | null
@@ -461,9 +523,12 @@ export type Database = {
           obra_id?: string
           observacoes?: string | null
           percentual_executado?: number | null
+          percentual_financeiro?: number | null
+          percentual_fisico?: number | null
           status?: Database["public"]["Enums"]["status_medicao"] | null
           updated_at?: string | null
           valor_executado?: number | null
+          valor_medido?: number | null
         }
         Relationships: [
           {
@@ -496,7 +561,10 @@ export type Database = {
           item_obra_id: string
           medicao_id: string
           quantidade_executada: number
+          quantidade_prevista: number | null
           valor_executado: number
+          valor_total: number | null
+          valor_unitario: number | null
         }
         Insert: {
           created_at?: string | null
@@ -504,7 +572,10 @@ export type Database = {
           item_obra_id: string
           medicao_id: string
           quantidade_executada: number
+          quantidade_prevista?: number | null
           valor_executado: number
+          valor_total?: number | null
+          valor_unitario?: number | null
         }
         Update: {
           created_at?: string | null
@@ -512,7 +583,10 @@ export type Database = {
           item_obra_id?: string
           medicao_id?: string
           quantidade_executada?: number
+          quantidade_prevista?: number | null
           valor_executado?: number
+          valor_total?: number | null
+          valor_unitario?: number | null
         }
         Relationships: [
           {
