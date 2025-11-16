@@ -60,10 +60,18 @@ export default function ContratoDetalhes() {
               <p className="text-muted-foreground">{contrato.objeto}</p>
             </div>
           </div>
-          <Button>
-            <Edit className="mr-2 h-4 w-4" />
-            Editar Contrato
-          </Button>
+          <div className="flex gap-2">
+            <Link to={`/integracao-tce/contrato/${id}`}>
+              <Button variant="outline">
+                <FileText className="mr-2 h-4 w-4" />
+                Enviar ao TCE
+              </Button>
+            </Link>
+            <Button>
+              <Edit className="mr-2 h-4 w-4" />
+              Editar Contrato
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="geral" className="space-y-4">

@@ -374,6 +374,48 @@ export type Database = {
         }
         Relationships: []
       }
+      integracoes_tce: {
+        Row: {
+          created_at: string
+          enviado_por: string | null
+          id: string
+          mensagem_erro: string | null
+          payload_enviado: Json
+          payload_resposta: Json | null
+          protocolo: string | null
+          referencia_id: string
+          status: string
+          tipo: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          enviado_por?: string | null
+          id?: string
+          mensagem_erro?: string | null
+          payload_enviado: Json
+          payload_resposta?: Json | null
+          protocolo?: string | null
+          referencia_id: string
+          status?: string
+          tipo: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          enviado_por?: string | null
+          id?: string
+          mensagem_erro?: string | null
+          payload_enviado?: Json
+          payload_resposta?: Json | null
+          protocolo?: string | null
+          referencia_id?: string
+          status?: string
+          tipo?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       itens_obra: {
         Row: {
           codigo: string | null

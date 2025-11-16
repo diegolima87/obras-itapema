@@ -34,10 +34,12 @@ import ESfingeExportacao from "./pages/ESfingeExportacao";
 import ESfingeEnvio from "./pages/ESfingeEnvio";
 import ESfingeLogs from "./pages/ESfingeLogs";
 import ESfingeMapeamento from "./pages/ESfingeMapeamento";
+import HistoricoTCE from "./pages/HistoricoTCE";
 import LoginFornecedor from "./pages/fornecedor/LoginFornecedor";
 import DashboardFornecedor from "./pages/fornecedor/DashboardFornecedor";
 import ObrasFornecedor from "./pages/fornecedor/ObrasFornecedor";
 import DocumentosFornecedor from "./pages/fornecedor/DocumentosFornecedor";
+import IntegracaoTCE from "./pages/IntegracaoTCE";
 import Mapa from "./pages/Mapa";
 import NotFound from "./pages/NotFound";
 
@@ -91,7 +93,7 @@ const App = () => (
           <Route path="/e-sfinge" element={<ProtectedRoute><ESfinge /></ProtectedRoute>} />
           <Route path="/e-sfinge/exportacao" element={<ProtectedRoute><ESfingeExportacao /></ProtectedRoute>} />
           <Route path="/e-sfinge/envio" element={<ProtectedRoute><ESfingeEnvio /></ProtectedRoute>} />
-          <Route path="/e-sfinge/logs" element={<ProtectedRoute><ESfingeLogs /></ProtectedRoute>} />
+          <Route path="/e-sfinge/logs" element={<ProtectedRoute><HistoricoTCE /></ProtectedRoute>} />
           <Route path="/e-sfinge/mapeamento" element={<ProtectedRoute><ESfingeMapeamento /></ProtectedRoute>} />
           
           {/* Fornecedor Portal Routes */}
@@ -103,6 +105,7 @@ const App = () => (
           {/* Other Protected Routes */}
           <Route path="/fornecedores" element={<ProtectedRoute><Fornecedores /></ProtectedRoute>} />
           <Route path="/mapa" element={<ProtectedRoute><Mapa /></ProtectedRoute>} />
+          <Route path="/integracao-tce/:tipo/:id" element={<ProtectedRoute><IntegracaoTCE /></ProtectedRoute>} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

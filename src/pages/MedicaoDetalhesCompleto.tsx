@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -249,8 +249,18 @@ export default function MedicaoDetalhesCompleto() {
         {/* Ações */}
         <Card>
           <CardContent className="pt-6">
-            <div className="flex flex-wrap gap-4 justify-end">
-              {podeFornecedorEditar && (
+            <div className="flex flex-wrap gap-4 justify-between items-center">
+              {medicao.status === "aprovado" && (
+                <Link to={`/integracao-tce/medicao/${id}`}>
+                  <Button variant="outline" size="lg">
+                    <FileText className="mr-2 h-5 w-5" />
+                    Enviar ao TCE/e-Sfinge
+                  </Button>
+                </Link>
+              )}
+              
+              <div className="flex flex-wrap gap-4 ml-auto">
+                {podeFornecedorEditar && (
                 <Button
                   onClick={handleEnviar}
                   disabled={enviarMutation.isPending}
@@ -301,6 +311,7 @@ export default function MedicaoDetalhesCompleto() {
                   </Button>
                 </>
               )}
+              </div>
             </div>
           </CardContent>
         </Card>
