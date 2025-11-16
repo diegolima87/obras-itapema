@@ -39,6 +39,7 @@ import LoginFornecedor from "./pages/fornecedor/LoginFornecedor";
 import DashboardFornecedor from "./pages/fornecedor/DashboardFornecedor";
 import ObrasFornecedor from "./pages/fornecedor/ObrasFornecedor";
 import DocumentosFornecedor from "./pages/fornecedor/DocumentosFornecedor";
+import MedicoesFornecedor from "./pages/fornecedor/MedicoesFornecedor";
 import IntegracaoTCE from "./pages/IntegracaoTCE";
 import Mapa from "./pages/Mapa";
 import NotFound from "./pages/NotFound";
@@ -100,6 +101,7 @@ const App = () => (
           <Route path="/fornecedor/login" element={<LoginFornecedor />} />
           <Route path="/fornecedor/dashboard" element={<ProtectedRoute><DashboardFornecedor /></ProtectedRoute>} />
           <Route path="/fornecedor/obras" element={<ProtectedRoute><ObrasFornecedor /></ProtectedRoute>} />
+          <Route path="/fornecedor/medicoes" element={<ProtectedRoute><MedicoesFornecedor /></ProtectedRoute>} />
           <Route path="/fornecedor/documentos" element={<ProtectedRoute><DocumentosFornecedor /></ProtectedRoute>} />
           
           {/* Other Protected Routes */}

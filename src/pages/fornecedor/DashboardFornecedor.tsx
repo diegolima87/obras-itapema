@@ -2,78 +2,73 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, FileText, Clock, CheckCircle, AlertCircle, Upload, LogOut } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { FornecedorLayout } from "@/components/fornecedor/FornecedorLayout";
+import {
+  useMeusContratos,
+  useMinhasMedicoes,
+} from "@/hooks/useFornecedorData";
+import { Building2, FileText, Clock, CheckCircle, XCircle, Upload, Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const statusLabels: Record<string, string> = {
+  pendente: "Pendente",
+  analise: "Em Análise",
+  aprovado: "Aprovado",
+  reprovado: "Reprovado",
+};
+
+const statusColors: Record<string, string> = {
+  pendente: "bg-yellow-500",
+  analise: "bg-blue-500",
+  aprovado: "bg-green-500",
+  reprovado: "bg-red-500",
+};
 
 export default function DashboardFornecedor() {
-  // Mock data do fornecedor
-  const fornecedor = {
-    nome: "Construtora ABC Ltda",
-    cnpj: "12.345.678/0001-90",
-  };
+  const { data: contratos, isLoading: loadingContratos } = useMeusContratos();
+  const { data: medicoes, isLoading: loadingMedicoes } = useMinhasMedicoes();
+
+  const contratosAtivos = contratos?.filter((c) => c.ativo).length || 0;
+  const medicoesEmAnalise = medicoes?.filter((m) => m.status === "analise").length || 0;
+  const medicoesAprovadas = medicoes?.filter((m) => m.status === "aprovado").length || 0;
+  const medicoesReprovadas = medicoes?.filter((m) => m.status === "reprovado").length || 0;
 
   const stats = [
-    { titulo: "Obras Ativas", valor: "3", icon: Building2, color: "text-blue-600" },
-    { titulo: "Contratos Vigentes", valor: "2", icon: FileText, color: "text-green-600" },
-    { titulo: "Medições Pendentes", valor: "1", icon: Clock, color: "text-orange-600" },
-    { titulo: "Medições Aprovadas", valor: "5", icon: CheckCircle, color: "text-emerald-600" },
+    { titulo: "Contratos Ativos", valor: contratosAtivos, icon: FileText, color: "text-blue-600" },
+    { titulo: "Medições em Análise", valor: medicoesEmAnalise, icon: Clock, color: "text-orange-600" },
+    { titulo: "Medições Aprovadas", valor: medicoesAprovadas, icon: CheckCircle, color: "text-emerald-600" },
+    { titulo: "Medições Reprovadas", valor: medicoesReprovadas, icon: XCircle, color: "text-red-600" },
   ];
 
-  const medicoesPendentes = [
-    {
-      id: 1,
-      numero: "002/2025",
-      obra: "Pavimentação da Rua das Flores",
-      valor: 170000,
-      data_envio: "2025-01-10",
-      status: "Em Análise",
-    },
-  ];
-
-  const proximosVencimentos = [
-    {
-      id: 1,
-      documento: "CND Federal",
-      vencimento: "2025-02-15",
-      dias: 10,
-    },
-    {
-      id: 2,
-      documento: "CND Estadual",
-      vencimento: "2025-03-01",
-      dias: 25,
-    },
-  ];
+  const medicoesPendentes = medicoes?.filter(
+    (m) => m.status === "pendente" || m.status === "analise"
+  ).slice(0, 5);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Building2 className="h-8 w-8 text-primary" />
-              <div>
-                <h1 className="text-xl font-bold">{fornecedor.nome}</h1>
-                <p className="text-sm text-muted-foreground">CNPJ: {fornecedor.cnpj}</p>
-              </div>
-            </div>
-            <Button variant="outline">
-              <LogOut className="mr-2 h-4 w-4" />
-              Sair
-            </Button>
-          </div>
+    <FornecedorLayout>
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold mb-2">Bem-vindo ao Portal do Fornecedor</h2>
+          <p className="text-muted-foreground">
+            Gerencie suas obras, medições e documentos de forma centralizada
+          </p>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-bold mb-2">Bem-vindo ao Portal do Fornecedor</h2>
-            <p className="text-muted-foreground">Gerencie suas obras, medições e documentos</p>
+        {loadingContratos || loadingMedicoes ? (
+          <div className="grid gap-4 md:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-4 w-24" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-8 w-16" />
+                </CardContent>
+              </Card>
+            ))}
           </div>
-
-          {/* Stats Grid */}
+        ) : (
           <div className="grid gap-4 md:grid-cols-4">
             {stats.map((stat) => (
               <Card key={stat.titulo}>
@@ -87,114 +82,103 @@ export default function DashboardFornecedor() {
               </Card>
             ))}
           </div>
+        )}
 
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Ações Rápidas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-3">
-                <Link to="/fornecedor/medicoes/nova">
-                  <Button className="w-full h-20" variant="outline">
-                    <div className="flex flex-col items-center gap-2">
-                      <Upload className="h-6 w-6" />
-                      <span>Enviar Medição</span>
-                    </div>
-                  </Button>
-                </Link>
-                <Link to="/fornecedor/documentos">
-                  <Button className="w-full h-20" variant="outline">
-                    <div className="flex flex-col items-center gap-2">
-                      <FileText className="h-6 w-6" />
-                      <span>Enviar Documentos</span>
-                    </div>
-                  </Button>
-                </Link>
-                <Link to="/fornecedor/obras">
-                  <Button className="w-full h-20" variant="outline">
-                    <div className="flex flex-col items-center gap-2">
-                      <Building2 className="h-6 w-6" />
-                      <span>Ver Minhas Obras</span>
-                    </div>
-                  </Button>
-                </Link>
+        <Card>
+          <CardHeader>
+            <CardTitle>Ações Rápidas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-3">
+              <Link to="/medicoes/nova">
+                <Button className="w-full h-20" variant="outline">
+                  <div className="flex flex-col items-center gap-2">
+                    <Upload className="h-6 w-6" />
+                    <span>Nova Medição</span>
+                  </div>
+                </Button>
+              </Link>
+              <Link to="/fornecedor/documentos">
+                <Button className="w-full h-20" variant="outline">
+                  <div className="flex flex-col items-center gap-2">
+                    <FileText className="h-6 w-6" />
+                    <span>Meus Documentos</span>
+                  </div>
+                </Button>
+              </Link>
+              <Link to="/fornecedor/obras">
+                <Button className="w-full h-20" variant="outline">
+                  <div className="flex flex-col items-center gap-2">
+                    <Building2 className="h-6 w-6" />
+                    <span>Minhas Obras</span>
+                  </div>
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Medições Recentes</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loadingMedicoes ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Medições Pendentes */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Medições Pendentes de Análise</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {medicoesPendentes.map((medicao) => (
-                    <div key={medicao.id} className="p-4 border rounded-lg space-y-2">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="font-medium">Medição {medicao.numero}</p>
-                          <p className="text-sm text-muted-foreground">{medicao.obra}</p>
-                        </div>
-                        <Badge variant="secondary">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {medicao.status}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">
-                          Enviado em {new Date(medicao.data_envio).toLocaleDateString("pt-BR")}
-                        </span>
-                        <span className="font-semibold">
+            ) : medicoesPendentes && medicoesPendentes.length > 0 ? (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Número</TableHead>
+                      <TableHead>Obra</TableHead>
+                      <TableHead>Valor</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {medicoesPendentes.map((medicao) => (
+                      <TableRow key={medicao.id}>
+                        <TableCell className="font-medium">
+                          {medicao.numero_medicao}
+                        </TableCell>
+                        <TableCell>{medicao.obra?.nome || "N/A"}</TableCell>
+                        <TableCell>
                           {new Intl.NumberFormat("pt-BR", {
                             style: "currency",
                             currency: "BRL",
-                          }).format(medicao.valor)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Documentos Próximos ao Vencimento */}
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  <AlertCircle className="h-5 w-5 inline mr-2 text-orange-600" />
-                  Documentos a Vencer
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {proximosVencimentos.map((doc) => (
-                    <div key={doc.id} className="p-4 border rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">{doc.documento}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Vence em {new Date(doc.vencimento).toLocaleDateString("pt-BR")}
-                          </p>
-                        </div>
-                        <Badge variant={doc.dias <= 15 ? "destructive" : "secondary"}>
-                          {doc.dias} dias
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                  <Button variant="outline" className="w-full">
-                    <Upload className="mr-2 h-4 w-4" />
-                    Atualizar Documentos
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </main>
-    </div>
+                          }).format(medicao.valor_executado || 0)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={statusColors[medicao.status]}>
+                            {statusLabels[medicao.status]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Link to={`/medicoes/${medicao.id}/completo`}>
+                            <Button variant="ghost" size="sm">
+                              Ver Detalhes
+                            </Button>
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                Nenhuma medição no momento
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </FornecedorLayout>
   );
 }
