@@ -2,30 +2,30 @@ import { useState } from "react";
 import { PortalHeader } from "@/components/portal/PortalHeader";
 import { EstatisticasPublicas } from "@/components/portal/EstatisticasPublicas";
 import { ObraCard } from "@/components/portal/ObraCard";
-import { FiltroObras } from "@/components/portal/FiltroObras";
+import { GoogleMapaObras } from "@/components/portal/GoogleMapaObras";
+import { FiltrosAvancados } from "@/components/portal/FiltrosAvancados";
+import { ResumoObras } from "@/components/portal/ResumoObras";
 import { Building2, Eye, TrendingUp, BarChart3, FileText, Shield, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useObrasPublicas } from "@/hooks/useObras";
+import { useObrasComFiltros, useFiltrosDisponiveis, FiltrosObras } from "@/hooks/useObrasComFiltros";
 
 const PortalPublico = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("todos");
-  const [tipoFilter, setTipoFilter] = useState("todos");
+  const [filtros, setFiltros] = useState<FiltrosObras>({});
+  
+  const { data: obras, isLoading } = useObrasComFiltros(filtros);
+  const { data: filtrosDisponiveis } = useFiltrosDisponiveis();
 
-  const { data: obrasPublicas, isLoading } = useObrasPublicas();
-
-  // Apply filters
-  const obrasFiltradas = obrasPublicas?.filter((obra) => {
-    const matchSearch =
-      obra.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (obra.descricao?.toLowerCase() || "").includes(searchTerm.toLowerCase());
-    const matchStatus = statusFilter === "todos" || obra.status === statusFilter;
-    const matchTipo = tipoFilter === "todos" || obra.tipo_obra === tipoFilter;
-
-    return matchSearch && matchStatus && matchTipo;
-  }) || [];
+  // Calcular estatísticas
+  const totalObras = obras?.length || 0;
+  const valorTotal = obras?.reduce((sum, obra) => sum + (obra.valor_total || 0), 0) || 0;
+  const percentualMedioFisico = totalObras > 0 
+    ? obras.reduce((sum, obra) => sum + (obra.percentual_executado || 0), 0) / totalObras 
+    : 0;
+  const percentualMedioFinanceiro = totalObras > 0 && valorTotal > 0
+    ? (obras.reduce((sum, obra) => sum + (obra.valor_executado || 0), 0) / valorTotal) * 100
+    : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -89,73 +89,61 @@ const PortalPublico = () => {
               ))}
             </div>
           ) : (
-            <EstatisticasPublicas obras={obrasPublicas || []} />
+            <EstatisticasPublicas obras={obras || []} />
           )}
         </section>
 
-        {/* Charts and Analytics Section */}
+        {/* Resumo e Filtros Section */}
         <section className="bg-gradient-to-b from-background to-primary/5 border-y">
           <div className="container mx-auto px-4 py-12">
             <div className="text-center mb-8">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <TrendingUp className="h-8 w-8 text-primary" />
-                <h2 className="text-3xl font-bold text-foreground">Análises e Estatísticas</h2>
+                <h2 className="text-3xl font-bold text-foreground">Dashboard de Obras</h2>
               </div>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Gráficos e análises estatísticas estarão disponíveis em breve
+                Visualize e filtre as obras públicas com informações em tempo real
               </p>
             </div>
             
-            <Card className="p-8 text-center">
-              <CardContent>
-                <BarChart3 className="h-16 w-16 mx-auto mb-4 text-primary" />
-                <h3 className="text-xl font-semibold mb-2">Análises em Desenvolvimento</h3>
-                <p className="text-muted-foreground">
-                  Em breve você poderá acompanhar gráficos de evolução temporal, 
-                  distribuição de investimentos e comparativos anuais.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="mb-8">
+              <ResumoObras
+                totalObras={totalObras}
+                valorTotal={valorTotal}
+                percentualMedioFisico={percentualMedioFisico}
+                percentualMedioFinanceiro={percentualMedioFinanceiro}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <div className="lg:col-span-1">
+                <FiltrosAvancados
+                  filtros={filtros}
+                  onFiltrosChange={setFiltros}
+                  bairrosDisponiveis={filtrosDisponiveis?.bairros || []}
+                  cidadesDisponiveis={filtrosDisponiveis?.cidades || []}
+                  statusDisponiveis={filtrosDisponiveis?.status || []}
+                  tiposDisponiveis={filtrosDisponiveis?.tipos || []}
+                />
+              </div>
+
+              <div className="lg:col-span-3">
+                <GoogleMapaObras obras={obras || []} />
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* Map Section */}
-        <section className="container mx-auto px-4 py-12">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-foreground mb-2">Mapa de Obras</h2>
-            <p className="text-muted-foreground">Localização geográfica de todas as obras públicas</p>
-          </div>
-          
-          <Card className="p-8 text-center">
-            <CardContent>
-              <MapPin className="h-16 w-16 mx-auto mb-4 text-primary" />
-              <h3 className="text-xl font-semibold mb-2">Mapa Interativo</h3>
-              <p className="text-muted-foreground">
-                Em breve você poderá visualizar a localização de todas as obras no mapa interativo.
-              </p>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Filter and Obras List Section */}
+        {/* Obras List Section */}
         <section className="bg-gradient-to-b from-background to-muted/20 border-t">
           <div className="container mx-auto px-4 py-12">
             <div className="space-y-6">
               <div className="text-center">
-                <h2 className="text-3xl font-bold text-foreground mb-2">Obras Públicas</h2>
+                <h2 className="text-3xl font-bold text-foreground mb-2">Lista de Obras</h2>
                 <p className="text-muted-foreground">
-                  Encontradas {obrasFiltradas.length} obra(s) pública(s)
+                  {totalObras > 0 ? `Encontradas ${totalObras} obra(s) pública(s)` : "Nenhuma obra encontrada"}
                 </p>
               </div>
-
-              <FiltroObras
-                searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
-                statusFilter={statusFilter}
-                onStatusChange={setStatusFilter}
-                tipoFilter={tipoFilter}
-                onTipoChange={setTipoFilter}
-              />
 
               {isLoading ? (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -170,7 +158,7 @@ const PortalPublico = () => {
                     </Card>
                   ))}
                 </div>
-              ) : obrasFiltradas.length === 0 ? (
+              ) : totalObras === 0 ? (
                 <Card className="p-12 text-center">
                   <CardContent>
                     <Building2 className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
@@ -182,7 +170,7 @@ const PortalPublico = () => {
                 </Card>
               ) : (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {obrasFiltradas.map((obra) => (
+                  {obras.map((obra) => (
                     <ObraCard key={obra.id} obra={obra} />
                   ))}
                 </div>
