@@ -23,6 +23,7 @@ import ContratoDetalhes from "./pages/ContratoDetalhes";
 import Medicoes from "./pages/Medicoes";
 import NovaMedicao from "./pages/NovaMedicao";
 import MedicaoDetalhes from "./pages/MedicaoDetalhes";
+import MedicaoDetalhesCompleto from "./pages/MedicaoDetalhesCompleto";
 import Fornecedores from "./pages/Fornecedores";
 import Usuarios from "./pages/Usuarios";
 import Configuracoes from "./pages/Configuracoes";
@@ -78,6 +79,7 @@ const App = () => (
           <Route path="/medicoes" element={<ProtectedRoute><Medicoes /></ProtectedRoute>} />
           <Route path="/medicoes/nova" element={<ProtectedRoute><NovaMedicao /></ProtectedRoute>} />
           <Route path="/medicoes/:id" element={<ProtectedRoute><MedicaoDetalhes /></ProtectedRoute>} />
+          <Route path="/medicoes/:id/completo" element={<ProtectedRoute><MedicaoDetalhesCompleto /></ProtectedRoute>} />
           
           {/* Admin Routes - Protected */}
           <Route path="/usuarios" element={<ProtectedRoute><Usuarios /></ProtectedRoute>} />
