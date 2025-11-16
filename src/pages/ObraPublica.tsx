@@ -4,17 +4,103 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, MapPin, Calendar, DollarSign } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, DollarSign, FileText, Image } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
-import { mockObras, mockContratos, mockMedicoes, statusColors, statusLabels, medicaoStatusColors, medicaoStatusLabels } from "@/lib/mockData";
+import { statusColors, statusLabels, medicaoStatusColors, medicaoStatusLabels } from "@/lib/mockData";
 import { Label } from "@/components/ui/label";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function ObraPublica() {
   const { id } = useParams();
-  const obra = mockObras.find((o) => o.id === id && o.publico_portal === true);
-  
-  const contrato = mockContratos.find((c) => c.obra_id === id);
-  const medicoes = mockMedicoes.filter((m) => m.obra_id === id && m.status === "aprovado");
+
+  const { data: obra, isLoading } = useQuery({
+    queryKey: ["obra-publica", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("obras")
+        .select("*")
+        .eq("id", id)
+        .eq("publico_portal", true)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  const { data: contratos } = useQuery({
+    queryKey: ["contratos-obra", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contratos")
+        .select(`
+          *,
+          fornecedor:fornecedores(nome, cnpj)
+        `)
+        .eq("obra_id", id);
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  const { data: medicoes } = useQuery({
+    queryKey: ["medicoes-obra", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("medicoes")
+        .select("*")
+        .eq("obra_id", id)
+        .eq("status", "aprovado")
+        .order("competencia", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  const { data: documentos } = useQuery({
+    queryKey: ["documentos-obra", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("documentos")
+        .select("*")
+        .eq("obra_id", id)
+        .in("tipo", ["projeto", "foto"])
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  const contrato = contratos?.[0];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <PortalHeader />
+        <div className="container mx-auto px-4 py-12">
+          <div className="space-y-6">
+            <Skeleton className="h-12 w-3/4" />
+            <div className="grid gap-4 md:grid-cols-4">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-24" />
+              ))}
+            </div>
+            <Skeleton className="h-96" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!obra) {
     return (
@@ -234,7 +320,7 @@ export default function ObraPublica() {
                         </div>
                         <div>
                           <Label className="text-muted-foreground">Fornecedor</Label>
-                          <p className="font-medium text-foreground">{contrato.fornecedor_nome}</p>
+                          <p className="font-medium text-foreground">{contrato.fornecedor?.nome || "N/A"}</p>
                         </div>
                         <div>
                           <Label className="text-muted-foreground">Origem do Recurso</Label>
@@ -270,7 +356,7 @@ export default function ObraPublica() {
                   <CardTitle>Medições Aprovadas</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {medicoes.length > 0 ? (
+                  {medicoes && medicoes.length > 0 ? (
                     <div className="space-y-4">
                       {medicoes.map((medicao) => (
                         <Card key={medicao.id}>
@@ -283,18 +369,30 @@ export default function ObraPublica() {
                                     {medicaoStatusLabels[medicao.status as keyof typeof medicaoStatusLabels]}
                                   </Badge>
                                 </div>
-                                <p className="text-sm text-muted-foreground">{medicao.etapa}</p>
-                                <p className="text-sm text-muted-foreground">{medicao.descricao}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Competência: {medicao.competencia 
+                                    ? new Date(medicao.competencia).toLocaleDateString("pt-BR", {
+                                        month: "2-digit",
+                                        year: "numeric"
+                                      })
+                                    : "N/A"}
+                                </p>
+                                {medicao.descricao && (
+                                  <p className="text-sm text-muted-foreground">{medicao.descricao}</p>
+                                )}
                               </div>
                               <div className="text-right">
                                 <p className="text-lg font-bold text-foreground">
                                   {new Intl.NumberFormat("pt-BR", {
                                     style: "currency",
                                     currency: "BRL",
-                                  }).format(medicao.valor_executado)}
+                                  }).format(medicao.valor_medido || 0)}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
-                                  {medicao.percentual_executado}% executado
+                                  Físico: {medicao.percentual_fisico?.toFixed(2) || 0}%
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  Financeiro: {medicao.percentual_financeiro?.toFixed(2) || 0}%
                                 </p>
                               </div>
                             </div>
@@ -315,7 +413,34 @@ export default function ObraPublica() {
                   <CardTitle>Galeria de Fotos</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">Nenhuma foto disponível no momento.</p>
+                  {documentos && documentos.filter(d => d.tipo === "foto").length > 0 ? (
+                    <div className="grid gap-4 md:grid-cols-3">
+                      {documentos
+                        .filter(d => d.tipo === "foto")
+                        .map((foto) => (
+                          <Card key={foto.id} className="overflow-hidden">
+                            <CardContent className="p-0">
+                              {foto.url && (
+                                <img 
+                                  src={foto.url} 
+                                  alt={foto.nome}
+                                  className="w-full h-48 object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                                  onClick={() => window.open(foto.url!, "_blank")}
+                                />
+                              )}
+                              <div className="p-3">
+                                <p className="text-sm font-medium text-foreground">{foto.nome}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(foto.created_at || "").toLocaleDateString("pt-BR")}
+                                </p>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">Nenhuma foto disponível no momento.</p>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
