@@ -10,17 +10,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useObrasPublicas, useObrasPublicasComLocalizacao, useFiltrosDisponiveis, FiltrosObras } from "@/hooks/useObrasComFiltros";
+import { useTenant } from "@/contexts/TenantContext";
 
 const PortalPublico = () => {
   const [filtros, setFiltros] = useState<FiltrosObras>({});
+  const { tenant, loading: tenantLoading } = useTenant();
   
   // Buscar TODAS as obras públicas (com ou sem coordenadas)
-  const { data: obras, isLoading } = useObrasPublicas(filtros);
+  const { data: obras, isLoading } = useObrasPublicas(filtros, tenant?.id);
   
   // Buscar apenas obras com localização (para o mapa)
-  const { data: obrasComLocalizacao } = useObrasPublicasComLocalizacao(filtros);
+  const { data: obrasComLocalizacao } = useObrasPublicasComLocalizacao(filtros, tenant?.id);
   
-  const { data: filtrosDisponiveis } = useFiltrosDisponiveis();
+  const { data: filtrosDisponiveis } = useFiltrosDisponiveis(tenant?.id);
 
   // Calcular estatísticas
   const totalObras = obras?.length || 0;
@@ -31,6 +33,42 @@ const PortalPublico = () => {
   const percentualMedioFinanceiro = totalObras > 0 && valorTotal > 0
     ? (obras.reduce((sum, obra) => sum + (obra.valor_executado || 0), 0) / valorTotal) * 100
     : 0;
+
+  // Loading state para tenant
+  if (tenantLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <PortalHeader />
+        <div className="container mx-auto px-4 py-12">
+          <div className="space-y-6">
+            <Skeleton className="h-12 w-3/4 mx-auto" />
+            <div className="grid gap-4 md:grid-cols-4">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-24" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Tenant não encontrado
+  if (!tenant) {
+    return (
+      <div className="min-h-screen bg-background">
+        <PortalHeader />
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center space-y-4">
+            <h2 className="text-2xl font-bold text-foreground">Portal não encontrado</h2>
+            <p className="text-muted-foreground">
+              Este portal de transparência não está disponível.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

@@ -12,78 +12,99 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useTenant } from "@/contexts/TenantContext";
 
 export default function ObraPublica() {
   const { id } = useParams();
+  const { tenant, loading: tenantLoading } = useTenant();
 
   const { data: obra, isLoading } = useQuery({
-    queryKey: ["obra-publica", id],
+    queryKey: ["obra-publica", id, tenant?.id],
     queryFn: async () => {
+      if (!tenant?.id) {
+        console.error('❌ Tentativa de buscar obra sem tenant_id');
+        throw new Error('Tenant não identificado');
+      }
+
       const { data, error } = await supabase
         .from("obras")
         .select("*")
         .eq("id", id)
         .eq("publico_portal", true)
+        .eq("tenant_id", tenant.id)
         .single();
 
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id && !!tenant?.id,
   });
 
   const { data: contratos } = useQuery({
-    queryKey: ["contratos-obra", id],
+    queryKey: ["contratos-obra", id, tenant?.id],
     queryFn: async () => {
+      if (!tenant?.id) return [];
+
       const { data, error } = await supabase
         .from("contratos")
         .select(`
           *,
-          fornecedor:fornecedores(nome, cnpj)
+          fornecedor:fornecedores(nome, cnpj),
+          obra:obras!inner(tenant_id)
         `)
-        .eq("obra_id", id);
+        .eq("obra_id", id)
+        .eq("obra.tenant_id", tenant.id);
 
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id && !!tenant?.id,
   });
 
   const { data: medicoes } = useQuery({
-    queryKey: ["medicoes-obra", id],
+    queryKey: ["medicoes-obra", id, tenant?.id],
     queryFn: async () => {
+      if (!tenant?.id) return [];
+
       const { data, error } = await supabase
         .from("medicoes")
-        .select("*")
+        .select(`
+          *,
+          obra:obras!inner(tenant_id)
+        `)
         .eq("obra_id", id)
         .eq("status", "aprovado")
+        .eq("obra.tenant_id", tenant.id)
         .order("competencia", { ascending: false });
 
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id && !!tenant?.id,
   });
 
   const { data: documentos } = useQuery({
-    queryKey: ["documentos-obra", id],
+    queryKey: ["documentos-obra", id, tenant?.id],
     queryFn: async () => {
+      if (!tenant?.id) return [];
+
       const { data, error } = await supabase
         .from("documentos")
         .select("*")
         .eq("obra_id", id)
+        .eq("tenant_id", tenant.id)
         .in("tipo", ["projeto", "foto"])
         .order("created_at", { ascending: false });
 
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id && !!tenant?.id,
   });
 
   const contrato = contratos?.[0];
 
-  if (isLoading) {
+  if (tenantLoading || isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <PortalHeader />
@@ -102,7 +123,7 @@ export default function ObraPublica() {
     );
   }
 
-  if (!obra) {
+  if (!tenant || !obra) {
     return (
       <div className="min-h-screen bg-background">
         <PortalHeader />
@@ -110,9 +131,9 @@ export default function ObraPublica() {
           <div className="text-center space-y-4">
             <h2 className="text-2xl font-bold text-foreground">Obra não encontrada</h2>
             <p className="text-muted-foreground">
-              Esta obra não está disponível no portal de transparência.
+              Esta obra não está disponível no portal de transparência ou não pertence a este município.
             </p>
-            <Link to="/">
+            <Link to="/portal-publico">
               <Button>Voltar ao Portal</Button>
             </Link>
           </div>

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Obra } from "./useObras";
+import { useTenant } from "@/contexts/TenantContext";
 
 export interface FiltrosObras {
   bairro?: string;
@@ -12,14 +13,20 @@ export interface FiltrosObras {
 }
 
 // Hook para listar TODAS as obras públicas (com ou sem coordenadas)
-export const useObrasPublicas = (filtros: FiltrosObras) => {
+export const useObrasPublicas = (filtros: FiltrosObras, tenantId?: string) => {
   return useQuery({
-    queryKey: ["obras", "publicas", filtros],
+    queryKey: ["obras", "publicas", filtros, tenantId],
     queryFn: async () => {
+      if (!tenantId) {
+        console.error('❌ Tentativa de buscar obras sem tenant_id');
+        return [];
+      }
+
       let query = supabase
         .from("obras")
         .select("*")
-        .eq("publico_portal", true);
+        .eq("publico_portal", true)
+        .eq("tenant_id", tenantId);
 
       if (filtros.bairro) {
         query = query.eq("bairro", filtros.bairro);
@@ -49,14 +56,20 @@ export const useObrasPublicas = (filtros: FiltrosObras) => {
 };
 
 // Hook para obras públicas COM localização (usado pelo portal público)
-export const useObrasPublicasComLocalizacao = (filtros: FiltrosObras) => {
+export const useObrasPublicasComLocalizacao = (filtros: FiltrosObras, tenantId?: string) => {
   return useQuery({
-    queryKey: ["obras", "com-localizacao", filtros],
+    queryKey: ["obras", "com-localizacao", filtros, tenantId],
     queryFn: async () => {
+      if (!tenantId) {
+        console.error('❌ Tentativa de buscar obras com localização sem tenant_id');
+        return [];
+      }
+
       let query = supabase
         .from("obras")
         .select("*")
         .eq("publico_portal", true)
+        .eq("tenant_id", tenantId)
         .not("latitude", "is", null)
         .not("longitude", "is", null);
 
@@ -87,14 +100,20 @@ export const useObrasPublicasComLocalizacao = (filtros: FiltrosObras) => {
   });
 };
 
-export const useFiltrosDisponiveis = () => {
+export const useFiltrosDisponiveis = (tenantId?: string) => {
   return useQuery({
-    queryKey: ["obras", "filtros-disponiveis"],
+    queryKey: ["obras", "filtros-disponiveis", tenantId],
     queryFn: async () => {
+      if (!tenantId) {
+        console.error('❌ Tentativa de buscar filtros sem tenant_id');
+        return { bairros: [], cidades: [], status: [], tipos: [] };
+      }
+
       const { data, error } = await supabase
         .from("obras")
         .select("bairro, cidade, status, tipo_obra")
-        .eq("publico_portal", true);
+        .eq("publico_portal", true)
+        .eq("tenant_id", tenantId);
 
       if (error) throw error;
 
