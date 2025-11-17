@@ -123,6 +123,31 @@ export default function NovaObra() {
     }
   };
 
+  const tryNominatimGeocoding = async (endereco: string) => {
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(endereco)}&format=json&limit=1&countrycodes=br`;
+      
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'SistemaGestaoObras/1.0'
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (data.length > 0) {
+        return {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon)
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error("Erro ao buscar coordenadas via Nominatim:", error);
+      return null;
+    }
+  };
+
   const handleGeocodeAddress = async (customAddress?: string) => {
     const endereco = customAddress || form.getValues("endereco");
     
@@ -135,45 +160,42 @@ export default function NovaObra() {
     
     try {
       const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-      console.log("API Key existe:", !!apiKey);
       
-      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(endereco)}&key=${apiKey}`;
-      console.log("Buscando coordenadas para:", endereco);
-      
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        console.error("Erro HTTP:", response.status, response.statusText);
-        toast.error(`Erro HTTP ${response.status}: ${response.statusText}`);
-        return;
+      // Tentar Google Maps primeiro se a chave existir
+      if (apiKey) {
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+            endereco
+          )}&key=${apiKey}`
+        );
+        
+        const data = await response.json();
+        
+        if (data.status === "OK" && data.results.length > 0) {
+          const location = data.results[0].geometry.location;
+          form.setValue("latitude", location.lat.toString());
+          form.setValue("longitude", location.lng.toString());
+          toast.success("Coordenadas encontradas com sucesso!");
+          return;
+        } else if (data.status !== "REQUEST_DENIED") {
+          // Se não for REQUEST_DENIED, tentar Nominatim como fallback
+          console.log("Google Maps não retornou resultados, tentando Nominatim...");
+        }
       }
       
-      const data = await response.json();
-      console.log("Resposta da API:", data);
+      // Usar Nominatim como fallback (se Google Maps falhou ou não está configurado)
+      const nominatimResult = await tryNominatimGeocoding(endereco);
       
-      if (data.status === "OK" && data.results.length > 0) {
-        const location = data.results[0].geometry.location;
-        
-        form.setValue("latitude", location.lat.toString());
-        form.setValue("longitude", location.lng.toString());
-        
-        toast.success("Coordenadas encontradas com sucesso!");
-      } else if (data.status === "ZERO_RESULTS") {
-        toast.error("Endereço não encontrado. Verifique e tente novamente.");
-      } else if (data.status === "REQUEST_DENIED") {
-        console.error("Erro na API:", data.error_message);
-        toast.error(`API bloqueada: ${data.error_message || "Verifique a chave da API"}`);
-      } else if (data.status === "INVALID_REQUEST") {
-        toast.error("Requisição inválida. Verifique o endereço.");
-      } else if (data.status === "OVER_QUERY_LIMIT") {
-        toast.error("Limite de requisições excedido. Tente novamente mais tarde.");
+      if (nominatimResult) {
+        form.setValue("latitude", nominatimResult.lat.toString());
+        form.setValue("longitude", nominatimResult.lng.toString());
+        toast.success("Coordenadas encontradas com sucesso via OpenStreetMap!");
       } else {
-        console.error("Status desconhecido:", data.status);
-        toast.error(`Erro: ${data.status}. ${data.error_message || ""}`);
+        toast.error("Não foi possível encontrar as coordenadas para este endereço");
       }
     } catch (error) {
-      console.error("Erro na geocodificação:", error);
-      toast.error("Erro ao buscar coordenadas. Verifique sua conexão.");
+      console.error("Erro ao buscar coordenadas:", error);
+      toast.error("Erro ao buscar coordenadas. Tente novamente.");
     } finally {
       setIsGeocoding(false);
     }
