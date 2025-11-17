@@ -1,4 +1,11 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.81.1';
+import {
+  CAMPOS_OBRIGATORIOS_CONTRATO,
+  CAMPOS_OBRIGATORIOS_MEDICAO,
+  CAMPOS_OBRIGATORIOS_SITUACAO_OBRA,
+  type CampoObrigatorio,
+} from '../_shared/tce-schemas.ts';
+import { validarCPF, validarCNPJ, validarData, validarDataPosterior, limparCPFCNPJ } from '../_shared/utils.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,6 +28,107 @@ interface ResultadoValidacao {
   valido: boolean;
   erros: ErroValidacao[];
   avisos: ErroValidacao[];
+}
+
+/**
+ * Valida campos obrigatórios conforme schema TCE/SC
+ */
+function validarCamposObrigatorios(
+  dados: any,
+  campos: CampoObrigatorio[],
+  erros: ErroValidacao[]
+): void {
+  for (const campo of campos) {
+    const valor = getNestedValue(dados, campo.campo);
+    
+    // Verificar se existe
+    if (valor === null || valor === undefined || valor === '') {
+      erros.push({
+        campo: campo.campo,
+        mensagem: `${campo.nome} é obrigatório`,
+        nivel: 'erro',
+      });
+      continue;
+    }
+    
+    // Validar tipo
+    if (campo.tipo === 'string' && typeof valor !== 'string') {
+      erros.push({
+        campo: campo.campo,
+        mensagem: `${campo.nome} deve ser um texto`,
+        nivel: 'erro',
+      });
+      continue;
+    }
+    
+    if (campo.tipo === 'number' && typeof valor !== 'number') {
+      erros.push({
+        campo: campo.campo,
+        mensagem: `${campo.nome} deve ser um número`,
+        nivel: 'erro',
+      });
+      continue;
+    }
+    
+    // Validar tamanho de string
+    if (campo.tipo === 'string' && campo.maxLength && valor.length > campo.maxLength) {
+      erros.push({
+        campo: campo.campo,
+        mensagem: `${campo.nome} excede o tamanho máximo de ${campo.maxLength} caracteres`,
+        nivel: 'erro',
+      });
+    }
+    
+    if (campo.tipo === 'string' && campo.minLength && valor.length < campo.minLength) {
+      erros.push({
+        campo: campo.campo,
+        mensagem: `${campo.nome} deve ter no mínimo ${campo.minLength} caracteres`,
+        nivel: 'erro',
+      });
+    }
+    
+    // Validar pattern
+    if (campo.pattern && !campo.pattern.test(valor)) {
+      erros.push({
+        campo: campo.campo,
+        mensagem: `${campo.nome} não está no formato válido`,
+        nivel: 'erro',
+      });
+    }
+    
+    // Validar range numérico
+    if (campo.tipo === 'number' && campo.min !== undefined && valor < campo.min) {
+      erros.push({
+        campo: campo.campo,
+        mensagem: `${campo.nome} deve ser maior ou igual a ${campo.min}`,
+        nivel: 'erro',
+      });
+    }
+    
+    if (campo.tipo === 'number' && campo.max !== undefined && valor > campo.max) {
+      erros.push({
+        campo: campo.campo,
+        mensagem: `${campo.nome} deve ser menor ou igual a ${campo.max}`,
+        nivel: 'erro',
+      });
+    }
+    
+    // Validar data
+    if (campo.tipo === 'date' && !validarData(valor)) {
+      erros.push({
+        campo: campo.campo,
+        mensagem: `${campo.nome} não é uma data válida (formato esperado: YYYY-MM-DD)`,
+        nivel: 'erro',
+      });
+    }
+  }
+}
+
+/**
+ * Obtém valor aninhado de um objeto usando notação de ponto
+ */
+function getNestedValue(obj: any, path: string): any {
+  return path.split('.').reduce((current, prop) => current?.[prop], obj);
 }
 
 Deno.serve(async (req) => {

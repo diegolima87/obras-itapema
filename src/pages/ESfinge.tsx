@@ -102,21 +102,37 @@ export default function ESfinge() {
             </Card>
           </Link>
 
-          <Link to="/e-sfinge/importacao">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Importação Automática
-                </CardTitle>
-                <Download className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-xs text-muted-foreground">
-                  Monitorar importações do e-Sfinge
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
+            <Link to="/e-sfinge/configuracoes">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Configurações
+                  </CardTitle>
+                  <Settings className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <p className="text-xs text-muted-foreground">
+                    Gerenciar integrações automáticas
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link to="/e-sfinge/documentacao">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Documentação TCE/SC
+                  </CardTitle>
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <p className="text-xs text-muted-foreground">
+                    Layout oficial 2025 e especificações
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
 
           <Link to="/e-sfinge/logs">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
