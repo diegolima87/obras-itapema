@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -20,26 +21,41 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, Search, TrendingUp, CheckCircle, Clock } from "lucide-react";
-import { mockMedicoes, medicaoStatusColors, medicaoStatusLabels } from "@/lib/mockData";
+import { useMedicoes } from "@/hooks/useMedicoes";
 import { useNavigate } from "react-router-dom";
+
+const medicaoStatusColors = {
+  pendente: "bg-yellow-500",
+  analise: "bg-blue-500",
+  aprovado: "bg-green-500",
+  reprovado: "bg-red-500",
+};
+
+const medicaoStatusLabels = {
+  pendente: "Pendente",
+  analise: "Em Análise",
+  aprovado: "Aprovado",
+  reprovado: "Reprovado",
+};
 
 const Medicoes = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
+  const { data: medicoes, isLoading } = useMedicoes();
 
-  const filteredMedicoes = mockMedicoes.filter((medicao) => {
+  const filteredMedicoes = (medicoes || []).filter((medicao) => {
     const matchesSearch =
       medicao.numero_medicao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      medicao.etapa.toLowerCase().includes(searchTerm.toLowerCase());
+      (medicao.etapa || "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       statusFilter === "todos" || medicao.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const totalPendentes = mockMedicoes.filter((m) => m.status === "pendente").length;
-  const totalAprovadas = mockMedicoes.filter((m) => m.status === "aprovado").length;
-  const valorTotal = mockMedicoes.reduce((acc, m) => acc + m.valor_executado, 0);
+  const totalPendentes = (medicoes || []).filter((m) => m.status === "pendente").length;
+  const totalAprovadas = (medicoes || []).filter((m) => m.status === "aprovado").length;
+  const valorTotal = (medicoes || []).reduce((acc, m) => acc + (m.valor_executado || 0), 0);
 
   return (
     <MainLayout>
@@ -64,7 +80,11 @@ const Medicoes = () => {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{mockMedicoes.length}</div>
+              {isLoading ? (
+                <Skeleton className="h-8 w-12" />
+              ) : (
+                <div className="text-2xl font-bold">{medicoes?.length || 0}</div>
+              )}
             </CardContent>
           </Card>
           <Card>
@@ -73,7 +93,11 @@ const Medicoes = () => {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalPendentes}</div>
+              {isLoading ? (
+                <Skeleton className="h-8 w-12" />
+              ) : (
+                <div className="text-2xl font-bold">{totalPendentes}</div>
+              )}
             </CardContent>
           </Card>
           <Card>
@@ -82,7 +106,11 @@ const Medicoes = () => {
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalAprovadas}</div>
+              {isLoading ? (
+                <Skeleton className="h-8 w-12" />
+              ) : (
+                <div className="text-2xl font-bold">{totalAprovadas}</div>
+              )}
             </CardContent>
           </Card>
           <Card>
@@ -91,14 +119,18 @@ const Medicoes = () => {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {new Intl.NumberFormat("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                }).format(valorTotal)}
-              </div>
+              {isLoading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <div className="text-2xl font-bold">
+                  {new Intl.NumberFormat("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  }).format(valorTotal)}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -131,51 +163,67 @@ const Medicoes = () => {
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Número</TableHead>
-                    <TableHead className="hidden sm:table-cell">Etapa</TableHead>
-                    <TableHead className="hidden md:table-cell">% Executado</TableHead>
-                    <TableHead>Valor</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredMedicoes.map((medicao) => (
-                    <TableRow key={medicao.id}>
-                      <TableCell className="font-medium">
-                        {medicao.numero_medicao}
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        {medicao.etapa}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {medicao.percentual_executado}%
-                      </TableCell>
-                      <TableCell>
-                        {new Intl.NumberFormat("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 0,
-                        }).format(medicao.valor_executado)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={medicaoStatusColors[medicao.status as keyof typeof medicaoStatusColors]}>
-                          {medicaoStatusLabels[medicao.status as keyof typeof medicaoStatusLabels]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">
-                          Ver Detalhes
-                        </Button>
-                      </TableCell>
+              {isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                </div>
+              ) : filteredMedicoes.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Nenhuma medição encontrada
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Número</TableHead>
+                      <TableHead className="hidden sm:table-cell">Etapa</TableHead>
+                      <TableHead className="hidden md:table-cell">% Executado</TableHead>
+                      <TableHead>Valor</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredMedicoes.map((medicao) => (
+                      <TableRow key={medicao.id}>
+                        <TableCell className="font-medium">
+                          {medicao.numero_medicao}
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          {medicao.etapa || "-"}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {medicao.percentual_executado || 0}%
+                        </TableCell>
+                        <TableCell>
+                          {new Intl.NumberFormat("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0,
+                          }).format(medicao.valor_executado || 0)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={medicaoStatusColors[medicao.status as keyof typeof medicaoStatusColors]}>
+                            {medicaoStatusLabels[medicao.status as keyof typeof medicaoStatusLabels]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => navigate(`/medicoes/${medicao.id}`)}
+                          >
+                            Ver Detalhes
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </div>
           </CardContent>
         </Card>

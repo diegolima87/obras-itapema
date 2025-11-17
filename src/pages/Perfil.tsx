@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,22 +6,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { User, Mail, Phone, Building2, Shield, Key } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useUserProfile, useUpdateProfile } from "@/hooks/useUserProfile";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Perfil() {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const { data: userProfile, isLoading } = useUserProfile();
+  const updateProfile = useUpdateProfile();
 
-  // Dados do usuário (mock)
   const [userData, setUserData] = useState({
-    nome: "João Silva",
-    email: "joao.silva@prefeitura.gov.br",
-    telefone: "(48) 99999-9999",
-    cargo: "Engenheiro Civil",
-    unidade: "Secretaria de Obras",
-    perfil: "Administrador",
+    nome: "",
+    telefone: "",
+    crea: "",
   });
+
+  useEffect(() => {
+    if (userProfile?.profile) {
+      setUserData({
+        nome: userProfile.profile.nome || "",
+        telefone: userProfile.profile.telefone || "",
+        crea: userProfile.profile.crea || "",
+      });
+    }
+  }, [userProfile]);
 
   const [senhaData, setSenhaData] = useState({
     senhaAtual: "",
@@ -31,15 +41,7 @@ export default function Perfil() {
 
   const handleSalvarPerfil = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    
-    setTimeout(() => {
-      toast({
-        title: "Perfil atualizado!",
-        description: "Suas informações foram salvas com sucesso",
-      });
-      setLoading(false);
-    }, 1000);
+    updateProfile.mutate(userData);
   };
 
   const handleAlterarSenha = async (e: React.FormEvent) => {
@@ -63,15 +65,25 @@ export default function Perfil() {
       return;
     }
 
-    setLoading(true);
-    setTimeout(() => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: senhaData.novaSenha
+      });
+
+      if (error) throw error;
+
       toast({
         title: "Senha alterada!",
         description: "Sua senha foi atualizada com sucesso",
       });
       setSenhaData({ senhaAtual: "", novaSenha: "", confirmarSenha: "" });
-      setLoading(false);
-    }, 1000);
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -234,8 +246,8 @@ export default function Perfil() {
                     />
                   </div>
 
-                  <Button type="submit" disabled={loading}>
-                    {loading ? "Alterando..." : "Alterar Senha"}
+                  <Button type="submit" disabled={updateProfile.isPending}>
+                    {updateProfile.isPending ? "Alterar Senha" : "Alterar Senha"}
                   </Button>
                 </form>
               </CardContent>

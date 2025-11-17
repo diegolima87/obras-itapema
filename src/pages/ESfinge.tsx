@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   FileSpreadsheet, 
   Send, 
@@ -13,44 +14,25 @@ import {
   Clock,
   Download
 } from "lucide-react";
+import { useIntegracoesTCE } from "@/hooks/useIntegracoesTCE";
 
 export default function ESfinge() {
-  const ultimosEnvios = [
-    {
-      id: 1,
-      tipo: "Obras",
-      data: "2024-01-15 14:30",
-      status: "sucesso",
-      registros: 45
-    },
-    {
-      id: 2,
-      tipo: "Contratos",
-      data: "2024-01-15 10:15",
-      status: "sucesso",
-      registros: 23
-    },
-    {
-      id: 3,
-      tipo: "Medições",
-      data: "2024-01-14 16:20",
-      status: "erro",
-      registros: 12,
-      erro: "Campos obrigatórios ausentes"
-    },
-    {
-      id: 4,
-      tipo: "Fornecedores",
-      data: "2024-01-14 09:00",
-      status: "pendente",
-      registros: 8
-    }
-  ];
+  const { data: integracoes, isLoading } = useIntegracoesTCE();
+  
+  // Pega apenas os últimos 4 envios
+  const ultimosEnvios = (integracoes || []).slice(0, 4);
 
   const statusConfig = {
     sucesso: { color: "bg-green-500", icon: CheckCircle2, label: "Sucesso" },
     erro: { color: "bg-red-500", icon: AlertCircle, label: "Erro" },
     pendente: { color: "bg-yellow-500", icon: Clock, label: "Pendente" }
+  };
+
+  const stats = {
+    total: integracoes?.length || 0,
+    sucesso: integracoes?.filter(i => i.status === 'sucesso').length || 0,
+    erro: integracoes?.filter(i => i.status === 'erro').length || 0,
+    pendente: integracoes?.filter(i => i.status === 'pendente').length || 0,
   };
 
   return (

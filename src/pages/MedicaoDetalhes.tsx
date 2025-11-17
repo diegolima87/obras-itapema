@@ -3,6 +3,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,46 +23,23 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DocumentoUpload } from "@/components/documentos/DocumentoUpload";
 import { DocumentoLista } from "@/components/documentos/DocumentoLista";
+import { useMedicao } from "@/hooks/useMedicoes";
+import { useAprovarMedicao, useReprovarMedicao } from "@/hooks/useMedicao";
+import { useMedicoesItens } from "@/hooks/useMedicoesItens";
 
 export default function MedicaoDetalhes() {
   const { id } = useParams();
   const { toast } = useToast();
   const [parecer, setParecer] = useState("");
-
-  // Mock data
-  const medicao = {
-    id: id,
-    numero: "001/2025",
-    obra: "Construção de Ponte sobre o Rio Verde",
-    fornecedor: "Construtora ABC Ltda",
-    periodo_inicio: "2025-01-01",
-    periodo_fim: "2025-01-31",
-    valor: 500000,
-    percentual: 20,
-    status: "pendente",
-    observacoes: "Primeira medição do projeto conforme cronograma previsto",
-    data_envio: "2025-02-05",
-  };
-
-  const itens = [
-    { id: 1, descricao: "Terraplanagem", quantidade: 1000, unidade: "m³", valor_unitario: 50, valor_total: 50000 },
-    { id: 2, descricao: "Fundações", quantidade: 50, unidade: "m³", valor_unitario: 800, valor_total: 40000 },
-    { id: 3, descricao: "Estrutura de Concreto", quantidade: 200, unidade: "m³", valor_unitario: 1200, valor_total: 240000 },
-    { id: 4, descricao: "Forma e Escoramento", quantidade: 1500, unidade: "m²", valor_unitario: 45, valor_total: 67500 },
-    { id: 5, descricao: "Armação de Aço", quantidade: 15, unidade: "ton", valor_unitario: 6700, valor_total: 100500 },
-  ];
-
-  const fotos = [
-    { id: 1, titulo: "Vista Geral da Obra", data: "2025-01-15" },
-    { id: 2, titulo: "Terraplanagem Concluída", data: "2025-01-20" },
-    { id: 3, titulo: "Início das Fundações", data: "2025-01-28" },
-  ];
+  
+  const { data: medicao, isLoading } = useMedicao(id);
+  const { data: itens, isLoading: loadingItens } = useMedicoesItens(id);
+  const aprovarMedicao = useAprovarMedicao();
+  const reprovarMedicao = useReprovarMedicao();
 
   const handleAprovar = () => {
-    toast({
-      title: "Medição aprovada!",
-      description: "A medição foi aprovada com sucesso",
-    });
+    if (!id) return;
+    aprovarMedicao.mutate(id);
   };
 
   const handleReprovar = () => {
@@ -73,12 +51,36 @@ export default function MedicaoDetalhes() {
       });
       return;
     }
-    toast({
-      title: "Medição reprovada",
-      description: "O fornecedor será notificado sobre a reprovação",
-      variant: "destructive",
-    });
+    if (!id) return;
+    reprovarMedicao.mutate({ medicaoId: id, motivo: parecer });
   };
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="space-y-6">
+          <Skeleton className="h-12 w-96" />
+          <div className="grid gap-4">
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (!medicao) {
+    return (
+      <MainLayout>
+        <div className="flex flex-col items-center justify-center h-96">
+          <p className="text-muted-foreground">Medição não encontrada</p>
+          <Link to="/medicoes">
+            <Button variant="outline" className="mt-4">Voltar</Button>
+          </Link>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -92,12 +94,12 @@ export default function MedicaoDetalhes() {
             </Link>
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold">Medição {medicao.numero}</h1>
+                <h1 className="text-3xl font-bold">Medição {medicao.numero_medicao}</h1>
                 <Badge variant={medicao.status === "pendente" ? "secondary" : medicao.status === "aprovado" ? "default" : "destructive"}>
                   {medicao.status === "pendente" ? "Pendente" : medicao.status === "aprovado" ? "Aprovada" : "Reprovada"}
                 </Badge>
               </div>
-              <p className="text-muted-foreground">{medicao.obra}</p>
+              <p className="text-muted-foreground">{medicao.obras?.nome || "-"}</p>
             </div>
           </div>
           {medicao.status === "pendente" && (
@@ -179,7 +181,7 @@ export default function MedicaoDetalhes() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <Label className="text-muted-foreground">Número da Medição</Label>
-                    <p className="font-medium">{medicao.numero}</p>
+                    <p className="font-medium">{medicao.numero_medicao}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Status</Label>

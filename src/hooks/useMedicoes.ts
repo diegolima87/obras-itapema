@@ -85,6 +85,47 @@ export const useMedicoes = (filters?: {
   });
 };
 
+export const useMedicao = (id: string | undefined) => {
+  const { data: currentTenant } = useQuery({
+    queryKey: ['currentUserTenant'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .single();
+      
+      return profile;
+    },
+  });
+  
+  return useQuery({
+    queryKey: ["medicoes", id, currentTenant?.tenant_id],
+    queryFn: async () => {
+      if (!id || !currentTenant?.tenant_id) return null;
+      
+      const { data, error } = await supabase
+        .from("medicoes")
+        .select(`
+          *,
+          obras (id, nome),
+          contratos (id, numero),
+          fornecedores (id, nome, cnpj)
+        `)
+        .eq("id", id)
+        .eq("tenant_id", currentTenant.tenant_id)
+        .single();
+
+      if (error) throw error;
+      return data as Medicao;
+    },
+    enabled: !!id && !!currentTenant?.tenant_id,
+  });
+};
+
 export const useCriarMedicao = () => {
   const queryClient = useQueryClient();
 
