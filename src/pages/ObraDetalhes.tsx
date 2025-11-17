@@ -186,7 +186,40 @@ export default function ObraDetalhes() {
             </Card>
 
             {obra.latitude && obra.longitude && (
-              <MapaObraIndividual obra={obra} />
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Localização da Obra</CardTitle>
+                    {obra.coordenadas_fonte === 'cidade_aproximada' || 
+                     obra.coordenadas_fonte === 'desconhecida' ? (
+                      <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        Coordenadas Aproximadas
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
+                        <MapPin className="h-3 w-3 mr-1" />
+                        Coordenadas Precisas
+                      </Badge>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {(obra.coordenadas_fonte === 'cidade_aproximada' || 
+                    obra.coordenadas_fonte === 'desconhecida') && (
+                    <Alert className="mb-4 bg-yellow-50 border-yellow-300">
+                      <AlertCircle className="h-4 w-4 text-yellow-600" />
+                      <AlertDescription className="text-yellow-800">
+                        As coordenadas atuais são aproximadas (centro da cidade). 
+                        <Link to={`/obras/${id}/editar#localizacao`} className="font-semibold underline ml-1">
+                          Clique aqui para ajustar a localização exata
+                        </Link>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  <MapaObraIndividual obra={obra} />
+                </CardContent>
+              </Card>
             )}
 
             {obra.descricao && (

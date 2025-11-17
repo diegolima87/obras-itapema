@@ -121,11 +121,31 @@ async function tryNominatimGeocoding(
     const data = await response.json();
 
     if (data.length > 0) {
-      console.log(`✅ Coordenadas encontradas via Nominatim para: "${endereco}"`);
+      const result = data[0];
+      
+      // Detectar se é um resultado genérico (apenas cidade)
+      const isGenericCity = 
+        result.type === 'city' || 
+        result.type === 'town' ||
+        result.type === 'municipality' ||
+        result.type === 'administrative' ||
+        !result.address?.road; // Sem nome de rua = coordenadas genéricas
+      
+      console.log('Nominatim result:', {
+        lat: result.lat,
+        lon: result.lon,
+        displayName: result.display_name,
+        type: result.type,
+        address: result.address,
+        isGenericCity
+      });
+      
+      const source = isGenericCity ? 'cidade_aproximada' : 'nominatim';
+      console.log(`✅ Coordenadas encontradas via Nominatim para: "${endereco}" (${source})`);
       return {
-        lat: parseFloat(data[0].lat),
-        lng: parseFloat(data[0].lon),
-        source: 'nominatim',
+        lat: parseFloat(result.lat),
+        lng: parseFloat(result.lon),
+        source,
         query: endereco
       };
     }
