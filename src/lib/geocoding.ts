@@ -60,7 +60,7 @@ const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
 export interface GeocodingResult {
   lat: number;
   lng: number;
-  source: 'google' | 'nominatim' | 'city-approximate';
+  source: 'google' | 'nominatim' | 'cidade_aproximada';
   query?: string;
 }
 
@@ -199,7 +199,7 @@ function getCityCoordinates(
     console.log(`📍 Usando coordenadas aproximadas da cidade: ${key}`);
     return {
       ...coords,
-      source: 'city-approximate',
+      source: 'cidade_aproximada',
       query: key
     };
   }

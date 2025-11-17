@@ -16,6 +16,7 @@ import { tiposObra } from "@/lib/constants";
 import { toast } from "sonner";
 import { formatCurrencyInput, parseCurrency } from "@/lib/utils";
 import { geocodeAddress, fetchAddressByCep, GeocodingResult } from "@/lib/geocoding";
+import { MapaSelecaoLocalizacao } from "@/components/obra/MapaSelecaoLocalizacao";
 
 export default function EditarObra() {
   const { id } = useParams();
@@ -26,6 +27,8 @@ export default function EditarObra() {
   const [isFetchingCep, setIsFetchingCep] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [valorDisplay, setValorDisplay] = useState("R$ 0,00");
+  const [geocodingSource, setGeocodingSource] = useState<'google' | 'nominatim' | 'cidade_aproximada' | 'manual' | 'desconhecida'>('desconhecida');
+  const [showMapSelection, setShowMapSelection] = useState(false);
 
   const [formData, setFormData] = useState({
     nome: "",
@@ -105,13 +108,14 @@ export default function EditarObra() {
           latitude: result.lat.toString(),
           longitude: result.lng.toString()
         }));
+        setGeocodingSource(result.source);
         
         // Mensagem personalizada baseada na fonte
         if (result.source === 'google') {
           toast.success("✅ Coordenadas encontradas via Google Maps!");
         } else if (result.source === 'nominatim') {
           toast.success("✅ Coordenadas encontradas via OpenStreetMap!");
-        } else if (result.source === 'city-approximate') {
+        } else if (result.source === 'cidade_aproximada') {
           toast.warning("📍 Coordenadas aproximadas do centro da cidade. Ajuste manualmente se necessário.");
         }
       } else {
@@ -123,6 +127,15 @@ export default function EditarObra() {
     } finally {
       setIsGeocoding(false);
     }
+  };
+
+  const handleLocationSelect = (lat: number, lng: number) => {
+    setFormData(prev => ({
+      ...prev,
+      latitude: lat.toString(),
+      longitude: lng.toString()
+    }));
+    setGeocodingSource('manual');
   };
 
   const handleFetchCep = async () => {
@@ -181,6 +194,7 @@ export default function EditarObra() {
       uf: formData.uf,
       latitude: formData.latitude ? parseFloat(formData.latitude) : null,
       longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+      coordenadas_fonte: geocodingSource,
       valor_total: formData.valor_total,
       percentual_executado: formData.percentual_executado,
       data_inicio: formData.data_inicio,
@@ -462,9 +476,19 @@ export default function EditarObra() {
                   {isGeocoding ? "Buscando coordenadas..." : "Buscar Coordenadas Automaticamente"}
                 </Button>
                 
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setShowMapSelection(true)}
+                  className="w-full"
+                >
+                  <MapPin className="mr-2 h-4 w-4" />
+                  Selecionar no Mapa
+                </Button>
+                
                 <p className="text-xs text-muted-foreground">
                   💡 Preencha o endereço completo e clique para buscar as coordenadas automaticamente.
-                  Você também pode inserir as coordenadas manualmente.
+                  Você também pode inserir as coordenadas manualmente ou selecionar no mapa.
                 </p>
               </div>
 
@@ -545,6 +569,14 @@ export default function EditarObra() {
           </Card>
         </form>
       </div>
+      
+      <MapaSelecaoLocalizacao
+        open={showMapSelection}
+        onOpenChange={setShowMapSelection}
+        initialLat={parseFloat(formData.latitude || "-15.7801")}
+        initialLng={parseFloat(formData.longitude || "-47.9292")}
+        onLocationSelect={handleLocationSelect}
+      />
     </MainLayout>
   );
 }

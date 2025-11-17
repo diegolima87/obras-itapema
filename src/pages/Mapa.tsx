@@ -52,7 +52,7 @@ const Mapa = () => {
     }
   }, [obras]);
 
-  const getMarkerIcon = useCallback((status: string) => {
+  const getMarkerIcon = useCallback((status: string, coordenadasFonte?: string) => {
     if (!isMapLoaded) return undefined;
     
     let color = "#3b82f6"; // andamento - blue
@@ -60,10 +60,14 @@ const Mapa = () => {
     if (status === "paralisada") color = "#ef4444"; // red
     if (status === "planejada") color = "#6b7280"; // gray
 
+    const isApproximate = coordenadasFonte === 'cidade_aproximada' || coordenadasFonte === 'desconhecida';
+    const opacity = isApproximate ? '0.6' : '1';
+
     // Create a custom SVG marker icon
     const svg = `
       <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="16" cy="16" r="12" fill="${color}" stroke="#ffffff" stroke-width="3"/>
+        <circle cx="16" cy="16" r="12" fill="${color}" stroke="#ffffff" stroke-width="3" opacity="${opacity}"/>
+        ${isApproximate ? '<text x="16" y="20" text-anchor="middle" fill="white" font-size="16" font-weight="bold">?</text>' : ''}
       </svg>
     `;
     
@@ -162,6 +166,11 @@ const Mapa = () => {
                         <h3 className="font-bold text-lg mb-2">{selectedObra.nome}</h3>
                         {selectedObra.descricao && (
                           <p className="text-sm text-gray-600 mb-2">{selectedObra.descricao}</p>
+                        )}
+                        {((selectedObra as any).coordenadas_fonte === 'cidade_aproximada' || (selectedObra as any).coordenadas_fonte === 'desconhecida') && (
+                          <div className="mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+                            ⚠️ Coordenadas aproximadas
+                          </div>
                         )}
                         <div className="space-y-1 mb-3">
                           <p className="text-sm">
