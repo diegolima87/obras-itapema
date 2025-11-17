@@ -2,10 +2,12 @@
  * Serviço de Geocodificação Robusto
  * 
  * Implementa uma estratégia em cascata para busca de coordenadas:
- * 1. Google Maps API (se configurada)
+ * 1. Supabase Edge Function (Google Maps server-side)
  * 2. OpenStreetMap Nominatim (múltiplas tentativas)
  * 3. Coordenadas aproximadas da cidade
  */
+
+import { supabase } from "@/integrations/supabase/client";
 
 // Dicionário de coordenadas das principais cidades brasileiras
 const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
@@ -60,8 +62,45 @@ const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
 export interface GeocodingResult {
   lat: number;
   lng: number;
-  source: 'google' | 'nominatim' | 'cidade_aproximada';
+  source: 'google' | 'nominatim' | 'cidade_aproximada' | 'google_maps' | 'manual';
   query?: string;
+}
+
+/**
+ * Tenta geocodificar usando Supabase Edge Function (Google Maps server-side)
+ */
+async function trySupabaseGeocoding(
+  endereco: string,
+  bairro?: string,
+  cidade?: string,
+  uf?: string,
+  cep?: string
+): Promise<GeocodingResult | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke('geocode-address', {
+      body: { endereco, bairro, cidade, uf, cep }
+    });
+    
+    if (error) {
+      console.error('❌ Supabase geocoding error:', error);
+      return null;
+    }
+    
+    if (data && data.latitude && data.longitude) {
+      console.log('✅ Coordenadas encontradas via Supabase (Google Maps server-side)');
+      return {
+        lat: data.latitude,
+        lng: data.longitude,
+        source: 'google',
+        query: data.query
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('❌ Error calling Supabase geocoding function:', error);
+    return null;
+  }
 }
 
 /**
@@ -238,57 +277,26 @@ export async function geocodeAddress(params: {
   cep?: string;
   googleApiKey?: string;
 }): Promise<GeocodingResult | null> {
-  const { endereco, bairro, cidade, uf, cep, googleApiKey } = params;
+  const { endereco, bairro, cidade, uf, cep } = params;
 
-  console.log('🗺️ Iniciando geocodificação:', { endereco, bairro, cidade, uf, cep, hasGoogleKey: !!googleApiKey });
+  console.log('🗺️ Iniciando geocodificação:', { endereco, bairro, cidade, uf, cep });
 
-  // PRIORITY 1: Try CEP-based geocoding first (most reliable for Brazil)
-  if (cep && cep.replace(/\D/g, '').length === 8) {
-    console.log('📍 Tentativa 1: Geocodificação baseada em CEP');
-    
-    // Try with full address from CEP
-    const cepQuery = `${endereco}, ${bairro}, ${cidade} - ${uf}, ${cep}`;
-    
-    // Try Google with CEP
-    if (googleApiKey) {
-      console.log('  🔍 Google Maps com CEP completo');
-      const googleWithCep = await tryGoogleMapsGeocoding(cepQuery, googleApiKey);
-      if (googleWithCep) {
-        console.log('✅ Sucesso com Google Maps + CEP!', googleWithCep);
-        return googleWithCep;
-      }
-    }
-    
-    // Try Nominatim with CEP
-    console.log('  🔍 Nominatim com CEP completo');
-    const nominatimWithCep = await tryNominatimGeocoding(cepQuery);
-    if (nominatimWithCep && nominatimWithCep.source !== 'cidade_aproximada') {
-      console.log('✅ Sucesso com Nominatim + CEP!', nominatimWithCep);
-      return nominatimWithCep;
-    }
+  // Estratégia 1: Tentar Supabase Edge Function (Google Maps server-side)
+  console.log('🔍 Estratégia 1: Tentando Supabase (Google Maps server-side)...');
+  const supabaseResult = await trySupabaseGeocoding(endereco, bairro, cidade, uf, cep);
+  if (supabaseResult) {
+    return supabaseResult;
   }
 
-  // PRIORITY 2: Try Google Maps with full address
-  if (googleApiKey) {
-    console.log('📍 Tentativa 2: Google Maps Geocoding API');
-    const fullAddress = `${endereco}, ${bairro}, ${cidade} - ${uf}`;
-    const googleResult = await tryGoogleMapsGeocoding(fullAddress, googleApiKey);
-    if (googleResult) {
-      console.log('✅ Sucesso com Google Maps!', googleResult);
-      return googleResult;
-    }
-  }
-
-  // PRIORITY 3: Try Nominatim with multiple query strategies
-  console.log('📍 Tentativa 3: OpenStreetMap Nominatim (múltiplas tentativas)');
+  // Estratégia 2: Tentar Nominatim com múltiplas queries
+  console.log('🔍 Estratégia 2: Tentando OpenStreetMap Nominatim...');
   const nominatimResult = await tryNominatimWithMultipleQueries(endereco, bairro, cidade, uf);
-  if (nominatimResult && nominatimResult.source !== 'cidade_aproximada') {
-    console.log('✅ Sucesso com Nominatim!', nominatimResult);
+  if (nominatimResult) {
     return nominatimResult;
   }
 
-  // PRIORITY 4: Fallback to approximate city coordinates
-  console.log('📍 Tentativa 4: Coordenadas aproximadas da cidade');
+  // Estratégia 3: Fallback para coordenadas aproximadas da cidade
+  console.log('⚠️ Estratégia 3: Usando coordenadas aproximadas da cidade');
   const cityResult = getCityCoordinates(cidade, uf);
   if (cityResult) {
     console.log('⚠️ Usando coordenadas aproximadas do centro da cidade', cityResult);

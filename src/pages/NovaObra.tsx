@@ -58,7 +58,7 @@ export default function NovaObra() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [isFetchingCep, setIsFetchingCep] = useState(false);
-  const [geocodingSource, setGeocodingSource] = useState<'google' | 'nominatim' | 'cidade_aproximada' | 'manual' | 'desconhecida'>('desconhecida');
+  const [geocodingSource, setGeocodingSource] = useState<'google' | 'nominatim' | 'cidade_aproximada' | 'manual' | 'desconhecida' | 'google_maps'>('desconhecida');
   const [showMapModal, setShowMapModal] = useState(false);
   const { data: engenheiros, isLoading: loadingEngenheiros } = useEngenheiros();
   const { tenant } = useTenant();

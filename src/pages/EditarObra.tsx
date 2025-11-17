@@ -28,7 +28,7 @@ export default function EditarObra() {
   const [isFetchingCep, setIsFetchingCep] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [valorDisplay, setValorDisplay] = useState("R$ 0,00");
-  const [geocodingSource, setGeocodingSource] = useState<'google' | 'nominatim' | 'cidade_aproximada' | 'manual' | 'desconhecida'>('desconhecida');
+  const [geocodingSource, setGeocodingSource] = useState<'google' | 'nominatim' | 'cidade_aproximada' | 'manual' | 'desconhecida' | 'google_maps'>('desconhecida');
   const [showMapSelection, setShowMapSelection] = useState(false);
 
   const [formData, setFormData] = useState({

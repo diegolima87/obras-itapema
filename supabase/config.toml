@@ -1,5 +1,8 @@
 project_id = "xazlcbykmummjteoojvf"
 
+[functions.geocode-address]
+verify_jwt = false
+
 [functions.enviar-tce]
 verify_jwt = true
 
