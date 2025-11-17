@@ -17,10 +17,15 @@ import {
   ArrowRight
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 
 export default function ESfingeMapeamento() {
   const { toast } = useToast();
   const [alteracoesPendentes, setAlteracoesPendentes] = useState(false);
+  const [validacaoAutomatica, setValidacaoAutomatica] = useState(true);
+  const [transformarMaiusculas, setTransformarMaiusculas] = useState(false);
+  const [permitirCamposVazios, setPermitirCamposVazios] = useState(false);
 
   const mapeamentoObras = [
     { 
@@ -206,10 +211,72 @@ export default function ESfingeMapeamento() {
                       Configuração de campos para exportação de obras
                     </CardDescription>
                   </div>
-                  <Button variant="outline" size="sm">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Configurações Avançadas
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Configurações Avançadas
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[500px]">
+                      <DialogHeader>
+                        <DialogTitle>Configurações Avançadas - Obras</DialogTitle>
+                        <DialogDescription>
+                          Configure opções avançadas de validação e transformação de dados
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-6 py-4">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label>Validação Automática</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Validar dados antes de exportar
+                            </p>
+                          </div>
+                          <Switch 
+                            checked={validacaoAutomatica} 
+                            onCheckedChange={setValidacaoAutomatica}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label>Transformar em Maiúsculas</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Converter textos para MAIÚSCULAS
+                            </p>
+                          </div>
+                          <Switch 
+                            checked={transformarMaiusculas} 
+                            onCheckedChange={setTransformarMaiusculas}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label>Permitir Campos Vazios</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Permitir exportação com campos não obrigatórios vazios
+                            </p>
+                          </div>
+                          <Switch 
+                            checked={permitirCamposVazios} 
+                            onCheckedChange={setPermitirCamposVazios}
+                          />
+                        </div>
+                        <Button 
+                          onClick={() => {
+                            toast({
+                              title: "Configurações salvas",
+                              description: "As configurações avançadas foram atualizadas",
+                            });
+                          }}
+                          className="w-full"
+                        >
+                          <Save className="mr-2 h-4 w-4" />
+                          Salvar Configurações
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </CardHeader>
               <CardContent>
