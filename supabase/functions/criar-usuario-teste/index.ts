@@ -64,8 +64,9 @@ Deno.serve(async (req) => {
       },
     )
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       {
         headers: { 'Content-Type': 'application/json' },
         status: 400,
