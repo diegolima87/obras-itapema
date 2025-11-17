@@ -1,5 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export interface Obra {
   id: string;
@@ -67,6 +68,28 @@ export const useObrasComLocalizacao = () => {
 
       if (error) throw error;
       return data as Obra[];
+    },
+  });
+};
+
+export const useDeletarObra = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("obras")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["obras"] });
+      toast.success("Obra excluída com sucesso");
+    },
+    onError: (error: any) => {
+      toast.error("Erro ao excluir obra: " + error.message);
     },
   });
 };

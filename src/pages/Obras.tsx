@@ -6,19 +6,45 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Plus, Search, Eye, AlertCircle } from "lucide-react";
-import { statusColors, statusLabels } from "@/lib/mockData";
-import { Link } from "react-router-dom";
-import { useObras } from "@/hooks/useObras";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Plus, Search, Eye, AlertCircle, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { statusColors, statusLabels } from "@/lib/constants";
+import { Link, useNavigate } from "react-router-dom";
+import { useObras, useDeletarObra } from "@/hooks/useObras";
 
 export default function Obras() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [obraToDelete, setObraToDelete] = useState<string | null>(null);
   const { data: obras, isLoading, error } = useObras();
+  const deletarObra = useDeletarObra();
 
   const obrasFiltradas = obras?.filter((obra) =>
     obra.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     obra.descricao?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleDelete = async () => {
+    if (obraToDelete) {
+      await deletarObra.mutateAsync(obraToDelete);
+      setObraToDelete(null);
+    }
+  };
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -79,11 +105,39 @@ export default function Obras() {
             {obrasFiltradas?.map((obra) => (
               <Card key={obra.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg">{obra.nome}</CardTitle>
-                    <Badge className={statusColors[obra.status as keyof typeof statusColors]}>
-                      {statusLabels[obra.status as keyof typeof statusLabels]}
-                    </Badge>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">{obra.nome}</CardTitle>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className={statusColors[obra.status as keyof typeof statusColors]}>
+                        {statusLabels[obra.status as keyof typeof statusLabels]}
+                      </Badge>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => navigate(`/obras/${obra.id}`)}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            Ver Detalhes
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate(`/obras/${obra.id}/editar`)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => setObraToDelete(obra.id)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -111,17 +165,32 @@ export default function Obras() {
                       </div>
                     )}
                   </div>
-                  <Link to={`/obras/${obra.id}`}>
-                    <Button className="w-full" variant="outline">
-                      <Eye className="mr-2 h-4 w-4" />
-                      Ver Detalhes
-                    </Button>
-                  </Link>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
+
+        <AlertDialog open={!!obraToDelete} onOpenChange={() => setObraToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir esta obra? Esta ação não pode ser desfeita.
+                Todos os dados relacionados (contratos, medições, documentos) também serão excluídos.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </MainLayout>
   );
