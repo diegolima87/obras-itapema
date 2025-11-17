@@ -3,42 +3,47 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowLeft, Edit, FileText, Plus, Download } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Label } from "@/components/ui/label";
 import { DocumentoUpload } from "@/components/documentos/DocumentoUpload";
 import { DocumentoLista } from "@/components/documentos/DocumentoLista";
+import { useContrato } from "@/hooks/useContratos";
+import { useAditivos } from "@/hooks/useAditivos";
 
 export default function ContratoDetalhes() {
   const { id } = useParams();
+  const { data: contrato, isLoading } = useContrato(id);
+  const { data: aditivos, isLoading: loadingAditivos } = useAditivos(id);
 
-  // Mock data
-  const contrato = {
-    id: id,
-    numero: "001/2025",
-    modalidade: "Pregão Eletrônico",
-    fornecedor: "Construtora ABC Ltda",
-    cnpj: "12.345.678/0001-90",
-    objeto: "Construção de Ponte sobre o Rio Verde",
-    valor: 2500000,
-    valor_executado: 1250000,
-    data_inicio: "2025-01-15",
-    data_termino: "2025-12-31",
-    status: "ativo",
-  };
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="space-y-6">
+          <Skeleton className="h-12 w-96" />
+          <div className="grid gap-4 md:grid-cols-2">
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
-  const aditivos = [
-    { id: 1, numero: "001/2025", tipo: "Prazo", data: "2025-06-15", valor: 0, novo_prazo: "2026-03-31" },
-    { id: 2, numero: "002/2025", tipo: "Valor", data: "2025-08-20", valor: 500000, novo_prazo: null },
-  ];
-
-  const cronograma = [
-    { id: 1, parcela: "1ª Parcela", previsao: "2025-03-31", valor: 500000, percentual: 20, pago: true },
-    { id: 2, parcela: "2ª Parcela", previsao: "2025-06-30", valor: 625000, percentual: 25, pago: true },
-    { id: 3, parcela: "3ª Parcela", previsao: "2025-09-30", valor: 750000, percentual: 30, pago: false },
-    { id: 4, parcela: "4ª Parcela", previsao: "2025-12-31", valor: 625000, percentual: 25, pago: false },
-  ];
+  if (!contrato) {
+    return (
+      <MainLayout>
+        <div className="flex flex-col items-center justify-center h-96">
+          <p className="text-muted-foreground">Contrato não encontrado</p>
+          <Link to="/contratos">
+            <Button variant="outline" className="mt-4">Voltar</Button>
+          </Link>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -53,8 +58,8 @@ export default function ContratoDetalhes() {
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-3xl font-bold">Contrato {contrato.numero}</h1>
-                <Badge variant={contrato.status === "ativo" ? "default" : "secondary"}>
-                  {contrato.status === "ativo" ? "Ativo" : "Encerrado"}
+                <Badge variant={contrato.ativo ? "default" : "secondary"}>
+                  {contrato.ativo ? "Ativo" : "Encerrado"}
                 </Badge>
               </div>
               <p className="text-muted-foreground">{contrato.objeto}</p>
