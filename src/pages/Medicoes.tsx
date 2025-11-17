@@ -21,8 +21,10 @@ import {
 } from "@/components/ui/table";
 import { Plus, Search, TrendingUp, CheckCircle, Clock } from "lucide-react";
 import { mockMedicoes, medicaoStatusColors, medicaoStatusLabels } from "@/lib/mockData";
+import { useNavigate } from "react-router-dom";
 
 const Medicoes = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
 
@@ -49,7 +51,7 @@ const Medicoes = () => {
               Acompanhamento de medições físico-financeiras
             </p>
           </div>
-          <Button className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto" onClick={() => navigate('/medicoes/nova')}>
             <Plus className="mr-2 h-4 w-4" />
             Nova Medição
           </Button>
