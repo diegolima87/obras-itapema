@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 interface MiniMapPreviewProps {
   latitude?: number;
   longitude?: number;
-  source?: 'google' | 'nominatim' | 'cidade_aproximada' | 'manual' | 'desconhecida';
+  source?: 'google' | 'nominatim' | 'cidade_aproximada' | 'manual' | 'desconhecida' | 'google_maps';
   endereco?: string;
 }
 
