@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Save, Upload } from "lucide-react";
+import { ArrowLeft, Save, Upload, MapPin, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,6 +47,7 @@ const formSchema = z.object({
 export default function NovaObra() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeocoding, setIsGeocoding] = useState(false);
   const { data: engenheiros, isLoading: loadingEngenheiros } = useEngenheiros();
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -65,6 +66,43 @@ export default function NovaObra() {
       longitude: "",
     },
   });
+
+  const handleGeocodeAddress = async () => {
+    const endereco = form.getValues("endereco");
+    
+    if (!endereco || endereco.trim().length < 5) {
+      toast.error("Informe um endereço válido antes de buscar coordenadas");
+      return;
+    }
+    
+    setIsGeocoding(true);
+    
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(endereco)}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`
+      );
+      
+      const data = await response.json();
+      
+      if (data.status === "OK" && data.results.length > 0) {
+        const location = data.results[0].geometry.location;
+        
+        form.setValue("latitude", location.lat.toString());
+        form.setValue("longitude", location.lng.toString());
+        
+        toast.success("Coordenadas encontradas com sucesso!");
+      } else if (data.status === "ZERO_RESULTS") {
+        toast.error("Endereço não encontrado. Verifique e tente novamente.");
+      } else {
+        toast.error("Erro ao buscar coordenadas. Tente novamente.");
+      }
+    } catch (error) {
+      console.error("Erro na geocodificação:", error);
+      toast.error("Erro ao buscar coordenadas. Verifique sua conexão.");
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
@@ -309,9 +347,24 @@ export default function NovaObra() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Endereço Completo *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Rua, número, bairro, cidade" {...field} />
-                      </FormControl>
+                      <div className="flex gap-2">
+                        <FormControl>
+                          <Input placeholder="Rua, número, bairro, cidade" {...field} />
+                        </FormControl>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleGeocodeAddress}
+                          disabled={isGeocoding || !field.value || field.value.trim().length < 5}
+                        >
+                          {isGeocoding ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <MapPin className="h-4 w-4" />
+                          )}
+                          <span className="ml-2">Buscar Coordenadas</span>
+                        </Button>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -325,9 +378,14 @@ export default function NovaObra() {
                       <FormItem>
                         <FormLabel>Latitude</FormLabel>
                         <FormControl>
-                          <Input placeholder="-27.5954" {...field} />
+                          <Input 
+                            placeholder="-27.5954" 
+                            {...field}
+                            readOnly
+                            className="bg-muted"
+                          />
                         </FormControl>
-                        <FormDescription>Opcional: para marcação no mapa</FormDescription>
+                        <FormDescription>Preenchido automaticamente</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -340,9 +398,14 @@ export default function NovaObra() {
                       <FormItem>
                         <FormLabel>Longitude</FormLabel>
                         <FormControl>
-                          <Input placeholder="-48.5480" {...field} />
+                          <Input 
+                            placeholder="-48.5480" 
+                            {...field}
+                            readOnly
+                            className="bg-muted"
+                          />
                         </FormControl>
-                        <FormDescription>Opcional: para marcação no mapa</FormDescription>
+                        <FormDescription>Preenchido automaticamente</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
