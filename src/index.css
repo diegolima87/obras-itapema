@@ -160,4 +160,19 @@ All colors MUST be HSL.
   .shadow-glow {
     box-shadow: 0 0 30px -5px hsla(224, 64%, 26%, 0.3);
   }
+
+  /* Sidebar Custom Styles */
+  .sidebar-item-active {
+    background: white;
+    color: #132A72;
+    box-shadow: 
+      0 4px 6px -1px rgba(19, 42, 114, 0.1),
+      0 2px 4px -1px rgba(19, 42, 114, 0.06),
+      inset 0 2px 4px 0 rgba(19, 42, 114, 0.05);
+    border-left: 4px solid #60a5fa;
+  }
+
+  .sidebar-glow {
+    filter: drop-shadow(0 0 8px rgba(96, 165, 250, 0.4));
+  }
 }
