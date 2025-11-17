@@ -821,6 +821,7 @@ export type Database = {
         Row: {
           bairro: string | null
           cidade: string | null
+          coordenadas_fonte: string | null
           created_at: string | null
           data_fim_prevista: string | null
           data_fim_real: string | null
@@ -846,6 +847,7 @@ export type Database = {
         Insert: {
           bairro?: string | null
           cidade?: string | null
+          coordenadas_fonte?: string | null
           created_at?: string | null
           data_fim_prevista?: string | null
           data_fim_real?: string | null
@@ -871,6 +873,7 @@ export type Database = {
         Update: {
           bairro?: string | null
           cidade?: string | null
+          coordenadas_fonte?: string | null
           created_at?: string | null
           data_fim_prevista?: string | null
           data_fim_real?: string | null

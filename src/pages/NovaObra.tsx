@@ -32,6 +32,7 @@ import { useEngenheiros } from "@/hooks/useEngenheiros";
 import { formatCurrencyInput, parseCurrency } from "@/lib/utils";
 import { useTenant } from "@/contexts/TenantContext";
 import { geocodeAddress, fetchAddressByCep, GeocodingResult } from "@/lib/geocoding";
+import { MapaSelecaoLocalizacao } from "@/components/obra/MapaSelecaoLocalizacao";
 
 const formSchema = z.object({
   nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
@@ -116,6 +117,9 @@ export default function NovaObra() {
     }
   };
 
+  const [geocodingSource, setGeocodingSource] = useState<'google' | 'nominatim' | 'cidade_aproximada' | 'manual' | 'desconhecida'>('desconhecida');
+  const [showMapSelection, setShowMapSelection] = useState(false);
+
   const handleGeocodeAddress = async () => {
     const endereco = form.getValues("endereco");
     const bairro = form.getValues("bairro");
@@ -143,13 +147,14 @@ export default function NovaObra() {
       if (result) {
         form.setValue("latitude", result.lat.toString());
         form.setValue("longitude", result.lng.toString());
+        setGeocodingSource(result.source);
         
         // Mensagem personalizada baseada na fonte
         if (result.source === 'google') {
           toast.success("✅ Coordenadas encontradas via Google Maps!");
         } else if (result.source === 'nominatim') {
           toast.success("✅ Coordenadas encontradas via OpenStreetMap!");
-        } else if (result.source === 'city-approximate') {
+        } else if (result.source === 'cidade_aproximada') {
           toast.warning("📍 Coordenadas aproximadas do centro da cidade. Ajuste manualmente se necessário.");
         }
       } else {
@@ -161,6 +166,12 @@ export default function NovaObra() {
     } finally {
       setIsGeocoding(false);
     }
+  };
+
+  const handleLocationSelect = (lat: number, lng: number) => {
+    form.setValue("latitude", lat.toString());
+    form.setValue("longitude", lng.toString());
+    setGeocodingSource('manual');
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -192,6 +203,7 @@ export default function NovaObra() {
           uf: values.uf,
           latitude: values.latitude ? parseFloat(values.latitude) : null,
           longitude: values.longitude ? parseFloat(values.longitude) : null,
+          coordenadas_fonte: geocodingSource,
           status: "planejada",
           publico_portal: false,
           tenant_id: tenant.id, // ✅ INCLUIR TENANT_ID
@@ -559,9 +571,19 @@ export default function NovaObra() {
                     {isGeocoding ? "Buscando coordenadas..." : "Buscar Coordenadas Automaticamente"}
                   </Button>
                   
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setShowMapSelection(true)}
+                    className="w-full"
+                  >
+                    <MapPin className="mr-2 h-4 w-4" />
+                    Selecionar no Mapa
+                  </Button>
+                  
                   <p className="text-xs text-muted-foreground">
                     💡 Preencha o endereço completo e clique para buscar as coordenadas automaticamente.
-                    Você também pode inserir as coordenadas manualmente.
+                    Você também pode inserir as coordenadas manualmente ou selecionar no mapa.
                   </p>
                 </div>
               </CardContent>
@@ -606,6 +628,14 @@ export default function NovaObra() {
           </form>
         </Form>
       </div>
+      
+      <MapaSelecaoLocalizacao
+        open={showMapSelection}
+        onOpenChange={setShowMapSelection}
+        initialLat={parseFloat(form.getValues("latitude") || "-15.7801")}
+        initialLng={parseFloat(form.getValues("longitude") || "-47.9292")}
+        onLocationSelect={handleLocationSelect}
+      />
     </MainLayout>
   );
 }

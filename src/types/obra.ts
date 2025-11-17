@@ -15,6 +15,7 @@ export interface Obra {
   longitude?: number;
   tipo_obra?: string;
   publico_portal?: boolean;
+  coordenadas_fonte?: 'google' | 'nominatim' | 'cidade_aproximada' | 'manual' | 'desconhecida';
 }
 
 export interface ItemObra {
