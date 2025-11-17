@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { TenantProvider } from "@/contexts/TenantContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { RoleProtectedRoute } from "@/components/auth/RoleProtectedRoute";
+import { FeatureProtectedRoute } from "@/components/auth/FeatureProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import RecuperarSenha from "./pages/RecuperarSenha";
@@ -50,6 +51,7 @@ import IntegracaoTCE from "./pages/IntegracaoTCE";
 import Mapa from "./pages/Mapa";
 import NotFound from "./pages/NotFound";
 import NovoFornecedor from "./pages/NovoFornecedor";
+import GerenciarFeatures from "./pages/GerenciarFeatures";
 
 const queryClient = new QueryClient();
 
@@ -103,15 +105,18 @@ const App = () => (
           <Route path="/relatorios" element={<RoleProtectedRoute allowedRoles={['admin', 'gestor', 'fiscal']}><Relatorios /></RoleProtectedRoute>} />
           <Route path="/auditoria" element={<RoleProtectedRoute allowedRoles={['admin']}><LogAuditoria /></RoleProtectedRoute>} />
           
-          {/* e-Sfinge Integration - Role Protected */}
-          <Route path="/e-sfinge" element={<RoleProtectedRoute allowedRoles={['admin', 'gestor']}><ESfinge /></RoleProtectedRoute>} />
-          <Route path="/e-sfinge/exportacao" element={<RoleProtectedRoute allowedRoles={['admin', 'gestor']}><ESfingeExportacao /></RoleProtectedRoute>} />
-          <Route path="/e-sfinge/envio" element={<RoleProtectedRoute allowedRoles={['admin', 'gestor']}><ESfingeEnvio /></RoleProtectedRoute>} />
-          <Route path="/e-sfinge/logs" element={<RoleProtectedRoute allowedRoles={['admin', 'gestor']}><HistoricoTCE /></RoleProtectedRoute>} />
-          <Route path="/e-sfinge/mapeamento" element={<RoleProtectedRoute allowedRoles={['admin', 'gestor']}><ESfingeMapeamento /></RoleProtectedRoute>} />
-          <Route path="/e-sfinge/importacao" element={<RoleProtectedRoute allowedRoles={['admin', 'gestor']}><ESfingeImportacao /></RoleProtectedRoute>} />
-          <Route path="/e-sfinge/configuracoes" element={<RoleProtectedRoute allowedRoles={['admin', 'gestor']}><ESfingeConfiguracoes /></RoleProtectedRoute>} />
-          <Route path="/e-sfinge/documentacao" element={<RoleProtectedRoute allowedRoles={['admin', 'gestor']}><ESfingeDocumentacao /></RoleProtectedRoute>} />
+          {/* e-Sfinge Integration - Feature Protected */}
+          <Route path="/e-sfinge" element={<FeatureProtectedRoute feature="esfinge" allowedRoles={['admin', 'gestor']} featureName="e-Sfinge"><ESfinge /></FeatureProtectedRoute>} />
+          <Route path="/e-sfinge/exportacao" element={<FeatureProtectedRoute feature="esfinge" allowedRoles={['admin', 'gestor']} featureName="e-Sfinge"><ESfingeExportacao /></FeatureProtectedRoute>} />
+          <Route path="/e-sfinge/envio" element={<FeatureProtectedRoute feature="esfinge" allowedRoles={['admin', 'gestor']} featureName="e-Sfinge"><ESfingeEnvio /></FeatureProtectedRoute>} />
+          <Route path="/e-sfinge/logs" element={<FeatureProtectedRoute feature="esfinge" allowedRoles={['admin', 'gestor']} featureName="e-Sfinge"><HistoricoTCE /></FeatureProtectedRoute>} />
+          <Route path="/e-sfinge/mapeamento" element={<FeatureProtectedRoute feature="esfinge" allowedRoles={['admin', 'gestor']} featureName="e-Sfinge"><ESfingeMapeamento /></FeatureProtectedRoute>} />
+          <Route path="/e-sfinge/importacao" element={<FeatureProtectedRoute feature="esfinge" allowedRoles={['admin', 'gestor']} featureName="e-Sfinge"><ESfingeImportacao /></FeatureProtectedRoute>} />
+          <Route path="/e-sfinge/configuracoes" element={<FeatureProtectedRoute feature="esfinge" allowedRoles={['admin', 'gestor']} featureName="e-Sfinge"><ESfingeConfiguracoes /></FeatureProtectedRoute>} />
+          <Route path="/e-sfinge/documentacao" element={<FeatureProtectedRoute feature="esfinge" allowedRoles={['admin', 'gestor']} featureName="e-Sfinge"><ESfingeDocumentacao /></FeatureProtectedRoute>} />
+          
+          {/* Super Admin - Feature Management */}
+          <Route path="/admin/features" element={<RoleProtectedRoute allowedRoles={['super_admin']}><GerenciarFeatures /></RoleProtectedRoute>} />
           
           {/* Fornecedor Portal Routes */}
           <Route path="/fornecedor/login" element={<LoginFornecedor />} />

@@ -1024,6 +1024,50 @@ export type Database = {
           },
         ]
       }
+      tenant_features: {
+        Row: {
+          created_at: string | null
+          data_habilitacao: string | null
+          feature: Database["public"]["Enums"]["feature_type"]
+          habilitado: boolean
+          habilitado_por: string | null
+          id: string
+          observacoes: string | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_habilitacao?: string | null
+          feature: Database["public"]["Enums"]["feature_type"]
+          habilitado?: boolean
+          habilitado_por?: string | null
+          id?: string
+          observacoes?: string | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_habilitacao?: string | null
+          feature?: Database["public"]["Enums"]["feature_type"]
+          habilitado?: boolean
+          habilitado_por?: string | null
+          id?: string
+          observacoes?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_features_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenants: {
         Row: {
           ativo: boolean | null
@@ -1157,6 +1201,7 @@ export type Database = {
         | "fornecedor"
         | "cidadao"
         | "super_admin"
+      feature_type: "esfinge" | "portal_publico" | "integracao_tce"
       plano_tenant: "basico" | "premium" | "enterprise"
       status_esfinge: "pendente" | "processando" | "enviado" | "erro"
       status_medicao: "pendente" | "analise" | "aprovado" | "reprovado"
@@ -1304,6 +1349,7 @@ export const Constants = {
         "cidadao",
         "super_admin",
       ],
+      feature_type: ["esfinge", "portal_publico", "integracao_tce"],
       plano_tenant: ["basico", "premium", "enterprise"],
       status_esfinge: ["pendente", "processando", "enviado", "erro"],
       status_medicao: ["pendente", "analise", "aprovado", "reprovado"],
