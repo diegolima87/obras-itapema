@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrencyInput, parseCurrency } from "@/lib/utils";
 
 export default function NovoContrato() {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ export default function NovoContrato() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [valorDisplay, setValorDisplay] = useState("R$ 0,00");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,11 +112,14 @@ export default function NovoContrato() {
                   <Label htmlFor="valor">Valor do Contrato (R$) *</Label>
                   <Input
                     id="valor"
-                    type="number"
-                    step="0.01"
-                    placeholder="0,00"
-                    value={formData.valor}
-                    onChange={(e) => setFormData({ ...formData, valor: parseFloat(e.target.value) })}
+                    type="text"
+                    placeholder="R$ 0,00"
+                    value={valorDisplay}
+                    onChange={(e) => {
+                      const formatted = formatCurrencyInput(e.target.value);
+                      setValorDisplay(formatted);
+                      setFormData({ ...formData, valor: parseCurrency(formatted) });
+                    }}
                     required
                   />
                 </div>
