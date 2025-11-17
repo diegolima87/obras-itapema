@@ -49,7 +49,35 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
   const loadTenant = async () => {
     try {
-      // Identificar tenant pelo hostname
+      // PRIMEIRO: Verificar se há um usuário logado e carregar seu tenant
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        // Buscar o tenant_id do profile do usuário
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('tenant_id')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile?.tenant_id) {
+          // Carregar o tenant do usuário
+          const { data: tenantData } = await supabase
+            .from('tenants')
+            .select('*')
+            .eq('id', profile.tenant_id)
+            .single();
+          
+          if (tenantData) {
+            setTenant(tenantData);
+            applyTenantStyles(tenantData);
+            setLoading(false);
+            return;
+          }
+        }
+      }
+      
+      // FALLBACK: Se não houver usuário logado, usar lógica de hostname
       const hostname = window.location.hostname;
       
       let tenantSlug = '';
@@ -172,6 +200,15 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     loadTenant();
+    
+    // Listener para mudanças de autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      loadTenant();
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const refetchTenant = async () => {
