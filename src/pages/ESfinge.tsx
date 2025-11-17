@@ -50,12 +50,27 @@ export default function ESfinge() {
     pendente: { color: "bg-yellow-500", icon: Clock, label: "Pendente" }
   };
 
+  // Calcula estatísticas reais
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  
+  const enviosHoje = integracoes?.filter(i => {
+    const dataEnvio = new Date(i.created_at);
+    dataEnvio.setHours(0, 0, 0, 0);
+    return dataEnvio.getTime() === hoje.getTime();
+  }).length || 0;
+
   const stats = {
     total: integracoes?.length || 0,
     sucesso: integracoes?.filter(i => i.status === 'sucesso').length || 0,
     erro: integracoes?.filter(i => i.status === 'erro').length || 0,
     pendente: integracoes?.filter(i => i.status === 'pendente').length || 0,
+    enviosHoje,
   };
+
+  const taxaSucesso = stats.total > 0 
+    ? ((stats.sucesso / stats.total) * 100).toFixed(1)
+    : '0.0';
 
   return (
     <MainLayout>
@@ -249,9 +264,9 @@ export default function ESfinge() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">12</div>
+              <div className="text-2xl font-bold">{stats.enviosHoje}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                +3 comparado a ontem
+                {stats.enviosHoje === 1 ? '1 envio realizado' : `${stats.enviosHoje} envios realizados`}
               </p>
             </CardContent>
           </Card>
@@ -263,9 +278,9 @@ export default function ESfinge() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">91.7%</div>
+              <div className="text-2xl font-bold text-green-600">{taxaSucesso}%</div>
               <p className="text-xs text-muted-foreground mt-1">
-                11 de 12 envios
+                {stats.sucesso} de {stats.total} {stats.total === 1 ? 'envio' : 'envios'}
               </p>
             </CardContent>
           </Card>
@@ -277,9 +292,9 @@ export default function ESfinge() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">8</div>
+              <div className="text-2xl font-bold text-yellow-600">{stats.pendente}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                Aguardando validação
+                Aguardando envio
               </p>
             </CardContent>
           </Card>
