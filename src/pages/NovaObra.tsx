@@ -30,6 +30,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { useEngenheiros } from "@/hooks/useEngenheiros";
 import { formatCurrencyInput, parseCurrency } from "@/lib/utils";
+import { useTenant } from "@/contexts/TenantContext";
 
 const formSchema = z.object({
   nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
@@ -55,6 +56,7 @@ export default function NovaObra() {
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [isFetchingCep, setIsFetchingCep] = useState(false);
   const { data: engenheiros, isLoading: loadingEngenheiros } = useEngenheiros();
+  const { tenant } = useTenant();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -205,6 +207,12 @@ export default function NovaObra() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     
+    if (!tenant?.id) {
+      toast.error("Erro: Tenant não identificado. Faça login novamente.");
+      setIsSubmitting(false);
+      return;
+    }
+    
     try {
       const { data, error } = await supabase
         .from("obras")
@@ -226,7 +234,8 @@ export default function NovaObra() {
           latitude: values.latitude ? parseFloat(values.latitude) : null,
           longitude: values.longitude ? parseFloat(values.longitude) : null,
           status: "planejada",
-          publico_portal: false, // Por padrão não é público
+          publico_portal: false,
+          tenant_id: tenant.id, // ✅ INCLUIR TENANT_ID
         })
         .select()
         .single();

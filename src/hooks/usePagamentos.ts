@@ -29,13 +29,25 @@ export const usePagamentos = (filters?: { status?: string }) => {
   return useQuery({
     queryKey: ["pagamentos", filters],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (!profile?.tenant_id) return [];
+      
       let query = supabase
         .from("pagamentos")
         .select(`
           *,
           medicoes (id, numero_medicao),
           fornecedores (id, nome)
-        `);
+        `)
+        .eq("tenant_id", profile.tenant_id);
 
       if (filters?.status) {
         query = query.eq("status", filters.status);

@@ -20,12 +20,24 @@ export const useAditivos = (contratoId: string | undefined) => {
   return useQuery({
     queryKey: ["aditivos", contratoId],
     queryFn: async () => {
-      if (!contratoId) throw new Error("ID do contrato não fornecido");
+      if (!contratoId) return [];
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (!profile?.tenant_id) return [];
       
       const { data, error } = await supabase
         .from("aditivos")
         .select("*")
         .eq("contrato_id", contratoId)
+        .eq("tenant_id", profile.tenant_id)
         .order("data_assinatura", { ascending: false });
 
       if (error) throw error;

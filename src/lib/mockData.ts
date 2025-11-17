@@ -1,3 +1,16 @@
+/**
+ * ⚠️⚠️⚠️ ATENÇÃO: DADOS MOCKADOS - NÃO USAR EM PRODUÇÃO ⚠️⚠️⚠️
+ * 
+ * Estes dados são apenas para demonstração e testes de UI durante desenvolvimento.
+ * 
+ * ❌ NUNCA use dados mockados em produção
+ * ❌ NUNCA use mockData nos componentes reais
+ * ✅ SEMPRE use os hooks apropriados (useObras, useContratos, useMedicoes, etc)
+ * 
+ * Os hooks já implementam isolamento por tenant automaticamente.
+ * Para mais informações, consulte: docs/MULTI_TENANCY.md
+ */
+
 export const mockObras = [
   {
     id: "1",

@@ -32,7 +32,21 @@ export const useDocumentos = (params: UseDocumentosParams) => {
   return useQuery({
     queryKey: ["documentos", params],
     queryFn: async () => {
-      let query = supabase.from("documentos").select("*");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (!profile?.tenant_id) return [];
+      
+      let query = supabase
+        .from("documentos")
+        .select("*")
+        .eq("tenant_id", profile.tenant_id);
 
       if (obraId) query = query.eq("obra_id", obraId);
       if (contratoId) query = query.eq("contrato_id", contratoId);
