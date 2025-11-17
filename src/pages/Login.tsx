@@ -16,7 +16,7 @@ export default function Login() {
   const [activeTab, setActiveTab] = useState("login");
   const navigate = useNavigate();
   const { signIn, signUp, user } = useAuth();
-  const { tenant } = useTenant();
+  const { tenant, loading: tenantLoading } = useTenant();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -58,9 +58,22 @@ export default function Login() {
     }
   };
 
+  if (tenantLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-secondary p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-12 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Carregando...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-secondary p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4">
+      <Card className="w-full max-w-md shadow-xl border-primary/20">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             {tenant?.logo_url ? (
