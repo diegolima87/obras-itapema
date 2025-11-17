@@ -69,7 +69,7 @@ export default function ESfinge() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <Link to="/e-sfinge/exportacao">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -97,6 +97,22 @@ export default function ESfinge() {
               <CardContent>
                 <p className="text-xs text-muted-foreground">
                   Enviar dados manualmente ao TCE/SC
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/e-sfinge/importacao">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Importação Automática
+                </CardTitle>
+                <Download className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground">
+                  Monitorar importações do e-Sfinge
                 </p>
               </CardContent>
             </Card>

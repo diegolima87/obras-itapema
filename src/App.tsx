@@ -36,6 +36,7 @@ import ESfingeExportacao from "./pages/ESfingeExportacao";
 import ESfingeEnvio from "./pages/ESfingeEnvio";
 import ESfingeLogs from "./pages/ESfingeLogs";
 import ESfingeMapeamento from "./pages/ESfingeMapeamento";
+import ESfingeImportacao from "./pages/ESfingeImportacao";
 import HistoricoTCE from "./pages/HistoricoTCE";
 import LoginFornecedor from "./pages/fornecedor/LoginFornecedor";
 import DashboardFornecedor from "./pages/fornecedor/DashboardFornecedor";
@@ -105,6 +106,7 @@ const App = () => (
           <Route path="/e-sfinge/envio" element={<ProtectedRoute><ESfingeEnvio /></ProtectedRoute>} />
           <Route path="/e-sfinge/logs" element={<ProtectedRoute><HistoricoTCE /></ProtectedRoute>} />
           <Route path="/e-sfinge/mapeamento" element={<ProtectedRoute><ESfingeMapeamento /></ProtectedRoute>} />
+          <Route path="/e-sfinge/importacao" element={<ProtectedRoute><ESfingeImportacao /></ProtectedRoute>} />
           
           {/* Fornecedor Portal Routes */}
           <Route path="/fornecedor/login" element={<LoginFornecedor />} />
