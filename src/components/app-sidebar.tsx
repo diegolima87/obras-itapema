@@ -59,9 +59,9 @@ export function AppSidebar() {
       collapsible="icon"
       className="border-r-0"
     >
-      <SidebarContent className="bg-gradient-to-b from-[#132A72] to-[#142050] shadow-2xl">
+      <SidebarContent className="bg-gradient-to-b from-primary to-primary-dark shadow-2xl">
         {/* Sidebar Header */}
-        <div className="px-6 py-6 bg-[#142050]/50 border-b border-white/10">
+        <div className="px-6 py-6 bg-primary-dark/50 border-b border-white/10">
           <div className="flex items-center gap-3">
             {tenant?.logo_url ? (
               <div className="bg-white/10 p-2 rounded-lg">
@@ -100,11 +100,11 @@ export function AppSidebar() {
                   >
                     <NavLink 
                       to={item.url}
-                      className="py-3.5 px-4 rounded-xl transition-all duration-300 text-white/80 hover:bg-white/10 hover:text-white hover:scale-[1.02] data-[active=true]:bg-white data-[active=true]:text-[#132A72] data-[active=true]:font-bold data-[active=true]:scale-[1.03] data-[active=true]:border-l-4 data-[active=true]:border-blue-400 data-[active=true]:shadow-lg"
+                      className="py-3.5 px-4 rounded-xl transition-all duration-300 text-white/80 hover:bg-white/10 hover:text-white hover:scale-[1.02] data-[active=true]:bg-white data-[active=true]:text-primary data-[active=true]:font-bold data-[active=true]:scale-[1.03] data-[active=true]:border-l-4 data-[active=true]:border-accent data-[active=true]:shadow-lg"
                       activeClassName="sidebar-item-active"
                     >
                       <item.icon 
-                        className="h-5 w-5 transition-all duration-300 group-hover:text-white group-data-[active=true]:text-[#132A72] group-data-[active=true]:sidebar-glow" 
+                        className="h-5 w-5 transition-all duration-300 group-hover:text-white group-data-[active=true]:text-primary group-data-[active=true]:sidebar-glow" 
                         strokeWidth={2.5}
                       />
                       <span className="transition-all duration-300">{item.title}</span>
@@ -133,11 +133,11 @@ export function AppSidebar() {
                   >
                     <NavLink 
                       to={item.url}
-                      className="py-3.5 px-4 rounded-xl transition-all duration-300 text-white/80 hover:bg-white/10 hover:text-white hover:scale-[1.02] data-[active=true]:bg-white data-[active=true]:text-[#132A72] data-[active=true]:font-bold data-[active=true]:scale-[1.03] data-[active=true]:border-l-4 data-[active=true]:border-blue-400 data-[active=true]:shadow-lg"
+                      className="py-3.5 px-4 rounded-xl transition-all duration-300 text-white/80 hover:bg-white/10 hover:text-white hover:scale-[1.02] data-[active=true]:bg-white data-[active=true]:text-primary data-[active=true]:font-bold data-[active=true]:scale-[1.03] data-[active=true]:border-l-4 data-[active=true]:border-accent data-[active=true]:shadow-lg"
                       activeClassName="sidebar-item-active"
                     >
                       <item.icon 
-                        className="h-5 w-5 transition-all duration-300 group-hover:text-white group-data-[active=true]:text-[#132A72] group-data-[active=true]:sidebar-glow" 
+                        className="h-5 w-5 transition-all duration-300 group-hover:text-white group-data-[active=true]:text-primary group-data-[active=true]:sidebar-glow" 
                         strokeWidth={2.5}
                       />
                       <span className="transition-all duration-300">{item.title}</span>
