@@ -33,8 +33,38 @@ export const useObras = () => {
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        // Detect JWT/authentication errors
+        if (error.message.includes('JWT') || error.message.includes('expired')) {
+          // Try to refresh session
+          const { data: { session } } = await supabase.auth.refreshSession();
+          
+          if (!session) {
+            // If refresh fails, force logout
+            await supabase.auth.signOut();
+            throw new Error('Sessão expirada. Faça login novamente.');
+          }
+          
+          // Retry with new token
+          const { data: retryData, error: retryError } = await supabase
+            .from("obras")
+            .select("*")
+            .order("created_at", { ascending: false });
+          
+          if (retryError) throw retryError;
+          return retryData as Obra[];
+        }
+        
+        throw error;
+      }
       return data as Obra[];
+    },
+    retry: (failureCount, error: any) => {
+      // Don't retry for authentication errors
+      if (error?.message?.includes('JWT') || error?.message?.includes('expired')) {
+        return false;
+      }
+      return failureCount < 3;
     },
   });
 };
