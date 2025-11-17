@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useTenant } from "@/contexts/TenantContext";
 
 import {
   Sidebar,
@@ -47,6 +48,7 @@ const adminItems = [
 
 export function AppSidebar() {
   const { open } = useSidebar();
+  const { tenant } = useTenant();
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -61,9 +63,21 @@ export function AppSidebar() {
         {/* Sidebar Header */}
         <div className="px-6 py-6 bg-[#142050]/50 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <HardHat className="h-8 w-8 text-white" strokeWidth={2.5} />
+            {tenant?.logo_url ? (
+              <div className="bg-white/10 p-2 rounded-lg">
+                <img 
+                  src={tenant.logo_url} 
+                  alt="Logo" 
+                  className="h-8 w-8 object-contain"
+                />
+              </div>
+            ) : (
+              <HardHat className="h-8 w-8 text-white" strokeWidth={2.5} />
+            )}
             <div className={open ? "block" : "hidden"}>
-              <h2 className="text-white font-bold text-lg">Gestão de Obras</h2>
+              <h2 className="text-white font-bold text-lg">
+                {tenant?.nome_sistema || "Gestão de Obras"}
+              </h2>
               <p className="text-white/60 text-xs">Sistema Integrado</p>
             </div>
           </div>
