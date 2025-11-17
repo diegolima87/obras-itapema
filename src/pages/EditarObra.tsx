@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, AlertCircle } from "lucide-react";
+import { ArrowLeft, Save, AlertCircle, Loader2, MapPin } from "lucide-react";
 import { useObra, useAtualizarObra } from "@/hooks/useObras";
 import { useEngenheiros } from "@/hooks/useEngenheiros";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { tiposObra } from "@/lib/constants";
+import { toast } from "sonner";
 
 export default function EditarObra() {
   const { id } = useParams();
@@ -20,6 +21,8 @@ export default function EditarObra() {
   const { data: obra, isLoading, error } = useObra(id);
   const { data: engenheiros } = useEngenheiros();
   const atualizarObra = useAtualizarObra();
+  const [isFetchingCep, setIsFetchingCep] = useState(false);
+  const [isGeocoding, setIsGeocoding] = useState(false);
 
   const [formData, setFormData] = useState({
     nome: "",
@@ -27,7 +30,13 @@ export default function EditarObra() {
     tipo_obra: "",
     status: "",
     unidade_gestora: "",
+    cep: "",
     endereco: "",
+    bairro: "",
+    cidade: "",
+    uf: "",
+    latitude: "",
+    longitude: "",
     valor_total: 0,
     percentual_executado: 0,
     data_inicio: "",
@@ -44,7 +53,13 @@ export default function EditarObra() {
         tipo_obra: obra.tipo_obra || "",
         status: obra.status || "",
         unidade_gestora: obra.unidade_gestora || "",
+        cep: "",
         endereco: obra.endereco || "",
+        bairro: (obra as any).bairro || "",
+        cidade: (obra as any).cidade || "",
+        uf: (obra as any).uf || "",
+        latitude: obra.latitude?.toString() || "",
+        longitude: obra.longitude?.toString() || "",
         valor_total: obra.valor_total || 0,
         percentual_executado: obra.percentual_executado || 0,
         data_inicio: obra.data_inicio || "",
@@ -55,14 +70,162 @@ export default function EditarObra() {
     }
   }, [obra]);
 
+  const tryNominatimGeocoding = async (endereco: string) => {
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(endereco)}&format=json&limit=1&countrycodes=br`;
+      
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'SistemaGestaoObras/1.0'
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (data.length > 0) {
+        return {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon)
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error("Erro ao buscar coordenadas via Nominatim:", error);
+      return null;
+    }
+  };
+
+  const handleGeocodeAddress = async (customAddress?: string) => {
+    const endereco = customAddress || formData.endereco;
+    
+    if (!endereco || endereco.trim().length < 5) {
+      toast.error("Informe um endereço válido antes de buscar coordenadas");
+      return;
+    }
+    
+    setIsGeocoding(true);
+    
+    try {
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+      
+      // Tentar Google Maps primeiro se a chave existir
+      if (apiKey) {
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+            endereco
+          )}&key=${apiKey}`
+        );
+        
+        const data = await response.json();
+        
+        if (data.status === "OK" && data.results.length > 0) {
+          const location = data.results[0].geometry.location;
+          setFormData((prev) => ({
+            ...prev,
+            latitude: location.lat.toString(),
+            longitude: location.lng.toString(),
+          }));
+          toast.success("Coordenadas encontradas com sucesso!");
+          return;
+        } else if (data.status !== "REQUEST_DENIED") {
+          console.log("Google Maps não retornou resultados, tentando Nominatim...");
+        }
+      }
+      
+      // Usar Nominatim como fallback
+      const nominatimResult = await tryNominatimGeocoding(endereco);
+      
+      if (nominatimResult) {
+        setFormData((prev) => ({
+          ...prev,
+          latitude: nominatimResult.lat.toString(),
+          longitude: nominatimResult.lng.toString(),
+        }));
+        toast.success("Coordenadas encontradas com sucesso via OpenStreetMap!");
+      } else {
+        toast.error("Não foi possível encontrar as coordenadas para este endereço");
+      }
+    } catch (error) {
+      console.error("Erro ao buscar coordenadas:", error);
+      toast.error("Erro ao buscar coordenadas. Tente novamente.");
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
+  const handleFetchCep = async () => {
+    const cep = formData.cep;
+    
+    if (!cep || cep.trim().length < 8) {
+      toast.error("Informe um CEP válido (8 dígitos)");
+      return;
+    }
+    
+    setIsFetchingCep(true);
+    
+    try {
+      const cepLimpo = cep.replace(/\D/g, "");
+      
+      const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+      
+      if (!response.ok) {
+        toast.error("Erro ao buscar CEP. Tente novamente.");
+        return;
+      }
+      
+      const data = await response.json();
+      
+      if (data.erro) {
+        toast.error("CEP não encontrado. Verifique e tente novamente.");
+        return;
+      }
+      
+      // Preencher campos do formulário
+      setFormData((prev) => ({
+        ...prev,
+        endereco: data.logradouro || "",
+        bairro: data.bairro || "",
+        cidade: data.localidade || "",
+        uf: data.uf || "",
+      }));
+      
+      // Tentar buscar coordenadas com o endereço completo
+      const enderecoCompleto = `${data.logradouro}, ${data.bairro}, ${data.localidade}, ${data.uf}`;
+      await handleGeocodeAddress(enderecoCompleto);
+      
+      toast.success("Endereço encontrado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao buscar CEP:", error);
+      toast.error("Erro ao buscar CEP. Verifique sua conexão.");
+    } finally {
+      setIsFetchingCep(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id) return;
 
     await atualizarObra.mutateAsync({
       id,
-      ...formData,
-    });
+      nome: formData.nome,
+      descricao: formData.descricao,
+      tipo_obra: formData.tipo_obra,
+      status: formData.status,
+      unidade_gestora: formData.unidade_gestora,
+      endereco: formData.endereco,
+      bairro: formData.bairro,
+      cidade: formData.cidade,
+      uf: formData.uf,
+      latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+      longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+      valor_total: formData.valor_total,
+      percentual_executado: formData.percentual_executado,
+      data_inicio: formData.data_inicio,
+      data_fim_prevista: formData.data_fim_prevista,
+      engenheiro_fiscal_id: formData.engenheiro_fiscal_id || null,
+      publico_portal: formData.publico_portal,
+    } as any);
     
     navigate(`/obras/${id}`);
   };
@@ -233,11 +396,108 @@ export default function EditarObra() {
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
+                  <Label>Localização</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="cep">CEP</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="cep"
+                          placeholder="00000-000"
+                          value={formData.cep}
+                          onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleFetchCep}
+                          disabled={isFetchingCep}
+                        >
+                          {isFetchingCep ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "Buscar"
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="endereco">Endereço</Label>
                   <Input
                     id="endereco"
                     value={formData.endereco}
                     onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bairro">Bairro</Label>
+                  <Input
+                    id="bairro"
+                    value={formData.bairro}
+                    onChange={(e) => setFormData({ ...formData, bairro: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cidade">Cidade</Label>
+                  <Input
+                    id="cidade"
+                    value={formData.cidade}
+                    onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="uf">UF</Label>
+                  <Input
+                    id="uf"
+                    maxLength={2}
+                    value={formData.uf}
+                    onChange={(e) => setFormData({ ...formData, uf: e.target.value.toUpperCase() })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="latitude">Latitude</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="latitude"
+                      type="number"
+                      step="0.0000001"
+                      placeholder="Ex: -27.5954"
+                      value={formData.latitude}
+                      onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleGeocodeAddress()}
+                      disabled={isGeocoding}
+                      title="Buscar coordenadas automaticamente"
+                    >
+                      {isGeocoding ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <MapPin className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="longitude">Longitude</Label>
+                  <Input
+                    id="longitude"
+                    type="number"
+                    step="0.0000001"
+                    placeholder="Ex: -48.5480"
+                    value={formData.longitude}
+                    onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
                   />
                 </div>
 
