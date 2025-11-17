@@ -178,7 +178,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       {/* Footer com botão de logout */}
-      <SidebarFooter className="p-4 border-t border-white/10">
+      <SidebarFooter className="p-4 border-t border-white/10 bg-primary-dark">
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:bg-white/10 hover:text-white transition-all duration-300"
