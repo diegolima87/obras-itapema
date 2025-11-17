@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus, Search, Shield, Loader2, Edit, Trash2 } from "lucide-react";
+import { UserPlus, Search, Shield, Loader2, Edit, Trash2, Users, Crown, X } from "lucide-react";
 import { useUsuarios, UserRole, UserProfile } from "@/hooks/useUsuarios";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -190,12 +190,18 @@ export default function Usuarios() {
     cidadao: 'Cidadão',
   };
 
-  const roleColors: Record<UserRole['role'], string> = {
-    admin: 'bg-red-500',
-    gestor: 'bg-blue-500',
-    fiscal: 'bg-green-500',
-    fornecedor: 'bg-purple-500',
-    cidadao: 'bg-gray-500',
+  const getRoleBadgeClasses = (role: UserRole['role']) => {
+    const baseClasses = "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 shadow-sm hover:shadow-md";
+    
+    const roleStyles: Record<UserRole['role'], string> = {
+      admin: 'bg-gradient-to-r from-red-900 to-red-600 text-white hover:from-red-800 hover:to-red-500',
+      gestor: 'bg-gradient-to-r from-[#132A72] to-blue-600 text-white hover:from-[#1e3a8a] hover:to-blue-500',
+      fiscal: 'bg-gradient-to-r from-green-900 to-green-600 text-white hover:from-green-800 hover:to-green-500',
+      fornecedor: 'bg-gradient-to-r from-purple-900 to-purple-600 text-white hover:from-purple-800 hover:to-purple-500',
+      cidadao: 'bg-gradient-to-r from-gray-700 to-gray-500 text-white hover:from-gray-600 hover:to-gray-400',
+    };
+    
+    return `${baseClasses} ${roleStyles[role]}`;
   };
 
   const isSuperAdmin = (email: string) => email === SUPER_ADMIN_EMAIL;
@@ -203,10 +209,29 @@ export default function Usuarios() {
   return (
     <MainLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Gerenciar Usuários</h1>
-            <p className="text-muted-foreground">Gerencie usuários e seus papéis no sistema</p>
+        {/* Modern Header with Gradient */}
+        <div className="gradient-primary rounded-xl p-8 shadow-glow relative overflow-hidden">
+          <div className="absolute top-0 right-0 opacity-10">
+            <Users size={180} />
+          </div>
+          <div className="relative z-10 flex justify-between items-center">
+            <div>
+              <h1 className="text-4xl font-bold text-white drop-shadow-lg">Gerenciar Usuários</h1>
+              <p className="text-white/90 mt-2 text-lg">Gerencie usuários e seus papéis no sistema</p>
+              {usuarios && (
+                <p className="text-white/80 text-sm mt-1">
+                  {usuarios.length} {usuarios.length === 1 ? 'usuário cadastrado' : 'usuários cadastrados'}
+                </p>
+              )}
+            </div>
+            <Button 
+              onClick={() => setIsNewUserDialogOpen(true)} 
+              size="lg"
+              className="bg-white text-primary hover:bg-white/90 shadow-lg hover:scale-105 transition-transform duration-200"
+            >
+              <UserPlus className="mr-2 h-5 w-5" />
+              Novo Usuário
+            </Button>
           </div>
         </div>
 
@@ -214,10 +239,10 @@ export default function Usuarios() {
           <DialogTrigger asChild>
             <div style={{ display: 'none' }}></div>
           </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Atribuir Papel ao Usuário</DialogTitle>
-              <DialogDescription>Selecione o papel que deseja atribuir</DialogDescription>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader className="gradient-primary rounded-t-lg -mx-6 -mt-6 px-6 py-4 mb-4">
+              <DialogTitle className="text-white text-xl">Atribuir Papel ao Usuário</DialogTitle>
+              <DialogDescription className="text-white/90">Selecione o papel que deseja atribuir</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
@@ -241,8 +266,16 @@ export default function Usuarios() {
             </div>
             <DialogFooter>
               <Button 
+                variant="outline"
+                onClick={() => setIsRoleDialogOpen(false)}
+                disabled={assignRole.isPending}
+              >
+                Cancelar
+              </Button>
+              <Button 
                 onClick={handleAssignRole}
                 disabled={assignRole.isPending}
+                className="bg-primary hover:bg-primary/90"
               >
                 {assignRole.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Atribuir Papel
@@ -251,43 +284,39 @@ export default function Usuarios() {
           </DialogContent>
         </Dialog>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Usuários Cadastrados</CardTitle>
-            <Button onClick={() => setIsNewUserDialogOpen(true)} size="sm">
-              <UserPlus className="mr-2 h-4 w-4" />
-              Novo Usuário
-            </Button>
+        <Card className="shadow-custom border-0 overflow-hidden">
+          <CardHeader className="gradient-primary border-b-0 pb-6">
+            <CardTitle className="text-white text-2xl">Usuários Cadastrados</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="mb-4 flex gap-4">
+          <CardContent className="pt-6">
+            <div className="mb-6 flex gap-4">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-3 h-5 w-5 text-primary/60" />
                 <Input
                   placeholder="Buscar por nome ou email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
+                  className="pl-10 h-12 border-2 focus:border-primary transition-colors duration-200"
                 />
               </div>
             </div>
 
             {isLoading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
+              <div className="space-y-3">
+                <Skeleton className="h-14 w-full bg-primary/10" />
+                <Skeleton className="h-14 w-full bg-primary/10" />
+                <Skeleton className="h-14 w-full bg-primary/10" />
               </div>
             ) : (
-              <div className="rounded-md border">
+              <div className="rounded-xl border-2 border-gray-200 overflow-hidden">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Papéis</TableHead>
-                      <TableHead>Data de Cadastro</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
+                    <TableRow className="gradient-primary hover:bg-none">
+                      <TableHead className="text-white font-semibold">Nome</TableHead>
+                      <TableHead className="text-white font-semibold">Email</TableHead>
+                      <TableHead className="text-white font-semibold">Papéis</TableHead>
+                      <TableHead className="text-white font-semibold">Data de Cadastro</TableHead>
+                      <TableHead className="text-right text-white font-semibold">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -315,16 +344,27 @@ export default function Usuarios() {
                                 usuario.roles.map((userRole) => {
                                   const isAdminAndSuperAdmin = isSuperAdmin(usuario.email) && userRole.role === 'admin';
                                   return (
-                                    <Badge 
-                                      key={userRole.id} 
-                                      className={roleColors[userRole.role]}
-                                      onClick={() => !isAdminAndSuperAdmin && handleRemoveRole(usuario.id, userRole.role)}
-                                      style={{ cursor: isAdminAndSuperAdmin ? 'not-allowed' : 'pointer', opacity: isAdminAndSuperAdmin ? 0.8 : 1 }}
+                                    <button
+                                      key={userRole.id}
+                                      className={`${getRoleBadgeClasses(userRole.role)} ${
+                                        isAdminAndSuperAdmin ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'
+                                      }`}
+                                      onClick={() => {
+                                        if (!isAdminAndSuperAdmin) {
+                                          handleRemoveRole(usuario.id, userRole.role);
+                                        }
+                                      }}
                                       title={isAdminAndSuperAdmin ? "Não é possível remover papel de Super Admin" : "Clique para remover"}
+                                      disabled={isAdminAndSuperAdmin}
                                     >
                                       {roleLabels[userRole.role]}
-                                      {isAdminAndSuperAdmin && <span className="ml-1 text-xs">(Super Admin)</span>}
-                                    </Badge>
+                                      {!isAdminAndSuperAdmin && (
+                                        <X className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                      )}
+                                      {isAdminAndSuperAdmin && (
+                                        <Crown className="h-3 w-3 ml-1" />
+                                      )}
+                                    </button>
                                   );
                                 })
                               ) : (
@@ -379,8 +419,8 @@ export default function Usuarios() {
         {/* New User Dialog */}
         <Dialog open={isNewUserDialogOpen} onOpenChange={setIsNewUserDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Cadastrar Novo Usuário</DialogTitle>
+            <DialogHeader className="gradient-primary rounded-t-lg -mx-6 -mt-6 px-6 py-4 mb-4">
+              <DialogTitle className="text-white text-xl">Cadastrar Novo Usuário</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
@@ -463,8 +503,19 @@ export default function Usuarios() {
               <Button variant="outline" onClick={() => setIsNewUserDialogOpen(false)} disabled={isCreatingUser}>
                 Cancelar
               </Button>
-              <Button onClick={handleCreateUser} disabled={isCreatingUser}>
-                {isCreatingUser ? "Criando..." : "Criar Usuário"}
+              <Button 
+                onClick={handleCreateUser} 
+                disabled={isCreatingUser}
+                className="bg-primary hover:bg-primary/90"
+              >
+                {isCreatingUser ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Criando...
+                  </>
+                ) : (
+                  "Criar Usuário"
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -472,10 +523,10 @@ export default function Usuarios() {
 
         {/* Edit User Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Editar Usuário</DialogTitle>
-              <DialogDescription>Atualize as informações do usuário</DialogDescription>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader className="gradient-primary rounded-t-lg -mx-6 -mt-6 px-6 py-4 mb-4">
+              <DialogTitle className="text-white text-xl">Editar Usuário</DialogTitle>
+              <DialogDescription className="text-white/90">Atualize as informações do usuário</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
@@ -510,6 +561,7 @@ export default function Usuarios() {
               <Button 
                 onClick={handleEditSubmit}
                 disabled={updateProfile.isPending}
+                className="bg-primary hover:bg-primary/90"
               >
                 {updateProfile.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Salvar Alterações
@@ -520,11 +572,11 @@ export default function Usuarios() {
 
         {/* Delete User Dialog */}
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <AlertDialogContent>
+          <AlertDialogContent className="sm:max-w-[425px]">
             <AlertDialogHeader>
-              <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Esta ação removerá todos os papéis de <strong>{editingUser?.nome}</strong>.
+              <AlertDialogTitle className="text-xl">Tem certeza?</AlertDialogTitle>
+              <AlertDialogDescription className="text-base">
+                Esta ação removerá todos os papéis de <strong className="text-foreground">{editingUser?.nome}</strong>.
                 O usuário não será deletado do sistema, mas perderá todos os acessos.
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -532,7 +584,7 @@ export default function Usuarios() {
               <AlertDialogCancel>Cancelar</AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDelete}
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-red-600 hover:bg-red-700 transition-colors duration-200"
               >
                 Remover Acessos
               </AlertDialogAction>
