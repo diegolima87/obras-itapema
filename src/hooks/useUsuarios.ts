@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useIsSuperAdmin } from './useUserRoles';
 import { toast } from 'sonner';
 
 export interface UserRole {
   id: string;
   user_id: string;
-  role: 'admin' | 'gestor' | 'fiscal' | 'fornecedor' | 'cidadao';
+  role: 'super_admin' | 'admin' | 'gestor' | 'fiscal' | 'fornecedor' | 'cidadao';
   created_at: string;
 }
 
@@ -23,6 +24,7 @@ export interface UserProfile {
 
 export function useUsuarios() {
   const queryClient = useQueryClient();
+  const { isSuperAdmin } = useIsSuperAdmin();
 
   const { data: currentUserTenant } = useQuery({
     queryKey: ['currentUserTenant'],
@@ -41,15 +43,22 @@ export function useUsuarios() {
   });
 
   const { data: usuarios, isLoading, error } = useQuery({
-    queryKey: ['usuarios', currentUserTenant?.tenant_id],
+    queryKey: ['usuarios', currentUserTenant?.tenant_id, isSuperAdmin],
     queryFn: async () => {
-      if (!currentUserTenant?.tenant_id) return [];
+      // Super admin vê todos os usuários, outros veem apenas do seu tenant
+      if (!isSuperAdmin && !currentUserTenant?.tenant_id) return [];
       
-      const { data: profiles, error: profilesError } = await supabase
+      let query = supabase
         .from('profiles')
         .select('*')
-        .eq('tenant_id', currentUserTenant.tenant_id)
         .order('created_at', { ascending: false });
+
+      // Se não for super_admin, filtrar por tenant
+      if (!isSuperAdmin && currentUserTenant?.tenant_id) {
+        query = query.eq('tenant_id', currentUserTenant.tenant_id);
+      }
+
+      const { data: profiles, error: profilesError } = await query;
 
       if (profilesError) throw profilesError;
 
@@ -70,7 +79,7 @@ export function useUsuarios() {
 
       return usersWithRoles as UserProfile[];
     },
-    enabled: !!currentUserTenant?.tenant_id,
+    enabled: isSuperAdmin || !!currentUserTenant?.tenant_id,
   });
 
   const assignRole = useMutation({
