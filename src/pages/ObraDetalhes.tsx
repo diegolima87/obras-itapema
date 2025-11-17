@@ -217,7 +217,7 @@ export default function ObraDetalhes() {
             <div className="space-y-6">
               <DocumentoUpload
                 bucketName="fotos_obras"
-                tipo="foto_obra"
+                tipo="foto"
                 obraId={id}
                 allowedTypes=".jpg,.jpeg,.png,.webp"
                 maxSize="5MB"
