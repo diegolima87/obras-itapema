@@ -74,8 +74,8 @@ export default function Login() {
       <Card className="w-full max-w-md shadow-xl border-primary/20">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            {tenant?.logo_dark_url || tenant?.logo_url ? <img src={tenant.logo_dark_url || tenant.logo_url} alt="Logo" className="h-16 w-16 object-contain" /> : <div className="bg-primary p-3 rounded-full">
-                <HardHat className="h-8 w-8 text-primary-foreground" />
+            {tenant?.logo_dark_url || tenant?.logo_url ? <img src={tenant.logo_dark_url || tenant.logo_url} alt="Logo" className="h-24 w-24 object-contain" /> : <div className="bg-primary p-3 rounded-full">
+                <HardHat className="h-12 w-12 text-primary-foreground" />
               </div>}
           </div>
           
