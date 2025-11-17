@@ -17,10 +17,14 @@ interface ObraCardProps {
     percentual_executado: number;
     data_inicio?: string | null;
     tipo_obra?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
   };
 }
 
 export function ObraCard({ obra }: ObraCardProps) {
+  const temLocalizacao = obra.latitude && obra.longitude;
+  
   return (
     <Card className="flex flex-col h-full hover:shadow-lg transition-shadow">
       <CardHeader>
@@ -30,11 +34,19 @@ export function ObraCard({ obra }: ObraCardProps) {
             {statusLabels[obra.status as keyof typeof statusLabels]}
           </Badge>
         </div>
-        {obra.tipo_obra && (
-          <Badge variant="outline" className="w-fit">
-            {obra.tipo_obra}
-          </Badge>
-        )}
+        <div className="flex gap-2">
+          {obra.tipo_obra && (
+            <Badge variant="outline" className="w-fit">
+              {obra.tipo_obra}
+            </Badge>
+          )}
+          {!temLocalizacao && (
+            <Badge variant="outline" className="w-fit text-xs">
+              <MapPin className="h-3 w-3 mr-1" />
+              Sem localização
+            </Badge>
+          )}
+        </div>
       </CardHeader>
 
       <CardContent className="flex-1 space-y-4">

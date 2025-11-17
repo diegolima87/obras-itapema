@@ -9,12 +9,17 @@ import { Building2, Eye, TrendingUp, BarChart3, FileText, Shield, MapPin } from 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useObrasComFiltros, useFiltrosDisponiveis, FiltrosObras } from "@/hooks/useObrasComFiltros";
+import { useObrasPublicas, useObrasComLocalizacao, useFiltrosDisponiveis, FiltrosObras } from "@/hooks/useObrasComFiltros";
 
 const PortalPublico = () => {
   const [filtros, setFiltros] = useState<FiltrosObras>({});
   
-  const { data: obras, isLoading } = useObrasComFiltros(filtros);
+  // Buscar TODAS as obras públicas (com ou sem coordenadas)
+  const { data: obras, isLoading } = useObrasPublicas(filtros);
+  
+  // Buscar apenas obras com localização (para o mapa)
+  const { data: obrasComLocalizacao } = useObrasComLocalizacao(filtros);
+  
   const { data: filtrosDisponiveis } = useFiltrosDisponiveis();
 
   // Calcular estatísticas
@@ -128,7 +133,19 @@ const PortalPublico = () => {
               </div>
 
               <div className="lg:col-span-3">
-                <GoogleMapaObras obras={obras || []} />
+                {isLoading ? (
+                  <Skeleton className="w-full h-[600px] rounded-lg" />
+                ) : obrasComLocalizacao && obrasComLocalizacao.length > 0 ? (
+                  <GoogleMapaObras obras={obrasComLocalizacao} />
+                ) : (
+                  <Card className="p-12 text-center">
+                    <MapPin className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-xl font-semibold mb-2">Nenhuma obra com localização</h3>
+                    <p className="text-muted-foreground">
+                      As obras aparecerão no mapa quando tiverem coordenadas geográficas definidas.
+                    </p>
+                  </Card>
+                )}
               </div>
             </div>
           </div>
