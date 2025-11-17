@@ -6,21 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { FileText, Download, FileSpreadsheet, Calendar, Building2, FileBarChart, TrendingUp } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useExportarDados } from "@/hooks/useExportarDados";
 
 export default function Relatorios() {
-  const { toast } = useToast();
+  const { exportar } = useExportarDados();
   const [loading, setLoading] = useState(false);
 
-  const handleGerarRelatorio = (tipo: string, formato: string) => {
-    setLoading(true);
-    setTimeout(() => {
-      toast({
-        title: "Relatório gerado!",
-        description: `Relatório ${tipo} em formato ${formato} está pronto para download`,
-      });
-      setLoading(false);
-    }, 2000);
+  const handleGerarRelatorio = (tipo: "obras" | "contratos" | "medicoes", formato: "csv" | "json") => {
+    exportar.mutate({ tipo, formato });
   };
 
   const relatoriosDisponiveis = [
@@ -144,8 +137,8 @@ export default function Relatorios() {
                   <Button
                     className="flex-1"
                     variant="outline"
-                    disabled={loading}
-                    onClick={() => handleGerarRelatorio(relatorio.titulo, "PDF")}
+                    disabled={exportar.isPending}
+                    onClick={() => handleGerarRelatorio(relatorio.id as "obras" | "contratos" | "medicoes", "json")}
                   >
                     <FileText className="mr-2 h-4 w-4" />
                     PDF
@@ -153,8 +146,8 @@ export default function Relatorios() {
                   <Button
                     className="flex-1"
                     variant="outline"
-                    disabled={loading}
-                    onClick={() => handleGerarRelatorio(relatorio.titulo, "Excel")}
+                    disabled={exportar.isPending}
+                    onClick={() => handleGerarRelatorio(relatorio.id as "obras" | "contratos" | "medicoes", "csv")}
                   >
                     <FileSpreadsheet className="mr-2 h-4 w-4" />
                     Excel
