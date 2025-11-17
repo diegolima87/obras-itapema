@@ -15,6 +15,7 @@ import { DocumentoLista } from "@/components/documentos/DocumentoLista";
 import { useObra, useAtualizarObra } from "@/hooks/useObras";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { MapaObraIndividual } from "@/components/obra/MapaObraIndividual";
 
 export default function ObraDetalhes() {
   const { id } = useParams();
@@ -135,7 +136,7 @@ export default function ObraDetalhes() {
             <TabsTrigger value="transparencia">Transparência</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="geral">
+          <TabsContent value="geral" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Dados Gerais da Obra</CardTitle>
@@ -166,6 +167,21 @@ export default function ObraDetalhes() {
                 </div>
               </CardContent>
             </Card>
+
+            {obra.latitude && obra.longitude && (
+              <MapaObraIndividual obra={obra} />
+            )}
+
+            {obra.descricao && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Descrição</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm">{obra.descricao}</p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="contrato">

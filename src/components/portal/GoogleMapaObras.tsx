@@ -3,7 +3,7 @@ import { GoogleMap, LoadScript, Marker, InfoWindow } from "@react-google-maps/ap
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { statusColors, statusLabels } from "@/lib/mockData";
+import { statusColors, statusLabels } from "@/lib/constants";
 import { useNavigate } from "react-router-dom";
 
 interface Obra {
