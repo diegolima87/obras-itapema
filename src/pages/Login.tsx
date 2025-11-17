@@ -8,10 +8,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HardHat, Globe } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [nome, setNome] = useState("");
+  const [nomeMunicipio, setNomeMunicipio] = useState("");
+  const [cnpj, setCnpj] = useState("");
+  const [uf, setUf] = useState("");
+  const [telefone, setTelefone] = useState("");
   const [activeTab, setActiveTab] = useState("login");
   const navigate = useNavigate();
   const {
@@ -44,7 +50,7 @@ export default function Login() {
   };
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !senha || !nome) {
+    if (!email || !senha || !nome || !nomeMunicipio || !cnpj || !uf) {
       return;
     }
     if (senha.length < 6) {
@@ -52,12 +58,16 @@ export default function Login() {
     }
     const {
       error
-    } = await signUp(email, senha, nome);
+    } = await signUp(email, senha, nome, nomeMunicipio, cnpj, uf, telefone);
     if (!error) {
       setActiveTab("login");
       setEmail("");
       setSenha("");
       setNome("");
+      setNomeMunicipio("");
+      setCnpj("");
+      setUf("");
+      setTelefone("");
     }
   };
   if (tenantLoading) {
@@ -122,8 +132,66 @@ export default function Login() {
                   <Input id="signup-senha" type="password" placeholder="••••••••" value={senha} onChange={e => setSenha(e.target.value)} required minLength={6} />
                   <p className="text-xs text-muted-foreground">Mínimo de 6 caracteres</p>
                 </div>
+                
+                <div className="border-t pt-4 space-y-4">
+                  <p className="text-sm text-muted-foreground font-medium">Informações do Município/Órgão</p>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-municipio">Nome do Município/Órgão</Label>
+                    <Input id="signup-municipio" type="text" placeholder="Prefeitura de São Paulo" value={nomeMunicipio} onChange={e => setNomeMunicipio(e.target.value)} required />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-cnpj">CNPJ</Label>
+                    <Input id="signup-cnpj" type="text" placeholder="00.000.000/0000-00" value={cnpj} onChange={e => setCnpj(e.target.value)} required />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-uf">Estado (UF)</Label>
+                    <Select value={uf} onValueChange={setUf} required>
+                      <SelectTrigger id="signup-uf">
+                        <SelectValue placeholder="Selecione o estado" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="AC">Acre</SelectItem>
+                        <SelectItem value="AL">Alagoas</SelectItem>
+                        <SelectItem value="AP">Amapá</SelectItem>
+                        <SelectItem value="AM">Amazonas</SelectItem>
+                        <SelectItem value="BA">Bahia</SelectItem>
+                        <SelectItem value="CE">Ceará</SelectItem>
+                        <SelectItem value="DF">Distrito Federal</SelectItem>
+                        <SelectItem value="ES">Espírito Santo</SelectItem>
+                        <SelectItem value="GO">Goiás</SelectItem>
+                        <SelectItem value="MA">Maranhão</SelectItem>
+                        <SelectItem value="MT">Mato Grosso</SelectItem>
+                        <SelectItem value="MS">Mato Grosso do Sul</SelectItem>
+                        <SelectItem value="MG">Minas Gerais</SelectItem>
+                        <SelectItem value="PA">Pará</SelectItem>
+                        <SelectItem value="PB">Paraíba</SelectItem>
+                        <SelectItem value="PR">Paraná</SelectItem>
+                        <SelectItem value="PE">Pernambuco</SelectItem>
+                        <SelectItem value="PI">Piauí</SelectItem>
+                        <SelectItem value="RJ">Rio de Janeiro</SelectItem>
+                        <SelectItem value="RN">Rio Grande do Norte</SelectItem>
+                        <SelectItem value="RS">Rio Grande do Sul</SelectItem>
+                        <SelectItem value="RO">Rondônia</SelectItem>
+                        <SelectItem value="RR">Roraima</SelectItem>
+                        <SelectItem value="SC">Santa Catarina</SelectItem>
+                        <SelectItem value="SP">São Paulo</SelectItem>
+                        <SelectItem value="SE">Sergipe</SelectItem>
+                        <SelectItem value="TO">Tocantins</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-telefone">Telefone (opcional)</Label>
+                    <Input id="signup-telefone" type="tel" placeholder="(00) 0000-0000" value={telefone} onChange={e => setTelefone(e.target.value)} />
+                  </div>
+                </div>
+
                 <Button type="submit" className="w-full">
-                  Criar Conta
+                  Criar Conta e Município
                 </Button>
               </form>
             </TabsContent>
