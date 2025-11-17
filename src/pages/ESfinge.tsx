@@ -69,7 +69,9 @@ export default function ESfinge() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+        <div className="space-y-4">
+          {/* Primeira linha - 4 cards */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Link to="/e-sfinge/exportacao">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -118,21 +120,40 @@ export default function ESfinge() {
               </Card>
             </Link>
 
-            <Link to="/e-sfinge/documentacao">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Documentação TCE/SC
-                  </CardTitle>
-                  <FileText className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs text-muted-foreground">
-                    Layout oficial 2025 e especificações
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
+          <Link to="/e-sfinge/configuracoes">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Configurações
+                </CardTitle>
+                <Settings className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground">
+                  Gerenciar integrações automáticas
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+
+        {/* Segunda linha - 3 cards */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <Link to="/e-sfinge/documentacao">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Documentação TCE/SC
+                </CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground">
+                  Layout oficial 2025 e especificações
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
 
           <Link to="/e-sfinge/logs">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
@@ -165,23 +186,8 @@ export default function ESfinge() {
               </CardContent>
             </Card>
           </Link>
-
-          <Link to="/e-sfinge/configuracoes">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-primary/50">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Configurações
-                </CardTitle>
-                <Settings className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-xs text-muted-foreground">
-                  Envios e importações automáticas
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
         </div>
+      </div>
 
         {/* Envios Rápidos */}
         {(contratosPendentes.length > 0 || medicoesPendentes.length > 0) && (
