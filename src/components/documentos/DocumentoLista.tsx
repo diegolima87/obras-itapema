@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, FileText, Image as ImageIcon, Trash2, Loader2 } from "lucide-react";
+import { Download, FileText, Image as ImageIcon, Trash2, Loader2, Eye } from "lucide-react";
 import { useDocumentos } from "@/hooks/useDocumentos";
 import { useDeleteDocumento } from "@/hooks/useDeleteDocumento";
 import { format } from "date-fns";
@@ -139,6 +139,17 @@ export function DocumentoLista({
                     variant="ghost"
                     size="icon"
                     asChild
+                    title="Visualizar arquivo"
+                  >
+                    <a href={fileUrl} target="_blank" rel="noopener noreferrer">
+                      <Eye className="h-4 w-4" />
+                    </a>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    asChild
+                    title="Baixar arquivo"
                   >
                     <a href={fileUrl} target="_blank" rel="noopener noreferrer" download>
                       <Download className="h-4 w-4" />
@@ -151,6 +162,7 @@ export function DocumentoLista({
                           variant="ghost"
                           size="icon"
                           disabled={isDeleting}
+                          title="Excluir arquivo"
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
