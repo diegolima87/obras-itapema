@@ -17,14 +17,14 @@ import { Separator } from "@/components/ui/separator";
 
 export default function LogAuditoria() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filtroAcao, setFiltroAcao] = useState("");
-  const [filtroTabela, setFiltroTabela] = useState("");
+  const [filtroAcao, setFiltroAcao] = useState("todos");
+  const [filtroTabela, setFiltroTabela] = useState("todos");
   const [exportando, setExportando] = useState(false);
   const [logSelecionado, setLogSelecionado] = useState<any>(null);
 
   const { data: logs, isLoading } = useLogsAuditoria({
-    acao: filtroAcao || undefined,
-    tabela: filtroTabela || undefined,
+    acao: filtroAcao !== "todos" ? filtroAcao : undefined,
+    tabela: filtroTabela !== "todos" ? filtroTabela : undefined,
   });
 
   const { data: estatisticas } = useEstatisticasAuditoria();
@@ -293,7 +293,7 @@ export default function LogAuditoria() {
                     <SelectValue placeholder="Todas as ações" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas as ações</SelectItem>
+                    <SelectItem value="todos">Todas as ações</SelectItem>
                     {acoesDisponiveis.map((acao) => (
                       <SelectItem key={acao} value={acao}>
                         {acao}
@@ -310,7 +310,7 @@ export default function LogAuditoria() {
                     <SelectValue placeholder="Todas as tabelas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas as tabelas</SelectItem>
+                    <SelectItem value="todos">Todas as tabelas</SelectItem>
                     {tabelasDisponiveis.map((tabela) => (
                       <SelectItem key={tabela} value={tabela}>
                         {tabela}
