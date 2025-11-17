@@ -38,6 +38,7 @@ import ESfingeLogs from "./pages/ESfingeLogs";
 import ESfingeMapeamento from "./pages/ESfingeMapeamento";
 import ESfingeImportacao from "./pages/ESfingeImportacao";
 import ESfingeConfiguracoes from "./pages/ESfingeConfiguracoes";
+import ESfingeDocumentacao from "./pages/ESfingeDocumentacao";
 import HistoricoTCE from "./pages/HistoricoTCE";
 import LoginFornecedor from "./pages/fornecedor/LoginFornecedor";
 import DashboardFornecedor from "./pages/fornecedor/DashboardFornecedor";
@@ -109,6 +110,7 @@ const App = () => (
           <Route path="/e-sfinge/mapeamento" element={<ProtectedRoute><ESfingeMapeamento /></ProtectedRoute>} />
           <Route path="/e-sfinge/importacao" element={<ProtectedRoute><ESfingeImportacao /></ProtectedRoute>} />
           <Route path="/e-sfinge/configuracoes" element={<ProtectedRoute><ESfingeConfiguracoes /></ProtectedRoute>} />
+          <Route path="/e-sfinge/documentacao" element={<ProtectedRoute><ESfingeDocumentacao /></ProtectedRoute>} />
           
           {/* Fornecedor Portal Routes */}
           <Route path="/fornecedor/login" element={<LoginFornecedor />} />
