@@ -69,7 +69,7 @@ export default function ESfinge() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
           <Link to="/e-sfinge/exportacao">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -145,6 +145,22 @@ export default function ESfinge() {
               <CardContent>
                 <p className="text-xs text-muted-foreground">
                   Configurar correspondência de campos
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/e-sfinge/configuracoes">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-primary/50">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Configurações
+                </CardTitle>
+                <Settings className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground">
+                  Envios e importações automáticas
                 </p>
               </CardContent>
             </Card>
