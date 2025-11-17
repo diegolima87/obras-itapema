@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -10,8 +12,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useIntegracoesTCE } from "@/hooks/useIntegracoesTCE";
-import { Loader2, Eye, FileText, CheckCircle, XCircle, Clock } from "lucide-react";
-import { useState } from "react";
+import { Loader2, Eye, FileText, CheckCircle, XCircle, Clock, Search, Filter } from "lucide-react";
+import { useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -47,10 +49,28 @@ const statusColors = {
 
 export function HistoricoTCE({ referenciaId, tipo }: HistoricoTCEProps) {
   const [integracaoSelecionada, setIntegracaoSelecionada] = useState<any>(null);
+  const [filtroStatus, setFiltroStatus] = useState<string>("todos");
+  const [filtroTipo, setFiltroTipo] = useState<string>("todos");
+  const [busca, setBusca] = useState("");
+  
   const { data: integracoes, isLoading } = useIntegracoesTCE({
     referenciaId,
     tipo,
   });
+  
+  const integracoesFiltradas = useMemo(() => {
+    if (!integracoes) return [];
+    
+    return integracoes.filter((integracao) => {
+      const matchStatus = filtroStatus === "todos" || integracao.status === filtroStatus;
+      const matchTipo = filtroTipo === "todos" || integracao.tipo === filtroTipo;
+      const matchBusca = !busca || 
+        integracao.protocolo?.toLowerCase().includes(busca.toLowerCase()) ||
+        tipoLabels[integracao.tipo as keyof typeof tipoLabels]?.toLowerCase().includes(busca.toLowerCase());
+      
+      return matchStatus && matchTipo && matchBusca;
+    });
+  }, [integracoes, filtroStatus, filtroTipo, busca]);
 
   if (isLoading) {
     return (
@@ -68,8 +88,49 @@ export function HistoricoTCE({ referenciaId, tipo }: HistoricoTCEProps) {
         <CardHeader>
           <CardTitle>Histórico de Integrações com TCE</CardTitle>
         </CardHeader>
-        <CardContent>
-          {integracoes && integracoes.length > 0 ? (
+        <CardContent className="space-y-4">
+          {/* Filtros */}
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por protocolo ou tipo..."
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            {!tipo && (
+              <Select value={filtroTipo} onValueChange={setFiltroTipo}>
+                <SelectTrigger className="w-full md:w-[180px]">
+                  <Filter className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os Tipos</SelectItem>
+                  <SelectItem value="contrato">Contrato</SelectItem>
+                  <SelectItem value="aditivo">Aditivo</SelectItem>
+                  <SelectItem value="medicao">Medição</SelectItem>
+                  <SelectItem value="situacao_obra">Situação da Obra</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+            
+            <Select value={filtroStatus} onValueChange={setFiltroStatus}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os Status</SelectItem>
+                <SelectItem value="sucesso">Sucesso</SelectItem>
+                <SelectItem value="erro">Erro</SelectItem>
+                <SelectItem value="pendente">Pendente</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {integracoesFiltradas && integracoesFiltradas.length > 0 ? (
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
@@ -82,7 +143,7 @@ export function HistoricoTCE({ referenciaId, tipo }: HistoricoTCEProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {integracoes.map((integracao) => {
+                  {integracoesFiltradas.map((integracao) => {
                     const StatusIcon = statusIcons[integracao.status];
                     return (
                       <TableRow key={integracao.id}>

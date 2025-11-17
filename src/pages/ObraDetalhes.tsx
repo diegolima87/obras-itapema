@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { ArrowLeft, Edit, Eye, EyeOff, AlertCircle, Send } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { statusColors, statusLabels } from "@/lib/constants";
 import { Switch } from "@/components/ui/switch";
@@ -115,12 +115,20 @@ export default function ObraDetalhes() {
               <p className="text-muted-foreground">{obra.descricao}</p>
             </div>
           </div>
-          <Link to={`/obras/${id}/editar`}>
-            <Button>
-              <Edit className="mr-2 h-4 w-4" />
-              Editar Obra
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link to={`/integracao-tce/situacao_obra/${id}`}>
+              <Button variant="outline">
+                <Send className="mr-2 h-4 w-4" />
+                Enviar Situação ao TCE/SC
+              </Button>
+            </Link>
+            <Link to={`/obras/${id}/editar`}>
+              <Button>
+                <Edit className="mr-2 h-4 w-4" />
+                Editar Obra
+              </Button>
+            </Link>
+          </div>
         </div>
 
         <Tabs defaultValue="geral" className="space-y-4">

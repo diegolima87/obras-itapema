@@ -3,5 +3,8 @@ project_id = "xazlcbykmummjteoojvf"
 [functions.enviar-tce]
 verify_jwt = true
 
+[functions.validar-dados-tce]
+verify_jwt = true
+
 [functions.exportar-dados]
 verify_jwt = true
