@@ -9,7 +9,7 @@ import { Building2, Eye, TrendingUp, BarChart3, FileText, Shield, MapPin } from 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useObrasPublicas, useObrasComLocalizacao, useFiltrosDisponiveis, FiltrosObras } from "@/hooks/useObrasComFiltros";
+import { useObrasPublicas, useObrasPublicasComLocalizacao, useFiltrosDisponiveis, FiltrosObras } from "@/hooks/useObrasComFiltros";
 
 const PortalPublico = () => {
   const [filtros, setFiltros] = useState<FiltrosObras>({});
@@ -18,7 +18,7 @@ const PortalPublico = () => {
   const { data: obras, isLoading } = useObrasPublicas(filtros);
   
   // Buscar apenas obras com localização (para o mapa)
-  const { data: obrasComLocalizacao } = useObrasComLocalizacao(filtros);
+  const { data: obrasComLocalizacao } = useObrasPublicasComLocalizacao(filtros);
   
   const { data: filtrosDisponiveis } = useFiltrosDisponiveis();
 

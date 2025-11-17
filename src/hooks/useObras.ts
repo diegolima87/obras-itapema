@@ -101,9 +101,21 @@ export const useObrasComLocalizacao = () => {
   return useQuery({
     queryKey: ["obras", "com-localizacao"],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (!profile?.tenant_id) return [];
+      
       const { data, error } = await supabase
         .from("obras")
         .select("*")
+        .eq("tenant_id", profile.tenant_id)
         .not("latitude", "is", null)
         .not("longitude", "is", null)
         .order("created_at", { ascending: false });
