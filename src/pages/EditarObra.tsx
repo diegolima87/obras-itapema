@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { tiposObra } from "@/lib/constants";
 import { toast } from "sonner";
+import { formatCurrencyInput, parseCurrency } from "@/lib/utils";
 
 export default function EditarObra() {
   const { id } = useParams();
@@ -23,6 +24,7 @@ export default function EditarObra() {
   const atualizarObra = useAtualizarObra();
   const [isFetchingCep, setIsFetchingCep] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
+  const [valorDisplay, setValorDisplay] = useState("R$ 0,00");
 
   const [formData, setFormData] = useState({
     nome: "",
@@ -67,6 +69,11 @@ export default function EditarObra() {
         engenheiro_fiscal_id: obra.engenheiro_fiscal_id || "",
         publico_portal: obra.publico_portal || false,
       });
+      
+      // Formatar valor para display
+      if (obra.valor_total) {
+        setValorDisplay(formatCurrencyInput(obra.valor_total.toString()));
+      }
     }
   }, [obra]);
 
@@ -505,10 +512,14 @@ export default function EditarObra() {
                   <Label htmlFor="valor_total">Valor Total (R$) *</Label>
                   <Input
                     id="valor_total"
-                    type="number"
-                    step="0.01"
-                    value={formData.valor_total}
-                    onChange={(e) => setFormData({ ...formData, valor_total: parseFloat(e.target.value) })}
+                    type="text"
+                    placeholder="R$ 0,00"
+                    value={valorDisplay}
+                    onChange={(e) => {
+                      const formatted = formatCurrencyInput(e.target.value);
+                      setValorDisplay(formatted);
+                      setFormData({ ...formData, valor_total: parseCurrency(formatted) });
+                    }}
                     required
                   />
                 </div>

@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Save, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrencyInput, parseCurrency } from "@/lib/utils";
 
 export default function NovaMedicao() {
   const navigate = useNavigate();
@@ -22,6 +23,8 @@ export default function NovaMedicao() {
     percentual_executado: 0,
     observacoes: "",
   });
+
+  const [valorDisplay, setValorDisplay] = useState("R$ 0,00");
 
   const [loading, setLoading] = useState(false);
 
@@ -105,11 +108,14 @@ export default function NovaMedicao() {
                     <Label htmlFor="valor_medicao">Valor da Medição (R$) *</Label>
                     <Input
                       id="valor_medicao"
-                      type="number"
-                      step="0.01"
-                      placeholder="0,00"
-                      value={formData.valor_medicao}
-                      onChange={(e) => setFormData({ ...formData, valor_medicao: parseFloat(e.target.value) })}
+                      type="text"
+                      placeholder="R$ 0,00"
+                      value={valorDisplay}
+                      onChange={(e) => {
+                        const formatted = formatCurrencyInput(e.target.value);
+                        setValorDisplay(formatted);
+                        setFormData({ ...formData, valor_medicao: parseCurrency(formatted) });
+                      }}
                       required
                     />
                   </div>

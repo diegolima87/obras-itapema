@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { useEngenheiros } from "@/hooks/useEngenheiros";
+import { formatCurrencyInput, parseCurrency } from "@/lib/utils";
 
 const formSchema = z.object({
   nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
@@ -394,9 +395,18 @@ export default function NovaObra() {
                   name="valor_total"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Valor Total *</FormLabel>
+                      <FormLabel>Valor Total (R$) *</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="0,00" {...field} />
+                        <Input 
+                          type="text" 
+                          placeholder="R$ 0,00" 
+                          value={field.value ? formatCurrencyInput(field.value) : ""}
+                          onChange={(e) => {
+                            const formatted = formatCurrencyInput(e.target.value);
+                            const numValue = parseCurrency(formatted);
+                            field.onChange(numValue.toString());
+                          }}
+                        />
                       </FormControl>
                       <FormDescription>Valor total estimado da obra em reais</FormDescription>
                       <FormMessage />
