@@ -187,6 +187,7 @@ export default function Usuarios() {
   const SUPER_ADMIN_EMAIL = 'deklima@gmail.com';
 
   const roleLabels: Record<UserRole['role'], string> = {
+    super_admin: 'Super Admin',
     admin: 'Administrador',
     gestor: 'Gestor',
     fiscal: 'Fiscal',
@@ -198,6 +199,7 @@ export default function Usuarios() {
     const baseClasses = "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 shadow-sm hover:shadow-md";
     
     const roleStyles: Record<UserRole['role'], string> = {
+      super_admin: 'bg-gradient-to-r from-yellow-900 to-yellow-600 text-white hover:from-yellow-800 hover:to-yellow-500',
       admin: 'bg-gradient-to-r from-red-900 to-red-600 text-white hover:from-red-800 hover:to-red-500',
       gestor: 'bg-gradient-to-r from-[#132A72] to-blue-600 text-white hover:from-[#1e3a8a] hover:to-blue-500',
       fiscal: 'bg-gradient-to-r from-green-900 to-green-600 text-white hover:from-green-800 hover:to-green-500',

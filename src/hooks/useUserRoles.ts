@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export type UserRole = 'admin' | 'gestor' | 'fiscal' | 'fornecedor' | 'cidadao';
+export type UserRole = 'super_admin' | 'admin' | 'gestor' | 'fiscal' | 'fornecedor' | 'cidadao';
 
 export function useUserRoles() {
   return useQuery({
@@ -43,6 +43,15 @@ export function useHasAnyRole(requiredRoles: UserRole[]) {
   
   return {
     hasRole: requiredRoles.some(role => roles.includes(role)),
+    isLoading,
+  };
+}
+
+export function useIsSuperAdmin() {
+  const { data: roles = [], isLoading } = useUserRoles();
+  
+  return {
+    isSuperAdmin: roles.includes('super_admin'),
     isLoading,
   };
 }
