@@ -437,7 +437,17 @@ export default function EditarObra() {
                   />
                 </div>
 
-              <div className="space-y-4">
+              <div className="space-y-4" id="localizacao">
+                {geocodingSource === 'cidade_aproximada' && (
+                  <Alert className="bg-yellow-50 border-yellow-300">
+                    <AlertCircle className="h-4 w-4 text-yellow-600" />
+                    <AlertDescription className="text-yellow-800">
+                      <strong>Atenção:</strong> As coordenadas são aproximadas (centro da cidade).
+                      Use o botão "Selecionar no Mapa" abaixo para definir a localização exata da obra.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="latitude">Latitude</Label>
@@ -461,30 +471,32 @@ export default function EditarObra() {
                   </div>
                 </div>
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleGeocodeAddress}
-                  disabled={isGeocoding}
-                  className="w-full"
-                >
-                  {isGeocoding ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleGeocodeAddress}
+                    disabled={isGeocoding}
+                  >
+                    {isGeocoding ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <MapPin className="mr-2 h-4 w-4" />
+                    )}
+                    {isGeocoding ? "Buscando..." : "Buscar Coordenadas"}
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant={geocodingSource === 'cidade_aproximada' ? 'default' : 'outline'}
+                    onClick={() => setShowMapSelection(true)}
+                    disabled={!formData.cidade || !formData.uf}
+                    className={geocodingSource === 'cidade_aproximada' ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : ''}
+                  >
                     <MapPin className="mr-2 h-4 w-4" />
-                  )}
-                  {isGeocoding ? "Buscando coordenadas..." : "Buscar Coordenadas Automaticamente"}
-                </Button>
-                
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => setShowMapSelection(true)}
-                  className="w-full"
-                >
-                  <MapPin className="mr-2 h-4 w-4" />
-                  Selecionar no Mapa
-                </Button>
+                    Selecionar no Mapa
+                  </Button>
+                </div>
                 
                 <p className="text-xs text-muted-foreground">
                   💡 Preencha o endereço completo e clique para buscar as coordenadas automaticamente.

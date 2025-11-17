@@ -9,6 +9,7 @@ export interface Obra {
   endereco: string | null;
   latitude: number | null;
   longitude: number | null;
+  coordenadas_fonte: string | null;
   status: string;
   unidade_gestora: string;
   valor_total: number;
