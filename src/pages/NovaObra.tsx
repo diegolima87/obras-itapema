@@ -78,11 +78,22 @@ export default function NovaObra() {
     setIsGeocoding(true);
     
     try {
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(endereco)}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`
-      );
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+      console.log("API Key existe:", !!apiKey);
+      
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(endereco)}&key=${apiKey}`;
+      console.log("Buscando coordenadas para:", endereco);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        console.error("Erro HTTP:", response.status, response.statusText);
+        toast.error(`Erro HTTP ${response.status}: ${response.statusText}`);
+        return;
+      }
       
       const data = await response.json();
+      console.log("Resposta da API:", data);
       
       if (data.status === "OK" && data.results.length > 0) {
         const location = data.results[0].geometry.location;
@@ -93,8 +104,16 @@ export default function NovaObra() {
         toast.success("Coordenadas encontradas com sucesso!");
       } else if (data.status === "ZERO_RESULTS") {
         toast.error("Endereço não encontrado. Verifique e tente novamente.");
+      } else if (data.status === "REQUEST_DENIED") {
+        console.error("Erro na API:", data.error_message);
+        toast.error(`API bloqueada: ${data.error_message || "Verifique a chave da API"}`);
+      } else if (data.status === "INVALID_REQUEST") {
+        toast.error("Requisição inválida. Verifique o endereço.");
+      } else if (data.status === "OVER_QUERY_LIMIT") {
+        toast.error("Limite de requisições excedido. Tente novamente mais tarde.");
       } else {
-        toast.error("Erro ao buscar coordenadas. Tente novamente.");
+        console.error("Status desconhecido:", data.status);
+        toast.error(`Erro: ${data.status}. ${data.error_message || ""}`);
       }
     } catch (error) {
       console.error("Erro na geocodificação:", error);
