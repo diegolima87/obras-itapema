@@ -15,12 +15,34 @@ import {
   Download
 } from "lucide-react";
 import { useIntegracoesTCE } from "@/hooks/useIntegracoesTCE";
+import { useContratos } from "@/hooks/useContratos";
+import { useMedicoes } from "@/hooks/useMedicoes";
+import { useObras } from "@/hooks/useObras";
+import { EnvioRapido } from "@/components/tce/EnvioRapido";
 
 export default function ESfinge() {
   const { data: integracoes, isLoading } = useIntegracoesTCE();
+  const { data: contratos } = useContratos();
+  const { data: medicoes } = useMedicoes();
+  const { data: obras } = useObras();
   
   // Pega apenas os últimos 4 envios
   const ultimosEnvios = (integracoes || []).slice(0, 4);
+  
+  // Filtra itens que não foram enviados ou foram enviados há mais tempo
+  const contratosPendentes = (contratos || [])
+    .filter(c => {
+      const envio = integracoes?.find(i => i.referencia_id === c.id && i.tipo === 'contrato');
+      return !envio || envio.status === 'erro';
+    })
+    .slice(0, 3);
+    
+  const medicoesPendentes = (medicoes || [])
+    .filter(m => {
+      const envio = integracoes?.find(i => i.referencia_id === m.id && i.tipo === 'medicao');
+      return !envio || envio.status === 'erro';
+    })
+    .slice(0, 3);
 
   const statusConfig = {
     sucesso: { color: "bg-green-500", icon: CheckCircle2, label: "Sucesso" },
@@ -112,6 +134,57 @@ export default function ESfinge() {
             </Card>
           </Link>
         </div>
+
+        {/* Envios Rápidos */}
+        {(contratosPendentes.length > 0 || medicoesPendentes.length > 0) && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Envios Rápidos</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Contratos e medições pendentes de envio ao e-Sfinge TCE/SC
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {contratosPendentes.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-muted-foreground">Contratos</h3>
+                  {contratosPendentes.map((contrato) => (
+                    <EnvioRapido
+                      key={contrato.id}
+                      tipo="contrato"
+                      referenciaId={contrato.id}
+                      nome={`Contrato ${contrato.numero}`}
+                      className="p-3 border rounded-lg"
+                    />
+                  ))}
+                </div>
+              )}
+              
+              {medicoesPendentes.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-muted-foreground">Medições</h3>
+                  {medicoesPendentes.map((medicao) => (
+                    <EnvioRapido
+                      key={medicao.id}
+                      tipo="medicao"
+                      referenciaId={medicao.id}
+                      nome={`Medição ${medicao.numero_medicao}`}
+                      className="p-3 border rounded-lg"
+                    />
+                  ))}
+                </div>
+              )}
+              
+              <div className="pt-4 border-t">
+                <Link to="/e-sfinge/exportacao">
+                  <Button variant="outline" className="w-full">
+                    Ver Todos os Registros
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Status Overview */}
         <div className="grid gap-4 md:grid-cols-3">

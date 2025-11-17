@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Check, X, Download, FileText, Image } from "lucide-react";
+import { ArrowLeft, Check, X, Download, FileText, Image, Send } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -102,61 +102,69 @@ export default function MedicaoDetalhes() {
               <p className="text-muted-foreground">{medicao.obras?.nome || "-"}</p>
             </div>
           </div>
-          {medicao.status === "pendente" && (
-            <div className="flex gap-2">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="default">
-                    <Check className="mr-2 h-4 w-4" />
-                    Aprovar
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Aprovar Medição</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Tem certeza que deseja aprovar esta medição? Esta ação não poderá ser desfeita.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleAprovar}>Confirmar Aprovação</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+          <div className="flex gap-2">
+            <Link to={`/integracao-tce/medicao/${id}`}>
+              <Button variant="outline">
+                <Send className="mr-2 h-4 w-4" />
+                Enviar ao e-Sfinge TCE/SC
+              </Button>
+            </Link>
+            {medicao.status === "pendente" && (
+              <>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="default">
+                      <Check className="mr-2 h-4 w-4" />
+                      Aprovar
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Aprovar Medição</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tem certeza que deseja aprovar esta medição? Esta ação não poderá ser desfeita.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleAprovar}>Confirmar Aprovação</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
 
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive">
-                    <X className="mr-2 h-4 w-4" />
-                    Reprovar
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Reprovar Medição</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Informe o motivo da reprovação desta medição.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <div className="py-4">
-                    <Textarea
-                      placeholder="Descreva o motivo da reprovação..."
-                      value={parecer}
-                      onChange={(e) => setParecer(e.target.value)}
-                      rows={4}
-                    />
-                  </div>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleReprovar} className="bg-destructive hover:bg-destructive/90">
-                      Confirmar Reprovação
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          )}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive">
+                      <X className="mr-2 h-4 w-4" />
+                      Reprovar
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Reprovar Medição</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Informe o motivo da reprovação desta medição.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="py-4">
+                      <Textarea
+                        placeholder="Descreva o motivo da reprovação..."
+                        value={parecer}
+                        onChange={(e) => setParecer(e.target.value)}
+                        rows={4}
+                      />
+                    </div>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleReprovar} className="bg-destructive hover:bg-destructive/90">
+                        Confirmar Reprovação
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+            )}
+          </div>
         </div>
 
         <Tabs defaultValue="dados" className="space-y-4">

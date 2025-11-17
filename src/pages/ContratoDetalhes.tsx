@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Edit, FileText, Plus, Download } from "lucide-react";
+import { ArrowLeft, Edit, FileText, Plus, Download, Send } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Label } from "@/components/ui/label";
 import { DocumentoUpload } from "@/components/documentos/DocumentoUpload";
@@ -67,9 +67,9 @@ export default function ContratoDetalhes() {
           </div>
           <div className="flex gap-2">
             <Link to={`/integracao-tce/contrato/${id}`}>
-              <Button variant="outline">
-                <FileText className="mr-2 h-4 w-4" />
-                Enviar ao TCE
+              <Button variant="default">
+                <Send className="mr-2 h-4 w-4" />
+                Enviar ao e-Sfinge TCE/SC
               </Button>
             </Link>
             <Button>
