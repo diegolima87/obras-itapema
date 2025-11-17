@@ -520,6 +520,73 @@ export type Database = {
           },
         ]
       }
+      liquidacoes: {
+        Row: {
+          contrato_id: string | null
+          created_at: string | null
+          dados_esfinge: Json | null
+          data_liquidacao: string
+          id: string
+          medicao_id: string | null
+          numero_empenho: string
+          numero_liquidacao: string
+          observacoes: string | null
+          tenant_id: string | null
+          updated_at: string | null
+          valor_liquidado: number
+        }
+        Insert: {
+          contrato_id?: string | null
+          created_at?: string | null
+          dados_esfinge?: Json | null
+          data_liquidacao: string
+          id?: string
+          medicao_id?: string | null
+          numero_empenho: string
+          numero_liquidacao: string
+          observacoes?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+          valor_liquidado: number
+        }
+        Update: {
+          contrato_id?: string | null
+          created_at?: string | null
+          dados_esfinge?: Json | null
+          data_liquidacao?: string
+          id?: string
+          medicao_id?: string | null
+          numero_empenho?: string
+          numero_liquidacao?: string
+          observacoes?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+          valor_liquidado?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "liquidacoes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "liquidacoes_medicao_id_fkey"
+            columns: ["medicao_id"]
+            isOneToOne: false
+            referencedRelation: "medicoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "liquidacoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       logs_auditoria: {
         Row: {
           acao: string
@@ -550,6 +617,48 @@ export type Database = {
           registro_id?: string
           tabela?: string
           usuario_id?: string | null
+        }
+        Relationships: []
+      }
+      logs_importacao_tce: {
+        Row: {
+          created_at: string | null
+          data_importacao: string
+          detalhes: Json | null
+          id: string
+          mensagem_erro: string | null
+          registros_atualizados: number | null
+          registros_erros: number | null
+          registros_importados: number | null
+          status: string
+          tempo_execucao_ms: number | null
+          tipo: string
+        }
+        Insert: {
+          created_at?: string | null
+          data_importacao?: string
+          detalhes?: Json | null
+          id?: string
+          mensagem_erro?: string | null
+          registros_atualizados?: number | null
+          registros_erros?: number | null
+          registros_importados?: number | null
+          status?: string
+          tempo_execucao_ms?: number | null
+          tipo: string
+        }
+        Update: {
+          created_at?: string | null
+          data_importacao?: string
+          detalhes?: Json | null
+          id?: string
+          mensagem_erro?: string | null
+          registros_atualizados?: number | null
+          registros_erros?: number | null
+          registros_importados?: number | null
+          status?: string
+          tempo_execucao_ms?: number | null
+          tipo?: string
         }
         Relationships: []
       }
