@@ -11,9 +11,47 @@ export interface FiltrosObras {
   valor_max?: number;
 }
 
-export const useObrasComFiltros = (filtros: FiltrosObras) => {
+// Hook para listar TODAS as obras públicas (com ou sem coordenadas)
+export const useObrasPublicas = (filtros: FiltrosObras) => {
   return useQuery({
-    queryKey: ["obras", "filtros", filtros],
+    queryKey: ["obras", "publicas", filtros],
+    queryFn: async () => {
+      let query = supabase
+        .from("obras")
+        .select("*")
+        .eq("publico_portal", true);
+
+      if (filtros.bairro) {
+        query = query.eq("bairro", filtros.bairro);
+      }
+      if (filtros.cidade) {
+        query = query.eq("cidade", filtros.cidade);
+      }
+      if (filtros.status) {
+        query = query.eq("status", filtros.status as any);
+      }
+      if (filtros.tipo_obra) {
+        query = query.eq("tipo_obra", filtros.tipo_obra);
+      }
+      if (filtros.valor_min !== undefined) {
+        query = query.gte("valor_total", filtros.valor_min);
+      }
+      if (filtros.valor_max !== undefined) {
+        query = query.lte("valor_total", filtros.valor_max);
+      }
+
+      const { data, error } = await query.order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data as Obra[];
+    },
+  });
+};
+
+// Hook para obras COM localização (usado pelo mapa)
+export const useObrasComLocalizacao = (filtros: FiltrosObras) => {
+  return useQuery({
+    queryKey: ["obras", "com-localizacao", filtros],
     queryFn: async () => {
       let query = supabase
         .from("obras")
