@@ -193,22 +193,21 @@ export default function MedicaoDetalhes() {
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Obra</Label>
-                    <p className="font-medium">{medicao.obra}</p>
+                    <p className="font-medium">{medicao.obras?.nome || 'N/A'}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Fornecedor</Label>
-                    <p className="font-medium">{medicao.fornecedor}</p>
+                    <p className="font-medium">{medicao.fornecedores?.nome || 'N/A'}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Período</Label>
+                    <Label className="text-muted-foreground">Competência</Label>
                     <p className="font-medium">
-                      {new Date(medicao.periodo_inicio).toLocaleDateString("pt-BR")} até{" "}
-                      {new Date(medicao.periodo_fim).toLocaleDateString("pt-BR")}
+                      {medicao.competencia ? new Date(medicao.competencia).toLocaleDateString("pt-BR", { month: 'long', year: 'numeric' }) : 'N/A'}
                     </p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Data de Envio</Label>
-                    <p className="font-medium">{new Date(medicao.data_envio).toLocaleDateString("pt-BR")}</p>
+                    <p className="font-medium">{medicao.data_envio ? new Date(medicao.data_envio).toLocaleDateString("pt-BR") : 'N/A'}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Valor da Medição</Label>
@@ -216,12 +215,12 @@ export default function MedicaoDetalhes() {
                       {new Intl.NumberFormat("pt-BR", {
                         style: "currency",
                         currency: "BRL",
-                      }).format(medicao.valor)}
+                      }).format(medicao.valor_medido || 0)}
                     </p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Percentual Executado</Label>
-                    <p className="font-medium text-lg">{medicao.percentual}%</p>
+                    <p className="font-medium text-lg">{medicao.percentual_executado || 0}%</p>
                   </div>
                   <div className="md:col-span-2">
                     <Label className="text-muted-foreground">Observações</Label>
@@ -239,17 +238,17 @@ export default function MedicaoDetalhes() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {itens.map((item) => (
+                  {itens?.map((item) => (
                     <div key={item.id} className="border rounded-lg p-4">
                       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                         <div className="md:col-span-2">
                           <Label className="text-muted-foreground">Descrição</Label>
-                          <p className="font-medium">{item.descricao}</p>
+                          <p className="font-medium">{item.item_obra?.descricao || 'N/A'}</p>
                         </div>
                         <div>
                           <Label className="text-muted-foreground">Quantidade</Label>
                           <p className="font-medium">
-                            {item.quantidade} {item.unidade}
+                            {item.quantidade_executada} {item.item_obra?.unidade || ''}
                           </p>
                         </div>
                         <div>
@@ -280,7 +279,7 @@ export default function MedicaoDetalhes() {
                         {new Intl.NumberFormat("pt-BR", {
                           style: "currency",
                           currency: "BRL",
-                        }).format(medicao.valor)}
+                        }).format(medicao.valor_medido || 0)}
                       </span>
                     </div>
                   </div>

@@ -185,10 +185,11 @@ export default function ESfinge() {
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {envio.data} • {envio.registros} registros
+                          {new Date(envio.created_at).toLocaleDateString('pt-BR')}
+                          {envio.protocolo && ` • Protocolo: ${envio.protocolo}`}
                         </p>
-                        {envio.erro && (
-                          <p className="text-sm text-red-600 mt-1">{envio.erro}</p>
+                        {envio.mensagem_erro && (
+                          <p className="text-sm text-red-600 mt-1">{envio.mensagem_erro}</p>
                         )}
                       </div>
                     </div>

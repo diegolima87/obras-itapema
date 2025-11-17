@@ -19,6 +19,7 @@ export default function Perfil() {
 
   const [userData, setUserData] = useState({
     nome: "",
+    email: "",
     telefone: "",
     crea: "",
   });
@@ -27,6 +28,7 @@ export default function Perfil() {
     if (userProfile?.profile) {
       setUserData({
         nome: userProfile.profile.nome || "",
+        email: userProfile.profile.email || "",
         telefone: userProfile.profile.telefone || "",
         crea: userProfile.profile.crea || "",
       });
@@ -159,43 +161,17 @@ export default function Perfil() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="cargo">Cargo</Label>
+                      <Label htmlFor="crea">CREA</Label>
                       <Input
-                        id="cargo"
-                        value={userData.cargo}
-                        onChange={(e) => setUserData({ ...userData, cargo: e.target.value })}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="unidade">
-                        <Building2 className="h-4 w-4 inline mr-2" />
-                        Unidade Gestora
-                      </Label>
-                      <Input
-                        id="unidade"
-                        value={userData.unidade}
-                        readOnly
-                        className="bg-muted"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="perfil">
-                        <Shield className="h-4 w-4 inline mr-2" />
-                        Perfil de Acesso
-                      </Label>
-                      <Input
-                        id="perfil"
-                        value={userData.perfil}
-                        readOnly
-                        className="bg-muted"
+                        id="crea"
+                        value={userData.crea}
+                        onChange={(e) => setUserData({ ...userData, crea: e.target.value })}
                       />
                     </div>
                   </div>
 
-                  <Button type="submit" disabled={loading}>
-                    {loading ? "Salvando..." : "Salvar Alterações"}
+                  <Button type="submit" disabled={updateProfile.isPending}>
+                    {updateProfile.isPending ? "Salvando..." : "Salvar Alterações"}
                   </Button>
                 </form>
               </CardContent>

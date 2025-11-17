@@ -105,37 +105,37 @@ export default function ContratoDetalhes() {
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Fornecedor</Label>
-                    <p className="font-medium">{contrato.fornecedor}</p>
+                    <p className="font-medium">{contrato.fornecedores?.nome || 'N/A'}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">CNPJ</Label>
-                    <p className="font-medium">{contrato.cnpj}</p>
+                    <p className="font-medium">{contrato.fornecedores?.cnpj || 'N/A'}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Valor Total</Label>
+                    <Label className="text-muted-foreground">Valor Inicial</Label>
                     <p className="font-medium text-lg">
                       {new Intl.NumberFormat("pt-BR", {
                         style: "currency",
                         currency: "BRL",
-                      }).format(contrato.valor)}
+                      }).format(contrato.valor_inicial)}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Valor Executado</Label>
+                    <Label className="text-muted-foreground">Valor Atualizado</Label>
                     <p className="font-medium text-lg">
                       {new Intl.NumberFormat("pt-BR", {
                         style: "currency",
                         currency: "BRL",
-                      }).format(contrato.valor_executado)}
+                      }).format(contrato.valor_atualizado)}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Data de Início</Label>
-                    <p className="font-medium">{new Date(contrato.data_inicio).toLocaleDateString("pt-BR")}</p>
+                    <Label className="text-muted-foreground">Data de Assinatura</Label>
+                    <p className="font-medium">{new Date(contrato.data_assinatura).toLocaleDateString("pt-BR")}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Data de Término</Label>
-                    <p className="font-medium">{new Date(contrato.data_termino).toLocaleDateString("pt-BR")}</p>
+                    <Label className="text-muted-foreground">Data de Vencimento</Label>
+                    <p className="font-medium">{new Date(contrato.data_vencimento).toLocaleDateString("pt-BR")}</p>
                   </div>
                   <div className="md:col-span-2">
                     <Label className="text-muted-foreground">Objeto</Label>
@@ -152,37 +152,7 @@ export default function ContratoDetalhes() {
                 <CardTitle>Cronograma Físico-Financeiro</CardTitle>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Parcela</TableHead>
-                      <TableHead>Previsão</TableHead>
-                      <TableHead>Valor</TableHead>
-                      <TableHead>Percentual</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {cronograma.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item.parcela}</TableCell>
-                        <TableCell>{new Date(item.previsao).toLocaleDateString("pt-BR")}</TableCell>
-                        <TableCell>
-                          {new Intl.NumberFormat("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          }).format(item.valor)}
-                        </TableCell>
-                        <TableCell>{item.percentual}%</TableCell>
-                        <TableCell>
-                          <Badge variant={item.pago ? "default" : "secondary"}>
-                            {item.pago ? "Pago" : "Pendente"}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <p className="text-muted-foreground">Em desenvolvimento</p>
               </CardContent>
             </Card>
           </TabsContent>
@@ -209,23 +179,23 @@ export default function ContratoDetalhes() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {aditivos.map((aditivo) => (
+                    {aditivos?.map((aditivo) => (
                       <TableRow key={aditivo.id}>
                         <TableCell className="font-medium">{aditivo.numero}</TableCell>
                         <TableCell>
                           <Badge variant="outline">{aditivo.tipo}</Badge>
                         </TableCell>
-                        <TableCell>{new Date(aditivo.data).toLocaleDateString("pt-BR")}</TableCell>
+                        <TableCell>{new Date(aditivo.data_assinatura).toLocaleDateString("pt-BR")}</TableCell>
                         <TableCell>
-                          {aditivo.valor > 0
+                          {aditivo.valor_aditado && aditivo.valor_aditado > 0
                             ? new Intl.NumberFormat("pt-BR", {
                                 style: "currency",
                                 currency: "BRL",
-                              }).format(aditivo.valor)
+                              }).format(aditivo.valor_aditado)
                             : "-"}
                         </TableCell>
                         <TableCell>
-                          {aditivo.novo_prazo ? new Date(aditivo.novo_prazo).toLocaleDateString("pt-BR") : "-"}
+                          {aditivo.nova_data_vencimento ? new Date(aditivo.nova_data_vencimento).toLocaleDateString("pt-BR") : "-"}
                         </TableCell>
                         <TableCell>
                           <Button variant="ghost" size="sm">
