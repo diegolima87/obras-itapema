@@ -42,6 +42,7 @@ const getMarkerColor = (status: string) => {
 
 export function MapaObraIndividual({ obra }: MapaObraIndividualProps) {
   const [showInfoWindow, setShowInfoWindow] = useState(true);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const center = {
     lat: obra.latitude,
@@ -120,7 +121,10 @@ export function MapaObraIndividual({ obra }: MapaObraIndividualProps) {
         </Button>
       </CardHeader>
       <CardContent className="p-0">
-        <LoadScript googleMapsApiKey={apiKey}>
+        <LoadScript 
+          googleMapsApiKey={apiKey}
+          onLoad={() => setIsLoaded(true)}
+        >
           <GoogleMap
             mapContainerStyle={mapContainerStyle}
             center={center}
@@ -132,41 +136,45 @@ export function MapaObraIndividual({ obra }: MapaObraIndividualProps) {
               zoomControl: true,
             }}
           >
-            <Marker
-              position={center}
-              onClick={() => setShowInfoWindow(!showInfoWindow)}
-              icon={{
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 10,
-                fillColor: getMarkerColor(obra.status),
-                fillOpacity: 0.9,
-                strokeColor: "#ffffff",
-                strokeWeight: 2,
-              }}
-            />
+            {isLoaded && (
+              <>
+                <Marker
+                  position={center}
+                  onClick={() => setShowInfoWindow(!showInfoWindow)}
+                  icon={{
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 10,
+                    fillColor: getMarkerColor(obra.status),
+                    fillOpacity: 0.9,
+                    strokeColor: "#ffffff",
+                    strokeWeight: 2,
+                  }}
+                />
 
-            {showInfoWindow && (
-              <InfoWindow
-                position={center}
-                onCloseClick={() => setShowInfoWindow(false)}
-              >
-                <div className="p-2 min-w-[200px]">
-                  <h3 className="font-semibold text-sm mb-2">{obra.nome}</h3>
-                  <Badge
-                    className={`${statusColors[obra.status as keyof typeof statusColors]} mb-2`}
+                {showInfoWindow && (
+                  <InfoWindow
+                    position={center}
+                    onCloseClick={() => setShowInfoWindow(false)}
                   >
-                    {statusLabels[obra.status as keyof typeof statusLabels]}
-                  </Badge>
-                  {enderecoCompleto && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {enderecoCompleto}
-                    </p>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {obra.latitude.toFixed(6)}, {obra.longitude.toFixed(6)}
-                  </p>
-                </div>
-              </InfoWindow>
+                    <div className="p-2 min-w-[200px]">
+                      <h3 className="font-semibold text-sm mb-2">{obra.nome}</h3>
+                      <Badge
+                        className={`${statusColors[obra.status as keyof typeof statusColors]} mb-2`}
+                      >
+                        {statusLabels[obra.status as keyof typeof statusLabels]}
+                      </Badge>
+                      {enderecoCompleto && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {enderecoCompleto}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {obra.latitude.toFixed(6)}, {obra.longitude.toFixed(6)}
+                      </p>
+                    </div>
+                  </InfoWindow>
+                )}
+              </>
             )}
           </GoogleMap>
         </LoadScript>
