@@ -72,6 +72,51 @@ export const useObrasComLocalizacao = () => {
   });
 };
 
+export const useObra = (id: string | undefined) => {
+  return useQuery({
+    queryKey: ["obras", id],
+    queryFn: async () => {
+      if (!id) throw new Error("ID da obra não fornecido");
+      
+      const { data, error } = await supabase
+        .from("obras")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+      return data as Obra;
+    },
+    enabled: !!id,
+  });
+};
+
+export const useAtualizarObra = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<Obra> & { id: string }) => {
+      const { data, error } = await supabase
+        .from("obras")
+        .update(updates as any)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["obras"] });
+      queryClient.invalidateQueries({ queryKey: ["obras", variables.id] });
+      toast.success("Obra atualizada com sucesso");
+    },
+    onError: (error: any) => {
+      toast.error("Erro ao atualizar obra: " + error.message);
+    },
+  });
+};
+
 export const useDeletarObra = () => {
   const queryClient = useQueryClient();
 
