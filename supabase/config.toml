@@ -11,3 +11,6 @@ verify_jwt = true
 
 [functions.importar-esfinge]
 verify_jwt = false
+
+[functions.enviar-situacao-obras-mensal]
+verify_jwt = false
