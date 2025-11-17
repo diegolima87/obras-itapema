@@ -94,6 +94,23 @@ export function useAuth() {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
+      // Obter tenant_id do contexto baseado no hostname
+      const hostname = window.location.hostname;
+      let tenantSlug = 'itampema'; // default
+      
+      if (hostname.includes('.obrasdigital.com.br')) {
+        tenantSlug = hostname.split('.')[0];
+      } else if (hostname.includes('localhost')) {
+        tenantSlug = 'itampema';
+      }
+      
+      // Buscar tenant_id pelo slug ou subdominio
+      const { data: tenantData } = await supabase
+        .from('tenants')
+        .select('id')
+        .or(`slug.eq.${tenantSlug},subdominio.eq.${tenantSlug}`)
+        .single();
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -101,6 +118,7 @@ export function useAuth() {
           emailRedirectTo: redirectUrl,
           data: {
             nome: nome,
+            tenant_id: tenantData?.id,
           }
         }
       });
