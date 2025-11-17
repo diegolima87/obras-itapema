@@ -24,12 +24,31 @@ export interface UserProfile {
 export function useUsuarios() {
   const queryClient = useQueryClient();
 
-  const { data: usuarios, isLoading, error } = useQuery({
-    queryKey: ['usuarios'],
+  const { data: currentUserTenant } = useQuery({
+    queryKey: ['currentUserTenant'],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .single();
+      
+      return profile;
+    },
+  });
+
+  const { data: usuarios, isLoading, error } = useQuery({
+    queryKey: ['usuarios', currentUserTenant?.tenant_id],
+    queryFn: async () => {
+      if (!currentUserTenant?.tenant_id) return [];
+      
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
+        .eq('tenant_id', currentUserTenant.tenant_id)
         .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;
@@ -51,6 +70,7 @@ export function useUsuarios() {
 
       return usersWithRoles as UserProfile[];
     },
+    enabled: !!currentUserTenant?.tenant_id,
   });
 
   const assignRole = useMutation({

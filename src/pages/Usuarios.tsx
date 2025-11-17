@@ -24,9 +24,11 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTenant } from "@/contexts/TenantContext";
 
 export default function Usuarios() {
   const queryClient = useQueryClient();
+  const { tenant } = useTenant();
   const [searchTerm, setSearchTerm] = useState("");
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -135,6 +137,7 @@ export default function Usuarios() {
         email_confirm: true,
         user_metadata: {
           nome: newUserFormData.nome,
+          tenant_id: tenant?.id,
         },
       });
 
@@ -150,6 +153,7 @@ export default function Usuarios() {
           email: newUserFormData.email,
           telefone: newUserFormData.telefone || null,
           crea: newUserFormData.crea || null,
+          tenant_id: tenant?.id,
         });
 
       if (profileError) throw profileError;
