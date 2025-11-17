@@ -11,17 +11,21 @@ import {
   History,
   Zap,
   Layers,
-  ShieldCheck
+  ShieldCheck,
+  LogOut
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTenant } from "@/contexts/TenantContext";
 import { useFeatureEnabled } from "@/hooks/useTenantFeatures";
 import { useIsSuperAdmin } from "@/hooks/useUserRoles";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -53,9 +57,20 @@ export function AppSidebar() {
   const { open } = useSidebar();
   const { tenant } = useTenant();
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
   const { isEnabled: esfingeEnabled } = useFeatureEnabled('esfinge');
   const { isSuperAdmin } = useIsSuperAdmin();
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success("Logout realizado com sucesso!");
+      navigate("/login");
+    } catch (error) {
+      toast.error("Erro ao fazer logout");
+    }
+  };
 
   const isActive = (path: string) => currentPath === path || currentPath.startsWith(path + '/');
   
@@ -161,6 +176,17 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      {/* Footer com botão de logout */}
+      <SidebarFooter className="p-4 border-t border-white/10">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/80 hover:bg-white/10 hover:text-white transition-all duration-300"
+        >
+          <LogOut className="h-5 w-5" strokeWidth={2.5} />
+          {open && <span className="font-medium">Sair</span>}
+        </button>
+      </SidebarFooter>
     </Sidebar>
   );
 }
