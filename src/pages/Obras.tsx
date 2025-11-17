@@ -26,6 +26,7 @@ import { Plus, Search, Eye, AlertCircle, MoreVertical, Pencil, Trash2 } from "lu
 import { statusColors, statusLabels } from "@/lib/constants";
 import { Link, useNavigate } from "react-router-dom";
 import { useObras, useDeletarObra } from "@/hooks/useObras";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Obras() {
   const navigate = useNavigate();
@@ -79,8 +80,24 @@ export default function Obras() {
         {error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Erro ao carregar obras: {(error as Error).message}
+            <AlertDescription className="flex items-center justify-between gap-4">
+              <span>
+                Erro ao carregar obras: {(error as Error).message}
+              </span>
+              {((error as Error).message.includes('JWT') || 
+                (error as Error).message.includes('expired') ||
+                (error as Error).message.includes('Sessão')) && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    navigate('/login');
+                  }}
+                >
+                  Fazer Login Novamente
+                </Button>
+              )}
             </AlertDescription>
           </Alert>
         )}

@@ -28,6 +28,48 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Check and refresh session periodically
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        const expiresAt = session.expires_at;
+        const now = Math.floor(Date.now() / 1000);
+        
+        // If token expires in less than 5 minutes, refresh it
+        if (expiresAt && (expiresAt - now < 300)) {
+          console.log('Token próximo de expirar, renovando...');
+          const { data: { session: newSession }, error } = await supabase.auth.refreshSession();
+          
+          if (error) {
+            console.error('Erro ao renovar sessão:', error);
+            await supabase.auth.signOut();
+          } else if (newSession) {
+            setSession(newSession);
+            setUser(newSession.user);
+          }
+        }
+      }
+    }, 45 * 60 * 1000); // Check every 45 minutes
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const refreshSession = async () => {
+    const { data: { session }, error } = await supabase.auth.refreshSession();
+    
+    if (error) {
+      console.error('Erro ao renovar sessão:', error);
+      await supabase.auth.signOut();
+      return null;
+    }
+    
+    setSession(session);
+    setUser(session?.user ?? null);
+    return session;
+  };
+
   const signIn = async (email: string, password: string) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -96,5 +138,6 @@ export function useAuth() {
     signIn,
     signUp,
     signOut,
+    refreshSession,
   };
 }
