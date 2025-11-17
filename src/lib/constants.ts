@@ -88,3 +88,23 @@ export const statusPagamento = [
   "pago",
   "cancelado",
 ];
+
+export const tiposDocumento = [
+  { value: "contrato", label: "Contrato" },
+  { value: "aditivo", label: "Aditivo" },
+  { value: "medicao", label: "Medição" },
+  { value: "pagamento", label: "Pagamento" },
+  { value: "projeto", label: "Projeto/Técnico" },
+  { value: "foto", label: "Foto" },
+  { value: "outro", label: "Outro" },
+] as const;
+
+export const tipoDocumentoLabels: Record<string, string> = {
+  contrato: "Contrato",
+  aditivo: "Aditivo",
+  medicao: "Medição",
+  pagamento: "Pagamento",
+  projeto: "Projeto/Técnico",
+  foto: "Foto",
+  outro: "Outro",
+};

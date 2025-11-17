@@ -53,9 +53,10 @@ export function DocumentoLista({
       contrato: { label: "Contrato", variant: "default" },
       aditivo: { label: "Aditivo", variant: "secondary" },
       medicao: { label: "Medição", variant: "outline" },
-      nota_fiscal: { label: "Nota Fiscal", variant: "default" },
-      relatorio_tecnico: { label: "Relatório Técnico", variant: "secondary" },
-      foto_obra: { label: "Foto", variant: "outline" },
+      pagamento: { label: "Pagamento", variant: "default" },
+      projeto: { label: "Projeto/Técnico", variant: "secondary" },
+      foto: { label: "Foto", variant: "outline" },
+      outro: { label: "Outro", variant: "secondary" },
     };
 
     const tipoConfig = tipos[tipo] || { label: tipo, variant: "secondary" };

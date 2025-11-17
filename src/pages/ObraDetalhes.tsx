@@ -244,7 +244,7 @@ export default function ObraDetalhes() {
             <div className="space-y-6">
               <DocumentoUpload
                 bucketName="documentos_obras"
-                tipo="relatorio_tecnico"
+                tipo="projeto"
                 obraId={id}
                 allowedTypes=".pdf,.doc,.docx"
                 maxSize="10MB"
