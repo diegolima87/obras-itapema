@@ -43,6 +43,7 @@ import MedicoesFornecedor from "./pages/fornecedor/MedicoesFornecedor";
 import IntegracaoTCE from "./pages/IntegracaoTCE";
 import Mapa from "./pages/Mapa";
 import NotFound from "./pages/NotFound";
+import NovoFornecedor from "./pages/NovoFornecedor";
 
 const queryClient = new QueryClient();
 
@@ -84,6 +85,10 @@ const App = () => (
           <Route path="/medicoes/:id" element={<ProtectedRoute><MedicaoDetalhes /></ProtectedRoute>} />
           <Route path="/medicoes/:id/completo" element={<ProtectedRoute><MedicaoDetalhesCompleto /></ProtectedRoute>} />
           
+          {/* Fornecedores Routes - Protected */}
+          <Route path="/fornecedores" element={<ProtectedRoute><Fornecedores /></ProtectedRoute>} />
+          <Route path="/fornecedores/novo" element={<ProtectedRoute><NovoFornecedor /></ProtectedRoute>} />
+          
           {/* Admin Routes - Protected */}
           <Route path="/usuarios" element={<ProtectedRoute><Usuarios /></ProtectedRoute>} />
           <Route path="/configuracoes" element={<ProtectedRoute><Configuracoes /></ProtectedRoute>} />
@@ -105,7 +110,6 @@ const App = () => (
           <Route path="/fornecedor/documentos" element={<ProtectedRoute><DocumentosFornecedor /></ProtectedRoute>} />
           
           {/* Other Protected Routes */}
-          <Route path="/fornecedores" element={<ProtectedRoute><Fornecedores /></ProtectedRoute>} />
           <Route path="/mapa" element={<ProtectedRoute><Mapa /></ProtectedRoute>} />
           <Route path="/integracao-tce/:tipo/:id" element={<ProtectedRoute><IntegracaoTCE /></ProtectedRoute>} />
           

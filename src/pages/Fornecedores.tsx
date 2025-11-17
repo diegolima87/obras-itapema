@@ -15,8 +15,10 @@ import { Plus, Search, Building2, Mail, Phone, AlertCircle } from "lucide-react"
 import { useFornecedores } from "@/hooks/useFornecedores";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useNavigate } from "react-router-dom";
 
 const Fornecedores = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const { data: fornecedores, isLoading, error } = useFornecedores();
 
@@ -39,7 +41,7 @@ const Fornecedores = () => {
               Cadastro e gestão de fornecedores
             </p>
           </div>
-          <Button className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto" onClick={() => navigate('/fornecedores/novo')}>
             <Plus className="mr-2 h-4 w-4" />
             Novo Fornecedor
           </Button>
