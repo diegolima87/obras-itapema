@@ -21,16 +21,31 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Usuarios() {
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isNewUserDialogOpen, setIsNewUserDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<UserRole['role']>('cidadao');
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [editFormData, setEditFormData] = useState({ nome: "", telefone: "", crea: "" });
+  const [newUserFormData, setNewUserFormData] = useState({
+    nome: "",
+    email: "",
+    telefone: "",
+    crea: "",
+    senha: "",
+    confirmarSenha: "",
+    role: "cidadao" as UserRole['role'],
+  });
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
 
   const { usuarios, isLoading, assignRole, removeRole, updateProfile } = useUsuarios();
 
@@ -91,6 +106,78 @@ export default function Usuarios() {
     
     setIsDeleteDialogOpen(false);
     setEditingUser(null);
+  };
+
+  const handleCreateUser = async () => {
+    // Validação
+    if (!newUserFormData.nome || !newUserFormData.email || !newUserFormData.senha) {
+      toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+
+    if (newUserFormData.senha.length < 6) {
+      toast.error("A senha deve ter no mínimo 6 caracteres");
+      return;
+    }
+
+    if (newUserFormData.senha !== newUserFormData.confirmarSenha) {
+      toast.error("As senhas não coincidem");
+      return;
+    }
+
+    setIsCreatingUser(true);
+
+    try {
+      // 1. Criar usuário no Auth usando admin API
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: newUserFormData.email,
+        password: newUserFormData.senha,
+        email_confirm: true,
+        user_metadata: {
+          nome: newUserFormData.nome,
+        },
+      });
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("Erro ao criar usuário");
+
+      // 2. Criar perfil
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .insert({
+          id: authData.user.id,
+          nome: newUserFormData.nome,
+          email: newUserFormData.email,
+          telefone: newUserFormData.telefone || null,
+          crea: newUserFormData.crea || null,
+        });
+
+      if (profileError) throw profileError;
+
+      // 3. Atribuir papel
+      await assignRole.mutateAsync({
+        userId: authData.user.id,
+        role: newUserFormData.role,
+      });
+
+      toast.success("Usuário criado com sucesso!");
+      setIsNewUserDialogOpen(false);
+      setNewUserFormData({
+        nome: "",
+        email: "",
+        telefone: "",
+        crea: "",
+        senha: "",
+        confirmarSenha: "",
+        role: "cidadao",
+      });
+      queryClient.invalidateQueries({ queryKey: ["usuarios"] });
+    } catch (error: any) {
+      console.error("Erro ao criar usuário:", error);
+      toast.error(error.message || "Erro ao criar usuário");
+    } finally {
+      setIsCreatingUser(false);
+    }
   };
 
   const SUPER_ADMIN_EMAIL = 'deklima@gmail.com';
@@ -167,7 +254,7 @@ export default function Usuarios() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Usuários Cadastrados</CardTitle>
-            <Button onClick={() => window.open('/login', '_blank')} size="sm">
+            <Button onClick={() => setIsNewUserDialogOpen(true)} size="sm">
               <UserPlus className="mr-2 h-4 w-4" />
               Novo Usuário
             </Button>
@@ -288,6 +375,100 @@ export default function Usuarios() {
             )}
           </CardContent>
         </Card>
+
+        {/* New User Dialog */}
+        <Dialog open={isNewUserDialogOpen} onOpenChange={setIsNewUserDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Cadastrar Novo Usuário</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="nome">Nome Completo *</Label>
+                <Input
+                  id="nome"
+                  value={newUserFormData.nome}
+                  onChange={(e) => setNewUserFormData({ ...newUserFormData, nome: e.target.value })}
+                  placeholder="Digite o nome completo"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="email">E-mail *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={newUserFormData.email}
+                  onChange={(e) => setNewUserFormData({ ...newUserFormData, email: e.target.value })}
+                  placeholder="usuario@email.com"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="telefone">Telefone</Label>
+                <Input
+                  id="telefone"
+                  value={newUserFormData.telefone}
+                  onChange={(e) => setNewUserFormData({ ...newUserFormData, telefone: e.target.value })}
+                  placeholder="(00) 00000-0000"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="crea">CREA</Label>
+                <Input
+                  id="crea"
+                  value={newUserFormData.crea}
+                  onChange={(e) => setNewUserFormData({ ...newUserFormData, crea: e.target.value })}
+                  placeholder="CREA/UF 000000000-0"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="senha">Senha Inicial *</Label>
+                <Input
+                  id="senha"
+                  type="password"
+                  value={newUserFormData.senha}
+                  onChange={(e) => setNewUserFormData({ ...newUserFormData, senha: e.target.value })}
+                  placeholder="Mínimo 6 caracteres"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="confirmarSenha">Confirmar Senha *</Label>
+                <Input
+                  id="confirmarSenha"
+                  type="password"
+                  value={newUserFormData.confirmarSenha}
+                  onChange={(e) => setNewUserFormData({ ...newUserFormData, confirmarSenha: e.target.value })}
+                  placeholder="Digite a senha novamente"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="role">Papel Inicial *</Label>
+                <Select
+                  value={newUserFormData.role}
+                  onValueChange={(value) => setNewUserFormData({ ...newUserFormData, role: value as UserRole['role'] })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                    <SelectItem value="gestor">Gestor</SelectItem>
+                    <SelectItem value="fiscal">Fiscal</SelectItem>
+                    <SelectItem value="fornecedor">Fornecedor</SelectItem>
+                    <SelectItem value="cidadao">Cidadão</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsNewUserDialogOpen(false)} disabled={isCreatingUser}>
+                Cancelar
+              </Button>
+              <Button onClick={handleCreateUser} disabled={isCreatingUser}>
+                {isCreatingUser ? "Criando..." : "Criar Usuário"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Edit User Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
