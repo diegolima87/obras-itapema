@@ -33,6 +33,7 @@ import { formatCurrencyInput, parseCurrency } from "@/lib/utils";
 import { useTenant } from "@/contexts/TenantContext";
 import { geocodeAddress, fetchAddressByCep, GeocodingResult } from "@/lib/geocoding";
 import { MapaSelecaoLocalizacao } from "@/components/obra/MapaSelecaoLocalizacao";
+import { MiniMapPreview } from "@/components/obra/MiniMapPreview";
 
 const formSchema = z.object({
   nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
@@ -57,6 +58,8 @@ export default function NovaObra() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [isFetchingCep, setIsFetchingCep] = useState(false);
+  const [geocodingSource, setGeocodingSource] = useState<'google' | 'nominatim' | 'cidade_aproximada' | 'manual' | 'desconhecida'>('desconhecida');
+  const [showMapModal, setShowMapModal] = useState(false);
   const { data: engenheiros, isLoading: loadingEngenheiros } = useEngenheiros();
   const { tenant } = useTenant();
   
@@ -117,14 +120,12 @@ export default function NovaObra() {
     }
   };
 
-  const [geocodingSource, setGeocodingSource] = useState<'google' | 'nominatim' | 'cidade_aproximada' | 'manual' | 'desconhecida'>('desconhecida');
-  const [showMapSelection, setShowMapSelection] = useState(false);
-
   const handleGeocodeAddress = async () => {
     const endereco = form.getValues("endereco");
     const bairro = form.getValues("bairro");
     const cidade = form.getValues("cidade");
     const uf = form.getValues("uf");
+    const cep = form.getValues("cep");
     
     if (!endereco || endereco.trim().length < 5) {
       toast.error("Informe um endereço válido antes de buscar coordenadas");
@@ -141,6 +142,7 @@ export default function NovaObra() {
         bairro,
         cidade,
         uf,
+        cep,
         googleApiKey: apiKey,
       });
       
@@ -556,6 +558,13 @@ export default function NovaObra() {
                     />
                   </div>
 
+                  <MiniMapPreview
+                    latitude={form.watch("latitude") ? parseFloat(form.watch("latitude")) : undefined}
+                    longitude={form.watch("longitude") ? parseFloat(form.watch("longitude")) : undefined}
+                    source={geocodingSource}
+                    endereco={`${form.watch("endereco")}, ${form.watch("cidade")} - ${form.watch("uf")}`}
+                  />
+
                   <Button
                     type="button"
                     variant="outline"
@@ -574,7 +583,7 @@ export default function NovaObra() {
                   <Button
                     type="button"
                     variant="secondary"
-                    onClick={() => setShowMapSelection(true)}
+                    onClick={() => setShowMapModal(true)}
                     className="w-full"
                   >
                     <MapPin className="mr-2 h-4 w-4" />
@@ -630,8 +639,8 @@ export default function NovaObra() {
       </div>
       
       <MapaSelecaoLocalizacao
-        open={showMapSelection}
-        onOpenChange={setShowMapSelection}
+        open={showMapModal}
+        onOpenChange={setShowMapModal}
         initialLat={parseFloat(form.getValues("latitude") || "-15.7801")}
         initialLng={parseFloat(form.getValues("longitude") || "-47.9292")}
         onLocationSelect={handleLocationSelect}

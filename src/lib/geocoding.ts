@@ -235,45 +235,67 @@ export async function geocodeAddress(params: {
   bairro?: string;
   cidade?: string;
   uf?: string;
+  cep?: string;
   googleApiKey?: string;
 }): Promise<GeocodingResult | null> {
-  const { endereco, bairro, cidade, uf, googleApiKey } = params;
+  const { endereco, bairro, cidade, uf, cep, googleApiKey } = params;
 
-  console.log('🗺️ Iniciando geocodificação robusta...');
+  console.log('🗺️ Iniciando geocodificação:', { endereco, bairro, cidade, uf, cep, hasGoogleKey: !!googleApiKey });
 
-  // Estratégia 1: Tentar Google Maps (se API key disponível)
-  if (googleApiKey) {
-    console.log('1️⃣ Tentando Google Maps API...');
-    const fullAddress = [endereco, bairro, cidade, uf, 'Brasil']
-      .filter(Boolean)
-      .join(', ');
+  // PRIORITY 1: Try CEP-based geocoding first (most reliable for Brazil)
+  if (cep && cep.replace(/\D/g, '').length === 8) {
+    console.log('📍 Tentativa 1: Geocodificação baseada em CEP');
     
+    // Try with full address from CEP
+    const cepQuery = `${endereco}, ${bairro}, ${cidade} - ${uf}, ${cep}`;
+    
+    // Try Google with CEP
+    if (googleApiKey) {
+      console.log('  🔍 Google Maps com CEP completo');
+      const googleWithCep = await tryGoogleMapsGeocoding(cepQuery, googleApiKey);
+      if (googleWithCep) {
+        console.log('✅ Sucesso com Google Maps + CEP!', googleWithCep);
+        return googleWithCep;
+      }
+    }
+    
+    // Try Nominatim with CEP
+    console.log('  🔍 Nominatim com CEP completo');
+    const nominatimWithCep = await tryNominatimGeocoding(cepQuery);
+    if (nominatimWithCep && nominatimWithCep.source !== 'cidade_aproximada') {
+      console.log('✅ Sucesso com Nominatim + CEP!', nominatimWithCep);
+      return nominatimWithCep;
+    }
+  }
+
+  // PRIORITY 2: Try Google Maps with full address
+  if (googleApiKey) {
+    console.log('📍 Tentativa 2: Google Maps Geocoding API');
+    const fullAddress = `${endereco}, ${bairro}, ${cidade} - ${uf}`;
     const googleResult = await tryGoogleMapsGeocoding(fullAddress, googleApiKey);
     if (googleResult) {
+      console.log('✅ Sucesso com Google Maps!', googleResult);
       return googleResult;
     }
   }
 
-  // Estratégia 2: Tentar Nominatim com múltiplas queries
-  console.log('2️⃣ Tentando OpenStreetMap Nominatim (múltiplas queries)...');
-  const nominatimResult = await tryNominatimWithMultipleQueries(
-    endereco,
-    bairro,
-    cidade,
-    uf
-  );
-  if (nominatimResult) {
+  // PRIORITY 3: Try Nominatim with multiple query strategies
+  console.log('📍 Tentativa 3: OpenStreetMap Nominatim (múltiplas tentativas)');
+  const nominatimResult = await tryNominatimWithMultipleQueries(endereco, bairro, cidade, uf);
+  if (nominatimResult && nominatimResult.source !== 'cidade_aproximada') {
+    console.log('✅ Sucesso com Nominatim!', nominatimResult);
     return nominatimResult;
   }
 
-  // Estratégia 3: Fallback para coordenadas aproximadas da cidade
-  console.log('3️⃣ Usando coordenadas aproximadas da cidade...');
+  // PRIORITY 4: Fallback to approximate city coordinates
+  console.log('📍 Tentativa 4: Coordenadas aproximadas da cidade');
   const cityResult = getCityCoordinates(cidade, uf);
   if (cityResult) {
+    console.log('⚠️ Usando coordenadas aproximadas do centro da cidade', cityResult);
     return cityResult;
   }
 
-  console.log('❌ Não foi possível encontrar coordenadas');
+  console.log('❌ Não foi possível geocodificar o endereço');
   return null;
 }
 
