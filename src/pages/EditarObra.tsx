@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { formatCurrencyInput, parseCurrency } from "@/lib/utils";
 import { geocodeAddress, fetchAddressByCep, GeocodingResult } from "@/lib/geocoding";
 import { MapaSelecaoLocalizacao } from "@/components/obra/MapaSelecaoLocalizacao";
+import { MiniMapPreview } from "@/components/obra/MiniMapPreview";
 
 export default function EditarObra() {
   const { id } = useParams();
@@ -82,7 +83,7 @@ export default function EditarObra() {
   }, [obra]);
 
   const handleGeocodeAddress = async () => {
-    const { endereco, bairro, cidade, uf } = formData;
+    const { endereco, bairro, cidade, uf, cep } = formData;
     
     if (!endereco || endereco.trim().length < 5) {
       toast.error("Informe um endereço válido antes de buscar coordenadas");
@@ -99,6 +100,7 @@ export default function EditarObra() {
         bairro,
         cidade,
         uf,
+        cep,
         googleApiKey: apiKey,
       });
       
@@ -470,6 +472,13 @@ export default function EditarObra() {
                     />
                   </div>
                 </div>
+
+                <MiniMapPreview
+                  latitude={formData.latitude ? parseFloat(formData.latitude) : undefined}
+                  longitude={formData.longitude ? parseFloat(formData.longitude) : undefined}
+                  source={geocodingSource}
+                  endereco={`${formData.endereco}, ${formData.cidade} - ${formData.uf}`}
+                />
 
                 <div className="grid grid-cols-2 gap-4">
                   <Button
