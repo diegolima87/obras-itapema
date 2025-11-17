@@ -54,8 +54,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       
       let tenantSlug = '';
       
-      // Para desenvolvimento local, usa 'itampema' por padrão
-      if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      // Para desenvolvimento local e Lovable preview, usa 'itampema' por padrão
+      if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('lovableproject.com')) {
         tenantSlug = 'itampema';
       }
       // Verificar se é subdomínio (itampema.obrasdigital.com.br)
@@ -76,6 +76,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
           setLoading(false);
           return;
         }
+        // Fallback para 'itampema' se não encontrar domínio customizado
+        tenantSlug = 'itampema';
       }
 
       // Carregar tenant pelo slug
