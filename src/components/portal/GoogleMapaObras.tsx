@@ -33,6 +33,23 @@ const defaultCenter = {
   lng: -46.6333,
 };
 
+// Helper function to create marker icon URL
+const getMarkerIcon = (status: string) => {
+  const color = statusColors[status as keyof typeof statusColors]?.includes('green') 
+    ? '22c55e' 
+    : statusColors[status as keyof typeof statusColors]?.includes('yellow') 
+    ? 'eab308' 
+    : statusColors[status as keyof typeof statusColors]?.includes('blue') 
+    ? '3b82f6' 
+    : '6b7280';
+  
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+    `<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="16" cy="16" r="12" fill="#${color}" stroke="white" stroke-width="2"/>
+    </svg>`
+  )}`;
+};
+
 export function GoogleMapaObras({ obras }: GoogleMapaObrasProps) {
   const navigate = useNavigate();
   const [selectedObra, setSelectedObra] = useState<Obra | null>(null);
@@ -111,20 +128,7 @@ export function GoogleMapaObras({ obras }: GoogleMapaObrasProps) {
                 key={obra.id}
                 position={{ lat: obra.latitude, lng: obra.longitude }}
                 onClick={() => setSelectedObra(obra)}
-                icon={{
-                  path: google.maps.SymbolPath.CIRCLE,
-                  scale: 8,
-                  fillColor: statusColors[obra.status as keyof typeof statusColors]?.includes('green') 
-                    ? '#22c55e' 
-                    : statusColors[obra.status as keyof typeof statusColors]?.includes('yellow') 
-                    ? '#eab308' 
-                    : statusColors[obra.status as keyof typeof statusColors]?.includes('blue') 
-                    ? '#3b82f6' 
-                    : '#6b7280',
-                  fillOpacity: 0.8,
-                  strokeColor: '#ffffff',
-                  strokeWeight: 2,
-                }}
+                icon={getMarkerIcon(obra.status)}
               />
             ))}
 
