@@ -22,9 +22,21 @@ export const useFornecedores = () => {
   return useQuery({
     queryKey: ["fornecedores"],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (!profile?.tenant_id) return [];
+      
       const { data, error } = await supabase
         .from("fornecedores")
         .select("*")
+        .eq("tenant_id", profile.tenant_id)
         .order("nome");
 
       if (error) throw error;

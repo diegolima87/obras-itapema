@@ -32,6 +32,17 @@ export const useContratos = () => {
   return useQuery({
     queryKey: ["contratos"],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (!profile?.tenant_id) return [];
+      
       const { data, error } = await supabase
         .from("contratos")
         .select(`
@@ -39,6 +50,7 @@ export const useContratos = () => {
           obras (id, nome),
           fornecedores (id, nome, cnpj)
         `)
+        .eq("tenant_id", profile.tenant_id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;

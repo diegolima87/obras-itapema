@@ -46,6 +46,17 @@ export const useMedicoes = (filters?: {
   return useQuery({
     queryKey: ["medicoes", filters],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (!profile?.tenant_id) return [];
+      
       let query = supabase
         .from("medicoes")
         .select(`
@@ -53,7 +64,8 @@ export const useMedicoes = (filters?: {
           obras (id, nome),
           contratos (id, numero),
           fornecedores (id, nome)
-        `);
+        `)
+        .eq("tenant_id", profile.tenant_id);
 
       if (filters?.status) {
         query = query.eq("status", filters.status as any);
