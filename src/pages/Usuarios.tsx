@@ -167,7 +167,7 @@ export default function Usuarios() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Usuários Cadastrados</CardTitle>
-            <Button onClick={() => window.location.href = '/login'} size="sm">
+            <Button onClick={() => window.open('/login', '_blank')} size="sm">
               <UserPlus className="mr-2 h-4 w-4" />
               Novo Usuário
             </Button>
