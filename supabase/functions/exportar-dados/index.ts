@@ -19,25 +19,38 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
+    // Extrair JWT do header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Token de autenticação não fornecido" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const jwt = authHeader.replace("Bearer ", "");
+
+    // Cliente com SERVICE_ROLE_KEY para operações administrativas
+    const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      {
-        global: {
-          headers: { Authorization: req.headers.get("Authorization")! },
-        },
-      }
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Verificar autenticação
+    // Cliente com ANON_KEY para validar o JWT do usuário
+    const supabaseAuth = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
+
+    // Verificar autenticação usando o JWT
     const {
       data: { user },
       error: authError,
-    } = await supabaseClient.auth.getUser();
+    } = await supabaseAuth.auth.getUser(jwt);
 
     if (authError || !user) {
       console.error("Erro de autenticação:", authError);
-      return new Response(JSON.stringify({ error: "Não autorizado" }), {
+      return new Response(JSON.stringify({ error: "Token inválido ou expirado" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -45,16 +58,22 @@ serve(async (req) => {
 
     console.log("Usuário autenticado:", user.id, user.email);
 
-    // Verificar se é admin
-    const { data: roles } = await supabaseClient
+    // Verificar se é admin usando o cliente administrativo
+    const { data: roles, error: rolesError } = await supabaseAdmin
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id);
 
+    if (rolesError) {
+      console.error("Erro ao verificar roles:", rolesError);
+    }
+
+    console.log("Roles do usuário:", roles);
+
     const isAdmin = roles?.some((r) => r.role === "admin" || r.role === "gestor");
     if (!isAdmin) {
       return new Response(
-        JSON.stringify({ error: "Acesso negado. Apenas administradores." }),
+        JSON.stringify({ error: "Acesso negado. Apenas administradores podem exportar dados." }),
         {
           status: 403,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -79,16 +98,16 @@ serve(async (req) => {
     let data: any[] = [];
     let error: any = null;
 
-    // Buscar dados conforme o tipo
+    // Buscar dados conforme o tipo usando o cliente administrativo
     switch (tipo) {
       case "obras":
-        const obrasResult = await supabaseClient.from("obras").select("*");
+        const obrasResult = await supabaseAdmin.from("obras").select("*");
         data = obrasResult.data || [];
         error = obrasResult.error;
         break;
 
       case "contratos":
-        const contratosResult = await supabaseClient
+        const contratosResult = await supabaseAdmin
           .from("contratos")
           .select(`
             *,
@@ -100,7 +119,7 @@ serve(async (req) => {
         break;
 
       case "medicoes":
-        const medicoesResult = await supabaseClient
+        const medicoesResult = await supabaseAdmin
           .from("medicoes")
           .select(`
             *,
@@ -120,8 +139,8 @@ serve(async (req) => {
       });
     }
 
-    // Registrar log de auditoria
-    await supabaseClient.from("logs_auditoria").insert({
+    // Registrar log de auditoria usando o cliente administrativo
+    await supabaseAdmin.from("logs_auditoria").insert({
       usuario_id: user.id,
       acao: "EXPORTACAO",
       tabela: tipo,
