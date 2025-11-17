@@ -1,29 +1,32 @@
-import { useEffect, useRef } from "react";
+import { useState, useCallback } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { GoogleMap, LoadScript, Marker, InfoWindow } from "@react-google-maps/api";
 import { statusLabels } from "@/lib/mockData";
 import { useObrasComLocalizacao } from "@/hooks/useObras";
-import icon from "leaflet/dist/images/marker-icon.png";
-import iconShadow from "leaflet/dist/images/marker-shadow.png";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
-const DefaultIcon = L.icon({
-  iconUrl: icon,
-  shadowUrl: iconShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
 
-L.Marker.prototype.options.icon = DefaultIcon;
+const mapContainerStyle = {
+  width: "100%",
+  height: "600px",
+};
+
+const defaultCenter = {
+  lat: -27.5954,
+  lng: -48.548,
+};
 
 const Mapa = () => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<L.Map | null>(null);
   const { data: obras, isLoading, error } = useObrasComLocalizacao();
+  const [selectedObra, setSelectedObra] = useState<any>(null);
+  const [mapCenter] = useState(defaultCenter);
+  const navigate = useNavigate();
 
   const contadores = {
     planejada: obras?.filter(o => o.status === 'planejada').length || 0,
@@ -32,49 +35,60 @@ const Mapa = () => {
     paralisada: obras?.filter(o => o.status === 'paralisada').length || 0,
   };
 
-  useEffect(() => {
-    if (!mapContainer.current || map.current || !obras || obras.length === 0) return;
-    map.current = L.map(mapContainer.current).setView([-27.5954, -48.548], 12);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    }).addTo(map.current);
-
-    obras.forEach((obra) => {
-      if (!map.current || !obra.latitude || !obra.longitude) return;
-      let markerColor = "#3b82f6";
-      if (obra.status === "concluida") markerColor = "#22c55e";
-      if (obra.status === "paralisada") markerColor = "#ef4444";
-      if (obra.status === "planejada") markerColor = "#6b7280";
-
-      const customIcon = L.divIcon({
-        className: "custom-marker",
-        html: `<div style="background-color: ${markerColor}; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-        iconSize: [20, 20],
-        iconAnchor: [10, 10],
+  const onLoad = useCallback((map: google.maps.Map) => {
+    if (obras && obras.length > 0) {
+      const bounds = new window.google.maps.LatLngBounds();
+      obras.forEach((obra) => {
+        if (obra.latitude && obra.longitude) {
+          bounds.extend({
+            lat: obra.latitude,
+            lng: obra.longitude,
+          });
+        }
       });
-
-      const marker = L.marker([obra.latitude, obra.longitude], { icon: customIcon }).addTo(map.current);
-      marker.bindPopup(`
-        <div style="min-width: 200px;">
-          <h3 style="font-weight: bold; margin-bottom: 8px;">${obra.nome}</h3>
-          <p style="font-size: 14px; color: #666; margin-bottom: 8px;">${obra.descricao || ''}</p>
-          <p style="font-size: 12px;"><strong>Status:</strong> ${statusLabels[obra.status as keyof typeof statusLabels]}</p>
-          <p style="font-size: 12px;"><strong>Progresso:</strong> ${obra.percentual_executado}%</p>
-          <p style="font-size: 12px;"><strong>Valor:</strong> ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(obra.valor_total)}</p>
-          <a href="/obras/${obra.id}" style="color: #3b82f6; font-size: 12px;">Ver detalhes</a>
-        </div>
-      `);
-    });
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
+      map.fitBounds(bounds);
+    }
   }, [obras]);
 
-  if (error) return <MainLayout><Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertDescription>Erro: {(error as Error).message}</AlertDescription></Alert></MainLayout>;
+  const getMarkerIcon = (status: string) => {
+    let color = "#3b82f6"; // andamento - blue
+    if (status === "concluida") color = "#22c55e"; // green
+    if (status === "paralisada") color = "#ef4444"; // red
+    if (status === "planejada") color = "#6b7280"; // gray
+
+    return {
+      path: google.maps.SymbolPath.CIRCLE,
+      fillColor: color,
+      fillOpacity: 1,
+      strokeColor: "#ffffff",
+      strokeWeight: 3,
+      scale: 10,
+    };
+  };
+
+  if (!GOOGLE_MAPS_API_KEY) {
+    return (
+      <MainLayout>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            API Key do Google Maps não configurada. Configure VITE_GOOGLE_MAPS_API_KEY no arquivo .env
+          </AlertDescription>
+        </Alert>
+      </MainLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <MainLayout>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>Erro: {(error as Error).message}</AlertDescription>
+        </Alert>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -97,11 +111,111 @@ const Mapa = () => {
           </div>
         )}
 
-        <Card><CardContent className="p-0">{isLoading ? <Skeleton className="h-[600px] w-full rounded-b-lg" /> : obras && obras.length > 0 ? <div ref={mapContainer} className="h-[600px] w-full rounded-b-lg" /> : <div className="h-[600px] w-full rounded-b-lg flex items-center justify-center text-muted-foreground"><div className="text-center"><AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" /><p>Nenhuma obra com localização disponível</p></div></div>}</CardContent></Card>
+        <Card>
+          <CardContent className="p-0">
+            {isLoading ? (
+              <Skeleton className="h-[600px] w-full" />
+            ) : obras && obras.length > 0 ? (
+              <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY}>
+                <GoogleMap
+                  mapContainerStyle={mapContainerStyle}
+                  center={mapCenter}
+                  zoom={12}
+                  onLoad={onLoad}
+                  options={{
+                    streetViewControl: false,
+                    mapTypeControl: false,
+                  }}
+                >
+                  {obras.map((obra) => {
+                    if (!obra.latitude || !obra.longitude) return null;
+                    return (
+                      <Marker
+                        key={obra.id}
+                        position={{
+                          lat: obra.latitude,
+                          lng: obra.longitude,
+                        }}
+                        icon={getMarkerIcon(obra.status)}
+                        onClick={() => setSelectedObra(obra)}
+                      />
+                    );
+                  })}
 
-        {!isLoading && obras && obras.length > 0 && (
-          <Card><CardHeader><CardTitle className="text-sm">Legenda</CardTitle></CardHeader><CardContent><div className="grid grid-cols-2 gap-4 sm:grid-cols-4"><div className="flex items-center gap-2"><div className="h-4 w-4 rounded-full bg-muted border-2 border-white" /><span className="text-sm">Planejadas</span></div><div className="flex items-center gap-2"><div className="h-4 w-4 rounded-full bg-blue-500 border-2 border-white" /><span className="text-sm">Em Andamento</span></div><div className="flex items-center gap-2"><div className="h-4 w-4 rounded-full bg-green-500 border-2 border-white" /><span className="text-sm">Concluídas</span></div><div className="flex items-center gap-2"><div className="h-4 w-4 rounded-full bg-red-500 border-2 border-white" /><span className="text-sm">Paralisadas</span></div></div></CardContent></Card>
-        )}
+                  {selectedObra && (
+                    <InfoWindow
+                      position={{
+                        lat: selectedObra.latitude,
+                        lng: selectedObra.longitude,
+                      }}
+                      onCloseClick={() => setSelectedObra(null)}
+                    >
+                      <div className="p-2 min-w-[250px]">
+                        <h3 className="font-bold text-lg mb-2">{selectedObra.nome}</h3>
+                        {selectedObra.descricao && (
+                          <p className="text-sm text-gray-600 mb-2">{selectedObra.descricao}</p>
+                        )}
+                        <div className="space-y-1 mb-3">
+                          <p className="text-sm">
+                            <strong>Status:</strong>{" "}
+                            {statusLabels[selectedObra.status as keyof typeof statusLabels]}
+                          </p>
+                          <p className="text-sm">
+                            <strong>Progresso:</strong> {selectedObra.percentual_executado}%
+                          </p>
+                          <p className="text-sm">
+                            <strong>Valor:</strong>{" "}
+                            {new Intl.NumberFormat("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            }).format(selectedObra.valor_total || 0)}
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          className="w-full"
+                          onClick={() => navigate(`/obras/${selectedObra.id}`)}
+                        >
+                          Ver Detalhes
+                        </Button>
+                      </div>
+                    </InfoWindow>
+                  )}
+                </GoogleMap>
+              </LoadScript>
+            ) : (
+              <div className="flex items-center justify-center h-[600px] text-muted-foreground">
+                Nenhuma obra com localização disponível
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Legenda</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full bg-[#6b7280] border-2 border-white shadow"></div>
+                <span className="text-sm">Planejada</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full bg-[#3b82f6] border-2 border-white shadow"></div>
+                <span className="text-sm">Em Andamento</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full bg-[#22c55e] border-2 border-white shadow"></div>
+                <span className="text-sm">Concluída</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full bg-[#ef4444] border-2 border-white shadow"></div>
+                <span className="text-sm">Paralisada</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </MainLayout>
   );
