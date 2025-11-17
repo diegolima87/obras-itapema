@@ -70,7 +70,7 @@ export function DocumentoLista({
   };
 
   const getBucketName = (tipo: string): string => {
-    if (tipo === 'foto_obra') return 'fotos_obras';
+    if (tipo === 'foto') return 'fotos_obras';
     if (contratoId) return 'documentos_contratos';
     if (medicaoId) return 'documentos_medicoes';
     return 'documentos_obras';
