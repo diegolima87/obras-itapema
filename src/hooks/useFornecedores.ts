@@ -51,10 +51,22 @@ export const useFornecedor = (id: string | undefined) => {
     queryFn: async () => {
       if (!id) throw new Error("ID do fornecedor não fornecido");
       
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (!profile?.tenant_id) throw new Error("Tenant não encontrado");
+      
       const { data, error } = await supabase
         .from("fornecedores")
         .select("*")
         .eq("id", id)
+        .eq("tenant_id", profile.tenant_id)
         .single();
 
       if (error) throw error;

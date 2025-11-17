@@ -61,6 +61,7 @@ export const useObras = () => {
           const { data: retryData, error: retryError } = await supabase
             .from("obras")
             .select("*")
+            .eq("tenant_id", profile.tenant_id)
             .order("created_at", { ascending: false });
           
           if (retryError) throw retryError;
@@ -132,10 +133,22 @@ export const useObra = (id: string | undefined) => {
     queryFn: async () => {
       if (!id) throw new Error("ID da obra não fornecido");
       
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (!profile?.tenant_id) throw new Error("Tenant não encontrado");
+      
       const { data, error } = await supabase
         .from("obras")
         .select("*")
         .eq("id", id)
+        .eq("tenant_id", profile.tenant_id)
         .single();
 
       if (error) throw error;
