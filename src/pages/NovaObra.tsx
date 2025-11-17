@@ -39,7 +39,11 @@ const formSchema = z.object({
   valor_total: z.string().min(1, "Informe o valor total"),
   data_inicio: z.string().min(1, "Informe a data de início"),
   data_previsao_termino: z.string().min(1, "Informe a previsão de término"),
+  cep: z.string().optional(),
   endereco: z.string().min(5, "Informe o endereço completo"),
+  bairro: z.string().optional(),
+  cidade: z.string().optional(),
+  uf: z.string().optional(),
   latitude: z.string().optional(),
   longitude: z.string().optional(),
 });
@@ -48,6 +52,7 @@ export default function NovaObra() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
+  const [isFetchingCep, setIsFetchingCep] = useState(false);
   const { data: engenheiros, isLoading: loadingEngenheiros } = useEngenheiros();
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -61,14 +66,65 @@ export default function NovaObra() {
       valor_total: "",
       data_inicio: "",
       data_previsao_termino: "",
+      cep: "",
       endereco: "",
+      bairro: "",
+      cidade: "",
+      uf: "",
       latitude: "",
       longitude: "",
     },
   });
 
-  const handleGeocodeAddress = async () => {
-    const endereco = form.getValues("endereco");
+  const handleFetchCep = async () => {
+    const cep = form.getValues("cep");
+    
+    if (!cep || cep.trim().length < 8) {
+      toast.error("Informe um CEP válido (8 dígitos)");
+      return;
+    }
+    
+    setIsFetchingCep(true);
+    
+    try {
+      const cepLimpo = cep.replace(/\D/g, "");
+      
+      // Buscar dados do endereço via ViaCEP
+      const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+      
+      if (!response.ok) {
+        toast.error("Erro ao buscar CEP. Tente novamente.");
+        return;
+      }
+      
+      const data = await response.json();
+      
+      if (data.erro) {
+        toast.error("CEP não encontrado. Verifique e tente novamente.");
+        return;
+      }
+      
+      // Preencher campos do formulário
+      form.setValue("endereco", data.logradouro || "");
+      form.setValue("bairro", data.bairro || "");
+      form.setValue("cidade", data.localidade || "");
+      form.setValue("uf", data.uf || "");
+      
+      // Tentar buscar coordenadas com o endereço completo
+      const enderecoCompleto = `${data.logradouro}, ${data.bairro}, ${data.localidade}, ${data.uf}`;
+      await handleGeocodeAddress(enderecoCompleto);
+      
+      toast.success("Endereço encontrado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao buscar CEP:", error);
+      toast.error("Erro ao buscar CEP. Verifique sua conexão.");
+    } finally {
+      setIsFetchingCep(false);
+    }
+  };
+
+  const handleGeocodeAddress = async (customAddress?: string) => {
+    const endereco = customAddress || form.getValues("endereco");
     
     if (!endereco || endereco.trim().length < 5) {
       toast.error("Informe um endereço válido antes de buscar coordenadas");
@@ -141,6 +197,9 @@ export default function NovaObra() {
           data_inicio: values.data_inicio,
           data_fim_prevista: values.data_previsao_termino,
           endereco: values.endereco,
+          bairro: values.bairro,
+          cidade: values.cidade,
+          uf: values.uf,
           latitude: values.latitude ? parseFloat(values.latitude) : null,
           longitude: values.longitude ? parseFloat(values.longitude) : null,
           status: "planejada",
@@ -362,32 +421,97 @@ export default function NovaObra() {
               <CardContent className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="endereco"
+                  name="cep"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Endereço Completo *</FormLabel>
+                      <FormLabel>CEP</FormLabel>
                       <div className="flex gap-2">
                         <FormControl>
-                          <Input placeholder="Rua, número, bairro, cidade" {...field} />
+                          <Input 
+                            placeholder="Ex: 12345-678" 
+                            {...field}
+                            maxLength={9}
+                          />
                         </FormControl>
                         <Button
                           type="button"
                           variant="outline"
-                          onClick={handleGeocodeAddress}
-                          disabled={isGeocoding || !field.value || field.value.trim().length < 5}
+                          onClick={handleFetchCep}
+                          disabled={isFetchingCep || !field.value || field.value.replace(/\D/g, "").length < 8}
                         >
-                          {isGeocoding ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                          {isFetchingCep ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
                           ) : (
-                            <MapPin className="h-4 w-4" />
+                            <MapPin className="h-4 w-4 mr-2" />
                           )}
-                          <span className="ml-2">Buscar Coordenadas</span>
+                          Buscar
                         </Button>
                       </div>
+                      <FormDescription>
+                        Preenche automaticamente endereço, bairro, cidade e coordenadas
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="endereco"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Endereço (Rua/Avenida) *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: Rua das Flores" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="bairro"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bairro</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: Centro" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="cidade"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cidade</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: São Paulo" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="uf"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>UF</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: SP" maxLength={2} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
@@ -395,7 +519,7 @@ export default function NovaObra() {
                     name="latitude"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Latitude</FormLabel>
+                        <FormLabel>Latitude (Gerada automaticamente)</FormLabel>
                         <FormControl>
                           <Input 
                             placeholder="-27.5954" 
@@ -404,7 +528,6 @@ export default function NovaObra() {
                             className="bg-muted"
                           />
                         </FormControl>
-                        <FormDescription>Preenchido automaticamente</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -415,7 +538,7 @@ export default function NovaObra() {
                     name="longitude"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Longitude</FormLabel>
+                        <FormLabel>Longitude (Gerada automaticamente)</FormLabel>
                         <FormControl>
                           <Input 
                             placeholder="-48.5480" 
@@ -424,7 +547,6 @@ export default function NovaObra() {
                             className="bg-muted"
                           />
                         </FormControl>
-                        <FormDescription>Preenchido automaticamente</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
