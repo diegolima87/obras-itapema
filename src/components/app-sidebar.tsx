@@ -16,6 +16,8 @@ import {
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useTenant } from "@/contexts/TenantContext";
+import { useFeatureEnabled } from "@/hooks/useTenantFeatures";
+import { useIsSuperAdmin } from "@/hooks/useUserRoles";
 
 import {
   Sidebar,
@@ -42,7 +44,8 @@ const adminItems = [
   { title: "Usuários", url: "/usuarios", icon: Users },
   { title: "Relatórios", url: "/relatorios", icon: FileBarChart },
   { title: "Auditoria", url: "/auditoria", icon: History },
-  { title: "e-Sfinge", url: "/e-sfinge", icon: Zap },
+  { title: "e-Sfinge", url: "/e-sfinge", icon: Zap, requiresFeature: 'esfinge' as const },
+  { title: "Gerenciar Features", url: "/admin/features", icon: ShieldCheck, superAdminOnly: true },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
 ];
 
@@ -51,8 +54,17 @@ export function AppSidebar() {
   const { tenant } = useTenant();
   const location = useLocation();
   const currentPath = location.pathname;
+  const { isEnabled: esfingeEnabled } = useFeatureEnabled('esfinge');
+  const { isSuperAdmin } = useIsSuperAdmin();
 
   const isActive = (path: string) => currentPath === path || currentPath.startsWith(path + '/');
+  
+  // Filtrar itens de admin baseado em features e permissões
+  const filteredAdminItems = adminItems.filter(item => {
+    if (item.superAdminOnly && !isSuperAdmin) return false;
+    if (item.requiresFeature === 'esfinge' && !esfingeEnabled) return false;
+    return true;
+  });
 
   return (
     <Sidebar 
@@ -124,7 +136,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1">
-              {adminItems.map((item) => (
+              {filteredAdminItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     asChild 
