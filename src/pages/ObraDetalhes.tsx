@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Eye, EyeOff, AlertCircle, Send } from "lucide-react";
+import { ArrowLeft, Edit, Eye, EyeOff, AlertCircle, Send, MapPin } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { statusColors, statusLabels } from "@/lib/constants";
 import { Switch } from "@/components/ui/switch";
@@ -116,6 +116,15 @@ export default function ObraDetalhes() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {(obra.coordenadas_fonte === 'cidade_aproximada' || 
+              obra.coordenadas_fonte === 'desconhecida') && (
+              <Button variant="outline" className="text-yellow-700 border-yellow-300 hover:bg-yellow-50" asChild>
+                <Link to={`/obras/${id}/editar#localizacao`}>
+                  <MapPin className="mr-2 h-4 w-4" />
+                  Ajustar Localização
+                </Link>
+              </Button>
+            )}
             <Link to={`/integracao-tce/situacao_obra/${id}`}>
               <Button variant="outline">
                 <Send className="mr-2 h-4 w-4" />

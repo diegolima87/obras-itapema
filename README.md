@@ -71,3 +71,45 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## 🗺️ Configuração do Google Maps Geocoding API
+
+Para melhorar a precisão da geocodificação de endereços das obras, siga os passos abaixo:
+
+### Passo a Passo:
+
+1. Acesse [Google Cloud Console](https://console.cloud.google.com/)
+2. Selecione seu projeto (ou crie um novo)
+3. Vá em **APIs & Services** > **Library**
+4. Busque por **"Geocoding API"**
+5. Clique em **"Enable"** (Habilitar)
+6. Configure o billing se solicitado
+7. A mesma API key configurada em `VITE_GOOGLE_MAPS_API_KEY` será usada automaticamente
+
+### Como verificar se está funcionando:
+
+No console do navegador, após tentar geocodificar um endereço, você verá:
+- ✅ `"Coordenadas encontradas via Google Maps"` = Funcionando corretamente
+- ⚠️ `"Google Maps API: Geocoding API não está habilitada"` = Precisa habilitar a API
+
+### Benefícios:
+
+- ✅ Maior precisão para endereços novos e recentes
+- ✅ Melhor cobertura de loteamentos e áreas em expansão
+- ✅ Geocodificação de áreas rurais
+- ✅ Validação automática de endereços
+- ✅ Redução de coordenadas aproximadas (centro da cidade)
+
+### Sistema de Fallback:
+
+O sistema usa uma estratégia em cascata:
+1. **Google Maps Geocoding API** (mais precisa) - se disponível
+2. **OpenStreetMap Nominatim** (gratuita) - fallback automático
+3. **Coordenadas aproximadas** - centro da cidade como última opção
+
+### Indicadores de Precisão:
+
+Cada obra exibe um badge indicando a precisão das coordenadas:
+- 🟢 **Coordenadas Precisas**: Obtidas via Google Maps ou endereço específico
+- 🟡 **Coordenadas Aproximadas**: Centro da cidade (necessita ajuste manual)
+- 🔵 **Coordenadas Manuais**: Selecionadas pelo usuário no mapa
