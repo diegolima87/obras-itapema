@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { TenantProvider } from "@/contexts/TenantContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { RoleProtectedRoute } from "@/components/auth/RoleProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import RecuperarSenha from "./pages/RecuperarSenha";
@@ -96,21 +97,21 @@ const App = () => (
           <Route path="/fornecedores" element={<ProtectedRoute><Fornecedores /></ProtectedRoute>} />
           <Route path="/fornecedores/novo" element={<ProtectedRoute><NovoFornecedor /></ProtectedRoute>} />
           
-          {/* Admin Routes - Protected */}
-          <Route path="/usuarios" element={<ProtectedRoute><Usuarios /></ProtectedRoute>} />
-          <Route path="/configuracoes" element={<ProtectedRoute><Configuracoes /></ProtectedRoute>} />
-          <Route path="/relatorios" element={<ProtectedRoute><Relatorios /></ProtectedRoute>} />
-          <Route path="/auditoria" element={<ProtectedRoute><LogAuditoria /></ProtectedRoute>} />
+          {/* Admin Routes - Role Protected */}
+          <Route path="/usuarios" element={<RoleProtectedRoute allowedRoles={['admin', 'gestor']}><Usuarios /></RoleProtectedRoute>} />
+          <Route path="/configuracoes" element={<RoleProtectedRoute allowedRoles={['admin', 'gestor']}><Configuracoes /></RoleProtectedRoute>} />
+          <Route path="/relatorios" element={<RoleProtectedRoute allowedRoles={['admin', 'gestor', 'fiscal']}><Relatorios /></RoleProtectedRoute>} />
+          <Route path="/auditoria" element={<RoleProtectedRoute allowedRoles={['admin']}><LogAuditoria /></RoleProtectedRoute>} />
           
-          {/* e-Sfinge Integration - Protected */}
-          <Route path="/e-sfinge" element={<ProtectedRoute><ESfinge /></ProtectedRoute>} />
-          <Route path="/e-sfinge/exportacao" element={<ProtectedRoute><ESfingeExportacao /></ProtectedRoute>} />
-          <Route path="/e-sfinge/envio" element={<ProtectedRoute><ESfingeEnvio /></ProtectedRoute>} />
-          <Route path="/e-sfinge/logs" element={<ProtectedRoute><HistoricoTCE /></ProtectedRoute>} />
-          <Route path="/e-sfinge/mapeamento" element={<ProtectedRoute><ESfingeMapeamento /></ProtectedRoute>} />
-          <Route path="/e-sfinge/importacao" element={<ProtectedRoute><ESfingeImportacao /></ProtectedRoute>} />
-          <Route path="/e-sfinge/configuracoes" element={<ProtectedRoute><ESfingeConfiguracoes /></ProtectedRoute>} />
-          <Route path="/e-sfinge/documentacao" element={<ProtectedRoute><ESfingeDocumentacao /></ProtectedRoute>} />
+          {/* e-Sfinge Integration - Role Protected */}
+          <Route path="/e-sfinge" element={<RoleProtectedRoute allowedRoles={['admin', 'gestor']}><ESfinge /></RoleProtectedRoute>} />
+          <Route path="/e-sfinge/exportacao" element={<RoleProtectedRoute allowedRoles={['admin', 'gestor']}><ESfingeExportacao /></RoleProtectedRoute>} />
+          <Route path="/e-sfinge/envio" element={<RoleProtectedRoute allowedRoles={['admin', 'gestor']}><ESfingeEnvio /></RoleProtectedRoute>} />
+          <Route path="/e-sfinge/logs" element={<RoleProtectedRoute allowedRoles={['admin', 'gestor']}><HistoricoTCE /></RoleProtectedRoute>} />
+          <Route path="/e-sfinge/mapeamento" element={<RoleProtectedRoute allowedRoles={['admin', 'gestor']}><ESfingeMapeamento /></RoleProtectedRoute>} />
+          <Route path="/e-sfinge/importacao" element={<RoleProtectedRoute allowedRoles={['admin', 'gestor']}><ESfingeImportacao /></RoleProtectedRoute>} />
+          <Route path="/e-sfinge/configuracoes" element={<RoleProtectedRoute allowedRoles={['admin', 'gestor']}><ESfingeConfiguracoes /></RoleProtectedRoute>} />
+          <Route path="/e-sfinge/documentacao" element={<RoleProtectedRoute allowedRoles={['admin', 'gestor']}><ESfingeDocumentacao /></RoleProtectedRoute>} />
           
           {/* Fornecedor Portal Routes */}
           <Route path="/fornecedor/login" element={<LoginFornecedor />} />

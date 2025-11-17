@@ -1,19 +1,20 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useHasAnyRole } from '@/hooks/useUserRoles';
+import { useHasAnyRole, UserRole } from '@/hooks/useUserRoles';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 
-interface EsfingeProtectedRouteProps {
+interface RoleProtectedRouteProps {
   children: React.ReactNode;
+  allowedRoles: UserRole[];
 }
 
-export function EsfingeProtectedRoute({ children }: EsfingeProtectedRouteProps) {
+export function RoleProtectedRoute({ children, allowedRoles }: RoleProtectedRouteProps) {
   const { user, loading: authLoading } = useAuth();
-  const { hasRole, isLoading: rolesLoading } = useHasAnyRole(['admin', 'gestor']);
+  const { hasRole, isLoading: rolesLoading } = useHasAnyRole(allowedRoles);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,7 +47,8 @@ export function EsfingeProtectedRoute({ children }: EsfingeProtectedRouteProps) 
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Acesso restrito ao e-Sfinge. Apenas administradores e gestores podem acessar esta área.
+            Você não tem permissão para acessar esta página. 
+            Contate um administrador se você acredita que isso é um erro.
           </AlertDescription>
         </Alert>
       </MainLayout>
