@@ -3,7 +3,6 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -12,17 +11,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Building2, Mail, Phone } from "lucide-react";
-import { mockFornecedores } from "@/lib/mockData";
+import { Plus, Search, Building2, Mail, Phone, AlertCircle } from "lucide-react";
+import { useFornecedores } from "@/hooks/useFornecedores";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Fornecedores = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const { data: fornecedores, isLoading, error } = useFornecedores();
 
-  const filteredFornecedores = mockFornecedores.filter(
+  const filteredFornecedores = (fornecedores || []).filter(
     (fornecedor) =>
       fornecedor.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       fornecedor.cnpj.includes(searchTerm)
   );
+
+  const totalFornecedores = fornecedores?.length || 0;
+  const fornecedoresAtivos = (fornecedores || []).filter(f => f.ativo !== false).length;
 
   return (
     <MainLayout>
@@ -47,7 +52,9 @@ const Fornecedores = () => {
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{mockFornecedores.length}</div>
+              <div className="text-2xl font-bold">
+                {isLoading ? "-" : totalFornecedores}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -56,10 +63,21 @@ const Fornecedores = () => {
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{mockFornecedores.length}</div>
+              <div className="text-2xl font-bold">
+                {isLoading ? "-" : fornecedoresAtivos}
+              </div>
             </CardContent>
           </Card>
         </div>
+
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Erro ao carregar fornecedores: {error.message}
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Card>
           <CardHeader>
@@ -88,36 +106,54 @@ const Fornecedores = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredFornecedores.map((fornecedor) => (
-                    <TableRow key={fornecedor.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4 text-muted-foreground" />
-                          {fornecedor.nome}
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <Badge variant="outline">{fornecedor.cnpj}</Badge>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Mail className="h-3 w-3" />
-                          {fornecedor.email}
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Phone className="h-3 w-3" />
-                          {fornecedor.telefone}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">
-                          Ver Detalhes
-                        </Button>
+                  {isLoading ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                        <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-36" /></TableCell>
+                        <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-40" /></TableCell>
+                        <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                      </TableRow>
+                    ))
+                  ) : filteredFornecedores.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                        Nenhum fornecedor encontrado
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    filteredFornecedores.map((fornecedor) => (
+                      <TableRow key={fornecedor.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-muted-foreground" />
+                            {fornecedor.nome}
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          {fornecedor.cnpj}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-3 w-3 text-muted-foreground" />
+                            {fornecedor.email}
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-3 w-3 text-muted-foreground" />
+                            {fornecedor.telefone || "-"}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="sm">
+                            Ver
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>

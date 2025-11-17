@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -7,44 +7,109 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { mockObras } from "@/lib/mockData";
+import { ArrowLeft, Save, AlertCircle } from "lucide-react";
+import { useObra, useAtualizarObra } from "@/hooks/useObras";
+import { useEngenheiros } from "@/hooks/useEngenheiros";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { tiposObra } from "@/lib/constants";
 
 export default function EditarObra() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const obra = mockObras.find((o) => o.id === id);
+  const { data: obra, isLoading, error } = useObra(id);
+  const { data: engenheiros } = useEngenheiros();
+  const atualizarObra = useAtualizarObra();
 
   const [formData, setFormData] = useState({
-    nome: obra?.nome || "",
-    descricao: obra?.descricao || "",
-    tipo_obra: obra?.tipo_obra || "",
-    status: obra?.status || "",
-    unidade_gestora: obra?.unidade_gestora || "",
-    endereco: obra?.endereco || "",
-    valor_total: obra?.valor_total || 0,
-    percentual_executado: obra?.percentual_executado || 0,
-    data_inicio: obra?.data_inicio || "",
-    data_fim_prevista: obra?.data_fim_prevista || "",
+    nome: "",
+    descricao: "",
+    tipo_obra: "",
+    status: "",
+    unidade_gestora: "",
+    endereco: "",
+    valor_total: 0,
+    percentual_executado: 0,
+    data_inicio: "",
+    data_fim_prevista: "",
+    engenheiro_fiscal_id: "",
+    publico_portal: false,
   });
 
-  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (obra) {
+      setFormData({
+        nome: obra.nome || "",
+        descricao: obra.descricao || "",
+        tipo_obra: obra.tipo_obra || "",
+        status: obra.status || "",
+        unidade_gestora: obra.unidade_gestora || "",
+        endereco: obra.endereco || "",
+        valor_total: obra.valor_total || 0,
+        percentual_executado: obra.percentual_executado || 0,
+        data_inicio: obra.data_inicio || "",
+        data_fim_prevista: obra.data_fim_prevista || "",
+        engenheiro_fiscal_id: obra.engenheiro_fiscal_id || "",
+        publico_portal: obra.publico_portal || false,
+      });
+    }
+  }, [obra]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    if (!id) return;
 
-    setTimeout(() => {
-      toast({
-        title: "Obra atualizada!",
-        description: "As alterações foram salvas com sucesso",
-      });
-      setLoading(false);
-      navigate(`/obras/${id}`);
-    }, 1000);
+    await atualizarObra.mutateAsync({
+      id,
+      ...formData,
+    });
+    
+    navigate(`/obras/${id}`);
   };
+
+  if (error) {
+    return (
+      <MainLayout>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Erro ao carregar obra: {error.message}
+          </AlertDescription>
+        </Alert>
+        <div className="text-center py-12">
+          <Link to="/obras">
+            <Button className="mt-4">Voltar para Obras</Button>
+          </Link>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="space-y-6">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-10 w-10" />
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+          </div>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </CardContent>
+          </Card>
+        </div>
+      </MainLayout>
+    );
+  }
 
   if (!obra) {
     return (
@@ -111,11 +176,11 @@ export default function EditarObra() {
                       <SelectValue placeholder="Selecione o tipo" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="edificacao">Edificação</SelectItem>
-                      <SelectItem value="pavimentacao">Pavimentação</SelectItem>
-                      <SelectItem value="saneamento">Saneamento</SelectItem>
-                      <SelectItem value="urbanizacao">Urbanização</SelectItem>
-                      <SelectItem value="reforma">Reforma</SelectItem>
+                      {tiposObra.map((tipo) => (
+                        <SelectItem key={tipo} value={tipo}>
+                          {tipo}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -130,10 +195,10 @@ export default function EditarObra() {
                       <SelectValue placeholder="Selecione o status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="em_andamento">Em Andamento</SelectItem>
-                      <SelectItem value="planejamento">Planejamento</SelectItem>
-                      <SelectItem value="concluida">Concluída</SelectItem>
+                      <SelectItem value="planejada">Planejada</SelectItem>
+                      <SelectItem value="andamento">Em Andamento</SelectItem>
                       <SelectItem value="paralisada">Paralisada</SelectItem>
+                      <SelectItem value="concluida">Concluída</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -149,6 +214,25 @@ export default function EditarObra() {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="engenheiro_fiscal_id">Engenheiro Fiscal</Label>
+                  <Select
+                    value={formData.engenheiro_fiscal_id}
+                    onValueChange={(value) => setFormData({ ...formData, engenheiro_fiscal_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o engenheiro" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {engenheiros?.map((eng) => (
+                        <SelectItem key={eng.id} value={eng.id}>
+                          {eng.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="endereco">Endereço</Label>
                   <Input
                     id="endereco"
@@ -174,7 +258,6 @@ export default function EditarObra() {
                   <Input
                     id="percentual_executado"
                     type="number"
-                    step="0.01"
                     min="0"
                     max="100"
                     value={formData.percentual_executado}
@@ -193,7 +276,7 @@ export default function EditarObra() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="data_fim_prevista">Previsão de Término</Label>
+                  <Label htmlFor="data_fim_prevista">Data de Término Prevista</Label>
                   <Input
                     id="data_fim_prevista"
                     type="date"
@@ -203,16 +286,29 @@ export default function EditarObra() {
                 </div>
               </div>
 
-              <div className="flex gap-4">
-                <Button type="submit" disabled={loading}>
-                  <Save className="mr-2 h-4 w-4" />
-                  {loading ? "Salvando..." : "Salvar Alterações"}
-                </Button>
-                <Link to={`/obras/${id}`}>
-                  <Button type="button" variant="outline">
-                    Cancelar
+              <div className="flex items-center justify-between pt-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="publico_portal"
+                    checked={formData.publico_portal}
+                    onChange={(e) => setFormData({ ...formData, publico_portal: e.target.checked })}
+                    className="rounded"
+                  />
+                  <Label htmlFor="publico_portal">Visível no Portal Público</Label>
+                </div>
+
+                <div className="flex gap-2">
+                  <Link to={`/obras/${id}`}>
+                    <Button type="button" variant="outline">
+                      Cancelar
+                    </Button>
+                  </Link>
+                  <Button type="submit" disabled={atualizarObra.isPending}>
+                    <Save className="mr-2 h-4 w-4" />
+                    {atualizarObra.isPending ? "Salvando..." : "Salvar Alterações"}
                   </Button>
-                </Link>
+                </div>
               </div>
             </CardContent>
           </Card>

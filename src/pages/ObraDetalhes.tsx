@@ -3,20 +3,83 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Edit, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
-import { mockObras, statusColors, statusLabels } from "@/lib/mockData";
+import { statusColors, statusLabels } from "@/lib/constants";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { ItensLista } from "@/components/obra/ItensLista";
 import { DocumentoUpload } from "@/components/documentos/DocumentoUpload";
 import { DocumentoLista } from "@/components/documentos/DocumentoLista";
+import { useObra, useAtualizarObra } from "@/hooks/useObras";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function ObraDetalhes() {
   const { id } = useParams();
-  const obra = mockObras.find((o) => o.id === id);
-  const [publicoPortal, setPublicoPortal] = useState(false);
+  const { data: obra, isLoading, error } = useObra(id);
+  const atualizarObra = useAtualizarObra();
+  const [publicoPortal, setPublicoPortal] = useState(obra?.publico_portal || false);
+
+  const handleTogglePublico = async () => {
+    if (!id || !obra) return;
+    
+    const novoValor = !publicoPortal;
+    setPublicoPortal(novoValor);
+    
+    await atualizarObra.mutateAsync({
+      id,
+      publico_portal: novoValor,
+    });
+  };
+
+  if (error) {
+    return (
+      <MainLayout>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Erro ao carregar obra: {error.message}
+          </AlertDescription>
+        </Alert>
+        <div className="text-center py-12">
+          <Link to="/obras">
+            <Button className="mt-4">Voltar para Obras</Button>
+          </Link>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-10 w-10" />
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-64" />
+                <Skeleton className="h-4 w-96" />
+              </div>
+            </div>
+            <Skeleton className="h-10 w-32" />
+          </div>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+            </CardContent>
+          </Card>
+        </div>
+      </MainLayout>
+    );
+  }
 
   if (!obra) {
     return (
@@ -51,10 +114,12 @@ export default function ObraDetalhes() {
               <p className="text-muted-foreground">{obra.descricao}</p>
             </div>
           </div>
-          <Button>
-            <Edit className="mr-2 h-4 w-4" />
-            Editar Obra
-          </Button>
+          <Link to={`/obras/${id}/editar`}>
+            <Button>
+              <Edit className="mr-2 h-4 w-4" />
+              Editar Obra
+            </Button>
+          </Link>
         </div>
 
         <Tabs defaultValue="geral" className="space-y-4">
@@ -83,7 +148,7 @@ export default function ObraDetalhes() {
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Engenheiro Responsável</Label>
-                    <p className="font-medium">{obra.engenheiro_nome}</p>
+                    <p className="font-medium">{obra.engenheiro_fiscal_id || "Não atribuído"}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Valor Total</Label>
@@ -196,11 +261,11 @@ export default function ObraDetalhes() {
                       Quando ativado, esta obra será visível no portal público
                     </p>
                   </div>
-                  <Switch
-                    id="publico-portal"
-                    checked={publicoPortal}
-                    onCheckedChange={setPublicoPortal}
-                  />
+                      <Switch
+                        id="publico-portal"
+                        checked={publicoPortal}
+                        onCheckedChange={handleTogglePublico}
+                      />
                 </div>
                 {publicoPortal && (
                   <div className="space-y-3">
