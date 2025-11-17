@@ -26,6 +26,7 @@ const Mapa = () => {
   const { data: obras, isLoading, error } = useObrasComLocalizacao();
   const [selectedObra, setSelectedObra] = useState<any>(null);
   const [mapCenter] = useState(defaultCenter);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
   const navigate = useNavigate();
 
   const contadores = {
@@ -36,6 +37,7 @@ const Mapa = () => {
   };
 
   const onLoad = useCallback((map: google.maps.Map) => {
+    setIsMapLoaded(true);
     if (obras && obras.length > 0) {
       const bounds = new window.google.maps.LatLngBounds();
       obras.forEach((obra) => {
@@ -50,21 +52,27 @@ const Mapa = () => {
     }
   }, [obras]);
 
-  const getMarkerIcon = (status: string) => {
+  const getMarkerIcon = useCallback((status: string) => {
+    if (!isMapLoaded) return undefined;
+    
     let color = "#3b82f6"; // andamento - blue
     if (status === "concluida") color = "#22c55e"; // green
     if (status === "paralisada") color = "#ef4444"; // red
     if (status === "planejada") color = "#6b7280"; // gray
 
+    // Create a custom SVG marker icon
+    const svg = `
+      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="16" cy="16" r="12" fill="${color}" stroke="#ffffff" stroke-width="3"/>
+      </svg>
+    `;
+    
     return {
-      path: google.maps.SymbolPath.CIRCLE,
-      fillColor: color,
-      fillOpacity: 1,
-      strokeColor: "#ffffff",
-      strokeWeight: 3,
-      scale: 10,
+      url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+      scaledSize: new window.google.maps.Size(32, 32),
+      anchor: new window.google.maps.Point(16, 16),
     };
-  };
+  }, [isMapLoaded]);
 
   if (!GOOGLE_MAPS_API_KEY) {
     return (
