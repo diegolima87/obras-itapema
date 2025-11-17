@@ -48,8 +48,8 @@ export const useObrasPublicas = (filtros: FiltrosObras) => {
   });
 };
 
-// Hook para obras COM localização (usado pelo mapa)
-export const useObrasComLocalizacao = (filtros: FiltrosObras) => {
+// Hook para obras públicas COM localização (usado pelo portal público)
+export const useObrasPublicasComLocalizacao = (filtros: FiltrosObras) => {
   return useQuery({
     queryKey: ["obras", "com-localizacao", filtros],
     queryFn: async () => {

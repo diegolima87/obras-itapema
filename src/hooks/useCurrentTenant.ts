@@ -14,6 +14,11 @@ export function useCurrentTenant() {
         .eq('id', user.id)
         .single();
       
+      if (!profile?.tenant_id) {
+        console.error('❌ ERRO: Usuário sem tenant_id!', user.id);
+        throw new Error('Usuário não está associado a nenhum tenant');
+      }
+      
       return profile;
     },
     staleTime: 1000 * 60 * 5, // Cache por 5 minutos
