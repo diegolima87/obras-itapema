@@ -24,6 +24,7 @@ export type Database = {
           nova_data_vencimento: string | null
           numero: string
           prazo_aditado: number | null
+          tenant_id: string | null
           tipo: string
           updated_at: string | null
           valor_aditado: number | null
@@ -37,6 +38,7 @@ export type Database = {
           nova_data_vencimento?: string | null
           numero: string
           prazo_aditado?: number | null
+          tenant_id?: string | null
           tipo: string
           updated_at?: string | null
           valor_aditado?: number | null
@@ -50,6 +52,7 @@ export type Database = {
           nova_data_vencimento?: string | null
           numero?: string
           prazo_aditado?: number | null
+          tenant_id?: string | null
           tipo?: string
           updated_at?: string | null
           valor_aditado?: number | null
@@ -60,6 +63,13 @@ export type Database = {
             columns: ["contrato_id"]
             isOneToOne: false
             referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aditivos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -154,6 +164,7 @@ export type Database = {
           objeto: string | null
           obra_id: string
           origem_recurso: string | null
+          tenant_id: string | null
           updated_at: string | null
           valor_atualizado: number
           valor_inicial: number
@@ -170,6 +181,7 @@ export type Database = {
           objeto?: string | null
           obra_id: string
           origem_recurso?: string | null
+          tenant_id?: string | null
           updated_at?: string | null
           valor_atualizado: number
           valor_inicial: number
@@ -186,6 +198,7 @@ export type Database = {
           objeto?: string | null
           obra_id?: string
           origem_recurso?: string | null
+          tenant_id?: string | null
           updated_at?: string | null
           valor_atualizado?: number
           valor_inicial?: number
@@ -205,6 +218,13 @@ export type Database = {
             referencedRelation: "obras"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contratos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
         ]
       }
       documentos: {
@@ -221,6 +241,7 @@ export type Database = {
           nome_original: string | null
           obra_id: string | null
           tamanho: number | null
+          tenant_id: string | null
           tipo: Database["public"]["Enums"]["tipo_documento"]
           uploaded_by: string | null
           url: string | null
@@ -238,6 +259,7 @@ export type Database = {
           nome_original?: string | null
           obra_id?: string | null
           tamanho?: number | null
+          tenant_id?: string | null
           tipo: Database["public"]["Enums"]["tipo_documento"]
           uploaded_by?: string | null
           url?: string | null
@@ -255,6 +277,7 @@ export type Database = {
           nome_original?: string | null
           obra_id?: string | null
           tamanho?: number | null
+          tenant_id?: string | null
           tipo?: Database["public"]["Enums"]["tipo_documento"]
           uploaded_by?: string | null
           url?: string | null
@@ -288,6 +311,13 @@ export type Database = {
             referencedRelation: "obras"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "documentos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
         ]
       }
       fornecedores: {
@@ -303,6 +333,7 @@ export type Database = {
           id: string
           nome: string
           telefone: string | null
+          tenant_id: string | null
           updated_at: string | null
           user_id: string | null
         }
@@ -318,6 +349,7 @@ export type Database = {
           id?: string
           nome: string
           telefone?: string | null
+          tenant_id?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -333,10 +365,19 @@ export type Database = {
           id?: string
           nome?: string
           telefone?: string | null
+          tenant_id?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fornecedores_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       integracao_esfinge_envios: {
         Row: {
@@ -426,6 +467,7 @@ export type Database = {
           percentual_executado: number | null
           quantidade_executada: number | null
           quantidade_total: number
+          tenant_id: string | null
           unidade: string
           updated_at: string | null
           valor_total: number | null
@@ -440,6 +482,7 @@ export type Database = {
           percentual_executado?: number | null
           quantidade_executada?: number | null
           quantidade_total: number
+          tenant_id?: string | null
           unidade: string
           updated_at?: string | null
           valor_total?: number | null
@@ -454,6 +497,7 @@ export type Database = {
           percentual_executado?: number | null
           quantidade_executada?: number | null
           quantidade_total?: number
+          tenant_id?: string | null
           unidade?: string
           updated_at?: string | null
           valor_total?: number | null
@@ -465,6 +509,13 @@ export type Database = {
             columns: ["obra_id"]
             isOneToOne: false
             referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itens_obra_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -522,6 +573,7 @@ export type Database = {
           percentual_financeiro: number | null
           percentual_fisico: number | null
           status: Database["public"]["Enums"]["status_medicao"] | null
+          tenant_id: string | null
           updated_at: string | null
           valor_executado: number | null
           valor_medido: number | null
@@ -545,6 +597,7 @@ export type Database = {
           percentual_financeiro?: number | null
           percentual_fisico?: number | null
           status?: Database["public"]["Enums"]["status_medicao"] | null
+          tenant_id?: string | null
           updated_at?: string | null
           valor_executado?: number | null
           valor_medido?: number | null
@@ -568,6 +621,7 @@ export type Database = {
           percentual_financeiro?: number | null
           percentual_fisico?: number | null
           status?: Database["public"]["Enums"]["status_medicao"] | null
+          tenant_id?: string | null
           updated_at?: string | null
           valor_executado?: number | null
           valor_medido?: number | null
@@ -592,6 +646,13 @@ export type Database = {
             columns: ["obra_id"]
             isOneToOne: false
             referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medicoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -665,6 +726,7 @@ export type Database = {
           percentual_executado: number | null
           publico_portal: boolean | null
           status: Database["public"]["Enums"]["status_obra"] | null
+          tenant_id: string | null
           tipo_obra: string | null
           uf: string | null
           unidade_gestora: string
@@ -689,6 +751,7 @@ export type Database = {
           percentual_executado?: number | null
           publico_portal?: boolean | null
           status?: Database["public"]["Enums"]["status_obra"] | null
+          tenant_id?: string | null
           tipo_obra?: string | null
           uf?: string | null
           unidade_gestora: string
@@ -713,6 +776,7 @@ export type Database = {
           percentual_executado?: number | null
           publico_portal?: boolean | null
           status?: Database["public"]["Enums"]["status_obra"] | null
+          tenant_id?: string | null
           tipo_obra?: string | null
           uf?: string | null
           unidade_gestora?: string
@@ -720,7 +784,15 @@ export type Database = {
           valor_executado?: number | null
           valor_total?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "obras_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pagamentos: {
         Row: {
@@ -734,6 +806,7 @@ export type Database = {
           numero_empenho: string | null
           observacoes: string | null
           status: string | null
+          tenant_id: string | null
           updated_at: string | null
           valor: number
         }
@@ -748,6 +821,7 @@ export type Database = {
           numero_empenho?: string | null
           observacoes?: string | null
           status?: string | null
+          tenant_id?: string | null
           updated_at?: string | null
           valor: number
         }
@@ -762,6 +836,7 @@ export type Database = {
           numero_empenho?: string | null
           observacoes?: string | null
           status?: string | null
+          tenant_id?: string | null
           updated_at?: string | null
           valor?: number
         }
@@ -787,6 +862,13 @@ export type Database = {
             referencedRelation: "medicoes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pagamentos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -798,6 +880,7 @@ export type Database = {
           id: string
           nome: string
           telefone: string | null
+          tenant_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -808,6 +891,7 @@ export type Database = {
           id: string
           nome: string
           telefone?: string | null
+          tenant_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -818,6 +902,105 @@ export type Database = {
           id?: string
           nome?: string
           telefone?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenants: {
+        Row: {
+          ativo: boolean | null
+          cnpj: string
+          cor_destaque: string | null
+          cor_primaria: string | null
+          cor_secundaria: string | null
+          created_at: string | null
+          data_contratacao: string | null
+          dominio_customizado: string | null
+          email: string
+          endereco: string | null
+          exigir_aprovacao: boolean | null
+          favicon_url: string | null
+          id: string
+          logo_dark_url: string | null
+          logo_url: string | null
+          mostrar_fornecedores: boolean | null
+          mostrar_valores: boolean | null
+          nome_municipio: string
+          nome_sistema: string | null
+          permitir_comentarios: boolean | null
+          plano: Database["public"]["Enums"]["plano_tenant"] | null
+          portal_ativo: boolean | null
+          slug: string
+          subdominio: string
+          telefone: string | null
+          uf: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          cnpj: string
+          cor_destaque?: string | null
+          cor_primaria?: string | null
+          cor_secundaria?: string | null
+          created_at?: string | null
+          data_contratacao?: string | null
+          dominio_customizado?: string | null
+          email: string
+          endereco?: string | null
+          exigir_aprovacao?: boolean | null
+          favicon_url?: string | null
+          id?: string
+          logo_dark_url?: string | null
+          logo_url?: string | null
+          mostrar_fornecedores?: boolean | null
+          mostrar_valores?: boolean | null
+          nome_municipio: string
+          nome_sistema?: string | null
+          permitir_comentarios?: boolean | null
+          plano?: Database["public"]["Enums"]["plano_tenant"] | null
+          portal_ativo?: boolean | null
+          slug: string
+          subdominio: string
+          telefone?: string | null
+          uf: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          cnpj?: string
+          cor_destaque?: string | null
+          cor_primaria?: string | null
+          cor_secundaria?: string | null
+          created_at?: string | null
+          data_contratacao?: string | null
+          dominio_customizado?: string | null
+          email?: string
+          endereco?: string | null
+          exigir_aprovacao?: boolean | null
+          favicon_url?: string | null
+          id?: string
+          logo_dark_url?: string | null
+          logo_url?: string | null
+          mostrar_fornecedores?: boolean | null
+          mostrar_valores?: boolean | null
+          nome_municipio?: string
+          nome_sistema?: string | null
+          permitir_comentarios?: boolean | null
+          plano?: Database["public"]["Enums"]["plano_tenant"] | null
+          portal_ativo?: boolean | null
+          slug?: string
+          subdominio?: string
+          telefone?: string | null
+          uf?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -858,6 +1041,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "gestor" | "fiscal" | "fornecedor" | "cidadao"
+      plano_tenant: "basico" | "premium" | "enterprise"
       status_esfinge: "pendente" | "processando" | "enviado" | "erro"
       status_medicao: "pendente" | "analise" | "aprovado" | "reprovado"
       status_obra: "planejada" | "andamento" | "concluida" | "paralisada"
@@ -997,6 +1181,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "gestor", "fiscal", "fornecedor", "cidadao"],
+      plano_tenant: ["basico", "premium", "enterprise"],
       status_esfinge: ["pendente", "processando", "enviado", "erro"],
       status_medicao: ["pendente", "analise", "aprovado", "reprovado"],
       status_obra: ["planejada", "andamento", "concluida", "paralisada"],
