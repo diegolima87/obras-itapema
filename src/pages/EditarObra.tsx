@@ -15,6 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { tiposObra } from "@/lib/constants";
 import { toast } from "sonner";
 import { formatCurrencyInput, parseCurrency } from "@/lib/utils";
+import { geocodeAddress, fetchAddressByCep, GeocodingResult } from "@/lib/geocoding";
 
 export default function EditarObra() {
   const { id } = useParams();
@@ -77,33 +78,8 @@ export default function EditarObra() {
     }
   }, [obra]);
 
-  const tryNominatimGeocoding = async (endereco: string) => {
-    try {
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(endereco)}&format=json&limit=1&countrycodes=br`;
-      
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'SistemaGestaoObras/1.0'
-        }
-      });
-      
-      const data = await response.json();
-      
-      if (data.length > 0) {
-        return {
-          lat: parseFloat(data[0].lat),
-          lng: parseFloat(data[0].lon)
-        };
-      }
-      return null;
-    } catch (error) {
-      console.error("Erro ao buscar coordenadas via Nominatim:", error);
-      return null;
-    }
-  };
-
-  const handleGeocodeAddress = async (customAddress?: string) => {
-    const endereco = customAddress || formData.endereco;
+  const handleGeocodeAddress = async () => {
+    const { endereco, bairro, cidade, uf } = formData;
     
     if (!endereco || endereco.trim().length < 5) {
       toast.error("Informe um endereço válido antes de buscar coordenadas");
@@ -115,42 +91,31 @@ export default function EditarObra() {
     try {
       const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
       
-      // Tentar Google Maps primeiro se a chave existir
-      if (apiKey) {
-        const response = await fetch(
-          `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-            endereco
-          )}&key=${apiKey}`
-        );
-        
-        const data = await response.json();
-        
-        if (data.status === "OK" && data.results.length > 0) {
-          const location = data.results[0].geometry.location;
-          setFormData((prev) => ({
-            ...prev,
-            latitude: location.lat.toString(),
-            longitude: location.lng.toString(),
-          }));
-          toast.success("Coordenadas encontradas com sucesso!");
-          return;
-        } else if (data.status !== "REQUEST_DENIED") {
-          console.log("Google Maps não retornou resultados, tentando Nominatim...");
-        }
-      }
+      const result = await geocodeAddress({
+        endereco,
+        bairro,
+        cidade,
+        uf,
+        googleApiKey: apiKey,
+      });
       
-      // Usar Nominatim como fallback
-      const nominatimResult = await tryNominatimGeocoding(endereco);
-      
-      if (nominatimResult) {
-        setFormData((prev) => ({
+      if (result) {
+        setFormData(prev => ({
           ...prev,
-          latitude: nominatimResult.lat.toString(),
-          longitude: nominatimResult.lng.toString(),
+          latitude: result.lat.toString(),
+          longitude: result.lng.toString()
         }));
-        toast.success("Coordenadas encontradas com sucesso via OpenStreetMap!");
+        
+        // Mensagem personalizada baseada na fonte
+        if (result.source === 'google') {
+          toast.success("✅ Coordenadas encontradas via Google Maps!");
+        } else if (result.source === 'nominatim') {
+          toast.success("✅ Coordenadas encontradas via OpenStreetMap!");
+        } else if (result.source === 'city-approximate') {
+          toast.warning("📍 Coordenadas aproximadas do centro da cidade. Ajuste manualmente se necessário.");
+        }
       } else {
-        toast.error("Não foi possível encontrar as coordenadas para este endereço");
+        toast.error("❌ Não foi possível encontrar as coordenadas. Insira manualmente.");
       }
     } catch (error) {
       console.error("Erro ao buscar coordenadas:", error);
@@ -171,18 +136,9 @@ export default function EditarObra() {
     setIsFetchingCep(true);
     
     try {
-      const cepLimpo = cep.replace(/\D/g, "");
+      const addressData = await fetchAddressByCep(cep);
       
-      const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
-      
-      if (!response.ok) {
-        toast.error("Erro ao buscar CEP. Tente novamente.");
-        return;
-      }
-      
-      const data = await response.json();
-      
-      if (data.erro) {
+      if (!addressData) {
         toast.error("CEP não encontrado. Verifique e tente novamente.");
         return;
       }
@@ -190,20 +146,19 @@ export default function EditarObra() {
       // Preencher campos do formulário
       setFormData((prev) => ({
         ...prev,
-        endereco: data.logradouro || "",
-        bairro: data.bairro || "",
-        cidade: data.localidade || "",
-        uf: data.uf || "",
+        endereco: addressData.logradouro,
+        bairro: addressData.bairro,
+        cidade: addressData.localidade,
+        uf: addressData.uf,
       }));
       
-      // Tentar buscar coordenadas com o endereço completo
-      const enderecoCompleto = `${data.logradouro}, ${data.bairro}, ${data.localidade}, ${data.uf}`;
-      await handleGeocodeAddress(enderecoCompleto);
+      toast.success("CEP encontrado! Endereço preenchido automaticamente.");
       
-      toast.success("Endereço encontrado com sucesso!");
+      // Tentar buscar coordenadas automaticamente
+      await handleGeocodeAddress();
     } catch (error) {
       console.error("Erro ao buscar CEP:", error);
-      toast.error("Erro ao buscar CEP. Verifique sua conexão.");
+      toast.error("Erro ao buscar CEP. Tente novamente.");
     } finally {
       setIsFetchingCep(false);
     }
@@ -468,45 +423,50 @@ export default function EditarObra() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="latitude">Latitude</Label>
-                  <div className="flex gap-2">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="latitude">Latitude</Label>
                     <Input
                       id="latitude"
-                      type="number"
-                      step="0.0000001"
-                      placeholder="Ex: -27.5954"
+                      type="text"
                       value={formData.latitude}
                       onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+                      placeholder="Ex: -27.5954"
                     />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleGeocodeAddress()}
-                      disabled={isGeocoding}
-                      title="Buscar coordenadas automaticamente"
-                    >
-                      {isGeocoding ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <MapPin className="h-4 w-4" />
-                      )}
-                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="longitude">Longitude</Label>
+                    <Input
+                      id="longitude"
+                      type="text"
+                      value={formData.longitude}
+                      onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+                      placeholder="Ex: -48.5480"
+                    />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="longitude">Longitude</Label>
-                  <Input
-                    id="longitude"
-                    type="number"
-                    step="0.0000001"
-                    placeholder="Ex: -48.5480"
-                    value={formData.longitude}
-                    onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
-                  />
-                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleGeocodeAddress}
+                  disabled={isGeocoding}
+                  className="w-full"
+                >
+                  {isGeocoding ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <MapPin className="mr-2 h-4 w-4" />
+                  )}
+                  {isGeocoding ? "Buscando coordenadas..." : "Buscar Coordenadas Automaticamente"}
+                </Button>
+                
+                <p className="text-xs text-muted-foreground">
+                  💡 Preencha o endereço completo e clique para buscar as coordenadas automaticamente.
+                  Você também pode inserir as coordenadas manualmente.
+                </p>
+              </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="valor_total">Valor Total (R$) *</Label>
