@@ -90,13 +90,47 @@ export function useAuth() {
     }
   };
 
-  const signUp = async (email: string, password: string, nome: string) => {
+  const signUp = async (
+    email: string, 
+    password: string, 
+    nome: string,
+    nomeMunicipio?: string,
+    cnpj?: string,
+    uf?: string,
+    telefone?: string
+  ) => {
     try {
+      // Se todos os dados do tenant foram fornecidos, criar novo tenant via edge function
+      if (nomeMunicipio && cnpj && uf) {
+        const { data, error } = await supabase.functions.invoke('register-new-tenant', {
+          body: {
+            nome,
+            email,
+            senha: password,
+            nome_municipio: nomeMunicipio,
+            cnpj,
+            uf,
+            telefone,
+          }
+        });
+
+        if (error) {
+          throw new Error(error.message || 'Erro ao criar conta');
+        }
+
+        if (data?.error) {
+          throw new Error(data.error);
+        }
+
+        toast.success('Conta e município criados com sucesso! Faça login para continuar.');
+        return { data, error: null };
+      }
+
+      // Fallback: cadastro simples (para segundo usuário do mesmo tenant)
       const redirectUrl = `${window.location.origin}/`;
       
-      // Obter tenant_id do contexto baseado no hostname
       const hostname = window.location.hostname;
-      let tenantSlug = 'itampema'; // default
+      let tenantSlug = 'itampema';
       
       if (hostname.includes('.obrasdigital.com.br')) {
         tenantSlug = hostname.split('.')[0];
@@ -104,7 +138,6 @@ export function useAuth() {
         tenantSlug = 'itampema';
       }
       
-      // Buscar tenant_id pelo slug ou subdominio
       const { data: tenantData } = await supabase
         .from('tenants')
         .select('id')

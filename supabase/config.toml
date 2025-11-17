@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.enviar-situacao-obras-mensal]
 verify_jwt = false
+
+[functions.register-new-tenant]
+verify_jwt = false
