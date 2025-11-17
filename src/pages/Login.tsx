@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { HardHat } from "lucide-react";
+import { HardHat, Globe } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTenant } from "@/contexts/TenantContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -15,6 +16,7 @@ export default function Login() {
   const [activeTab, setActiveTab] = useState("login");
   const navigate = useNavigate();
   const { signIn, signUp, user } = useAuth();
+  const { tenant } = useTenant();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -61,11 +63,21 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="bg-primary p-3 rounded-full">
-              <HardHat className="h-8 w-8 text-primary-foreground" />
-            </div>
+            {tenant?.logo_url ? (
+              <img 
+                src={tenant.logo_url} 
+                alt="Logo" 
+                className="h-16 w-16 object-contain"
+              />
+            ) : (
+              <div className="bg-primary p-3 rounded-full">
+                <HardHat className="h-8 w-8 text-primary-foreground" />
+              </div>
+            )}
           </div>
-          <CardTitle className="text-2xl">Sistema de Gestão de Obras Públicas</CardTitle>
+          <CardTitle className="text-2xl">
+            {tenant?.nome_sistema || "Sistema de Gestão de Obras Públicas"}
+          </CardTitle>
           <CardDescription>Entre ou crie sua conta para acessar</CardDescription>
         </CardHeader>
         <CardContent>
@@ -151,6 +163,21 @@ export default function Login() {
               </form>
             </TabsContent>
           </Tabs>
+          
+          <div className="mt-6 pt-6 border-t">
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="w-full"
+              onClick={() => navigate('/portal-publico')}
+            >
+              <Globe className="mr-2 h-4 w-4" />
+              Acessar Portal da Transparência
+            </Button>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              Visualize obras públicas sem necessidade de login
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
