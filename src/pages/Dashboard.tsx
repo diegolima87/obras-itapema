@@ -104,90 +104,86 @@ export default function Dashboard() {
           })}
         </div>
 
-        {/* Gráfico de Pizza de Status e Cards */}
-        <div className="grid gap-4 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <div className="grid gap-4 md:grid-cols-2">
-              <Card className="hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
-                <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-transparent">
-                  <CardTitle className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                    Obras por Status
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  {isLoading ? (
-                    <div className="space-y-4">
-                      {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="flex items-center justify-between">
-                          <Skeleton className="h-4 w-24" />
-                          <Skeleton className="h-4 w-8" />
-                        </div>
-                      ))}
+        {/* Cards de Visão Geral */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <Card className="hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
+            <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-transparent">
+              <CardTitle className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                Obras por Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              {isLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="flex items-center justify-between">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-8" />
                     </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {Object.entries({
-                        planejada: obras?.filter(o => o.status === "planejada").length || 0,
-                        andamento: obras?.filter(o => o.status === "andamento").length || 0,
-                        concluida: obras?.filter(o => o.status === "concluida").length || 0,
-                        paralisada: obras?.filter(o => o.status === "paralisada").length || 0,
-                      }).map(([status, count]) => (
-                        <div key={status} className="flex items-center justify-between group hover:bg-primary/5 p-2 rounded-lg transition-colors">
-                          <span className="capitalize text-sm group-hover:text-primary transition-colors">{status.replace("_", " ")}</span>
-                          <span className="font-semibold text-primary">{count}</span>
-                        </div>
-                      ))}
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {Object.entries({
+                    planejada: obras?.filter(o => o.status === "planejada").length || 0,
+                    andamento: obras?.filter(o => o.status === "andamento").length || 0,
+                    concluida: obras?.filter(o => o.status === "concluida").length || 0,
+                    paralisada: obras?.filter(o => o.status === "paralisada").length || 0,
+                  }).map(([status, count]) => (
+                    <div key={status} className="flex items-center justify-between group hover:bg-primary/5 p-2 rounded-lg transition-colors">
+                      <span className="capitalize text-sm group-hover:text-primary transition-colors">{status.replace("_", " ")}</span>
+                      <span className="font-semibold text-primary">{count}</span>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-              <Card className="hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
-                <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-transparent">
-                  <CardTitle className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                    Obras Recentes
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  {isLoading ? (
-                    <div className="space-y-3">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="border-l-4 border-muted pl-3">
-                          <Skeleton className="h-4 w-48 mb-1" />
-                          <Skeleton className="h-3 w-32" />
-                        </div>
-                      ))}
+          <Card className="hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
+            <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-transparent">
+              <CardTitle className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                Obras Recentes
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              {isLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="border-l-4 border-muted pl-3">
+                      <Skeleton className="h-4 w-48 mb-1" />
+                      <Skeleton className="h-3 w-32" />
                     </div>
-                  ) : obras && obras.length > 0 ? (
-                    <div className="space-y-3">
-                      {obras.slice(0, 3).map((obra, index) => (
-                        <div 
-                          key={obra.id} 
-                          className="group flex items-start gap-3 p-3 rounded-lg hover:bg-primary/5 transition-all duration-200 cursor-pointer border-l-4 border-primary"
-                        >
-                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                            {index + 1}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm group-hover:text-primary transition-colors truncate">
-                              {obra.nome}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {obra.unidade_gestora}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
+                  ))}
+                </div>
+              ) : obras && obras.length > 0 ? (
+                <div className="space-y-3">
+                  {obras.slice(0, 3).map((obra, index) => (
+                    <div 
+                      key={obra.id} 
+                      className="group flex items-start gap-3 p-3 rounded-lg hover:bg-primary/5 transition-all duration-200 cursor-pointer border-l-4 border-primary"
+                    >
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm group-hover:text-primary transition-colors truncate">
+                          {obra.nome}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {obra.unidade_gestora}
+                        </p>
+                      </div>
                     </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Nenhuma obra cadastrada ainda.</p>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">Nenhuma obra cadastrada ainda.</p>
+              )}
+            </CardContent>
+          </Card>
 
           <GraficoPizzaStatus />
         </div>
