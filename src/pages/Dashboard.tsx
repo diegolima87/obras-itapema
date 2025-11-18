@@ -7,6 +7,7 @@ import { useMedicoes } from "@/hooks/useMedicoes";
 import { GraficoEvolucaoObras } from "@/components/dashboard/GraficoEvolucaoObras";
 import { GraficoFinanceiroMensal } from "@/components/dashboard/GraficoFinanceiroMensal";
 import { GraficoPizzaStatus } from "@/components/dashboard/GraficoPizzaStatus";
+import { GraficoAreaPorObra } from "@/components/dashboard/GraficoAreaPorObra";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
@@ -195,6 +196,11 @@ export default function Dashboard() {
         <div className="grid gap-4 lg:grid-cols-2">
           <GraficoEvolucaoObras />
           <GraficoFinanceiroMensal />
+        </div>
+
+        {/* Gráfico de Área Empilhada por Obra */}
+        <div className="grid gap-4">
+          <GraficoAreaPorObra />
         </div>
       </div>
     </MainLayout>
