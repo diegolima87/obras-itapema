@@ -48,7 +48,20 @@ const Mapa = () => {
           });
         }
       });
-      map.fitBounds(bounds);
+      
+      // Adiciona padding para dar mais espaço visual
+      map.fitBounds(bounds, 100);
+      
+      // Limita o zoom máximo após o fitBounds
+      google.maps.event.addListenerOnce(map, 'bounds_changed', () => {
+        const currentZoom = map.getZoom();
+        if (currentZoom && currentZoom > 15) {
+          map.setZoom(15);
+        }
+      });
+    } else {
+      // Se não há obras, usa zoom padrão da cidade
+      map.setZoom(12);
     }
   }, [obras]);
 
@@ -136,7 +149,9 @@ const Mapa = () => {
                   onLoad={onLoad}
                   options={{
                     streetViewControl: false,
-                    mapTypeControl: false,
+                    mapTypeControl: true,
+                    fullscreenControl: true,
+                    zoomControl: true,
                   }}
                 >
                   {obras.map((obra) => {
