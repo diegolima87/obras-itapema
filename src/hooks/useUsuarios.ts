@@ -24,7 +24,7 @@ export interface UserProfile {
 
 export function useUsuarios() {
   const queryClient = useQueryClient();
-  const { isSuperAdmin } = useIsSuperAdmin();
+  const { isSuperAdmin, isLoading: isLoadingRoles } = useIsSuperAdmin();
 
   const { data: currentUserTenant } = useQuery({
     queryKey: ['currentUserTenant'],
@@ -84,9 +84,18 @@ export function useUsuarios() {
             !user.roles?.some(role => role.role === 'super_admin')
           );
 
+      console.log('🔍 Filtrando usuários:', {
+        isSuperAdmin,
+        totalUsers: usersWithRoles.length,
+        superAdminsFound: usersWithRoles.filter(u => 
+          u.roles?.some(r => r.role === 'super_admin')
+        ).length,
+        filteredUsers: filteredUsers.length
+      });
+
       return filteredUsers as UserProfile[];
     },
-    enabled: isSuperAdmin || !!currentUserTenant?.tenant_id,
+    enabled: !isLoadingRoles && (isSuperAdmin || !!currentUserTenant?.tenant_id),
   });
 
   const assignRole = useMutation({

@@ -177,6 +177,7 @@ export function useAuth() {
       if (error) throw error;
       
       // Limpar cache do React Query ao fazer logout
+      queryClient.invalidateQueries({ queryKey: ['userRoles'] });
       queryClient.clear();
       
       toast.success('Logout realizado com sucesso!');
