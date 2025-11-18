@@ -25,10 +25,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
+import { RoleProtectedRoute } from "@/components/auth/RoleProtectedRoute";
+import { useIsSuperAdmin } from "@/hooks/useUserRoles";
 
 export default function Usuarios() {
   const queryClient = useQueryClient();
   const { tenant } = useTenant();
+  const { isSuperAdmin } = useIsSuperAdmin();
   const [searchTerm, setSearchTerm] = useState("");
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -51,6 +54,18 @@ export default function Usuarios() {
 
   const { usuarios, isLoading, assignRole, removeRole, updateProfile } = useUsuarios();
 
+  // Verificar se pode gerenciar um usuário
+  const canManageUser = (usuario: UserProfile) => {
+    // Super admin pode gerenciar todos
+    if (isSuperAdmin) return true;
+    
+    // Não pode gerenciar super admins
+    if (usuario.roles?.some(r => r.role === 'super_admin')) return false;
+    
+    // Admin/Gestor pode gerenciar usuários do mesmo tenant (exceto super admins)
+    return true;
+  };
+
   const filteredUsuarios = usuarios?.filter(
     (usuario) =>
       usuario.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -67,7 +82,14 @@ export default function Usuarios() {
   };
 
   const handleRemoveRole = async (userId: string, role: UserRole['role']) => {
-    await removeRole.mutateAsync({ userId, role });
+    try {
+      await removeRole.mutateAsync({ userId, role });
+    } catch (error: any) {
+      console.error('Erro ao remover papel:', error);
+      if (error.message?.includes('permission') || error.code === 'PGRST301') {
+        toast.error('Você não tem permissão para remover papéis deste usuário');
+      }
+    }
   };
 
   const openEditDialog = (usuario: UserProfile) => {
@@ -99,15 +121,32 @@ export default function Usuarios() {
   const handleDelete = async () => {
     if (!editingUser) return;
     
-    // Remove all roles first
-    if (editingUser.roles) {
-      for (const role of editingUser.roles) {
-        await removeRole.mutateAsync({ userId: editingUser.id, role: role.role });
-      }
+    // Verificar permissão
+    if (!canManageUser(editingUser)) {
+      toast.error('Você não tem permissão para remover papéis deste usuário');
+      setIsDeleteDialogOpen(false);
+      return;
     }
     
-    setIsDeleteDialogOpen(false);
-    setEditingUser(null);
+    try {
+      // Remove all roles first
+      if (editingUser.roles) {
+        for (const role of editingUser.roles) {
+          await removeRole.mutateAsync({ userId: editingUser.id, role: role.role });
+        }
+      }
+      
+      setIsDeleteDialogOpen(false);
+      setEditingUser(null);
+    } catch (error: any) {
+      console.error('Erro ao remover papéis:', error);
+      if (error.message?.includes('permission') || error.code === 'PGRST301') {
+        toast.error('Você não tem permissão para remover papéis deste usuário');
+      } else {
+        toast.error('Erro ao remover papéis do usuário');
+      }
+      setIsDeleteDialogOpen(false);
+    }
   };
 
   const handleCreateUser = async () => {
@@ -189,8 +228,6 @@ export default function Usuarios() {
     }
   };
 
-  const SUPER_ADMIN_EMAIL = 'deklima@gmail.com';
-
   const roleLabels: Record<UserRole['role'], string> = {
     super_admin: 'Super Admin',
     admin: 'Administrador',
@@ -217,10 +254,9 @@ export default function Usuarios() {
     return `${baseClasses} ${roleStyles[role]}`;
   };
 
-  const isSuperAdmin = (email: string) => email === SUPER_ADMIN_EMAIL;
-
   return (
-    <MainLayout>
+    <RoleProtectedRoute allowedRoles={['super_admin', 'admin', 'gestor']}>
+      <MainLayout>
       <div className="space-y-6">
         {/* Modern Header with Gradient */}
         <div className="gradient-primary rounded-xl p-8 shadow-glow relative overflow-hidden">
@@ -346,7 +382,7 @@ export default function Usuarios() {
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-2">
                               {usuario.nome}
-                              {isSuperAdmin(usuario.email) && (
+                              {usuario.roles?.some(r => r.role === 'super_admin') && (
                                 <span className="text-yellow-500" title="Super Administrador">👑</span>
                               )}
                             </div>
@@ -356,26 +392,26 @@ export default function Usuarios() {
                             <div className="flex flex-wrap gap-1">
                               {usuario.roles && usuario.roles.length > 0 ? (
                                 usuario.roles.map((userRole) => {
-                                  const isAdminAndSuperAdmin = isSuperAdmin(usuario.email) && userRole.role === 'admin';
+                                  const isSuperAdminRole = usuario.roles?.some(r => r.role === 'super_admin');
                                   return (
                                     <button
                                       key={userRole.id}
                                       className={`${getRoleBadgeClasses(userRole.role)} ${
-                                        isAdminAndSuperAdmin ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'
+                                        isSuperAdminRole ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'
                                       }`}
                                       onClick={() => {
-                                        if (!isAdminAndSuperAdmin) {
+                                        if (!isSuperAdminRole) {
                                           handleRemoveRole(usuario.id, userRole.role);
                                         }
                                       }}
-                                      title={isAdminAndSuperAdmin ? "Não é possível remover papel de Super Admin" : "Clique para remover"}
-                                      disabled={isAdminAndSuperAdmin}
+                                      title={isSuperAdminRole ? "Não é possível remover papel de Super Admin" : "Clique para remover"}
+                                      disabled={isSuperAdminRole}
                                     >
                                       {roleLabels[userRole.role]}
-                                      {!isAdminAndSuperAdmin && (
+                                      {!isSuperAdminRole && (
                                         <X className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                                       )}
-                                      {isAdminAndSuperAdmin && (
+                                      {isSuperAdminRole && (
                                         <Crown className="h-3 w-3 ml-1" />
                                       )}
                                     </button>
@@ -398,6 +434,8 @@ export default function Usuarios() {
                                   setSelectedUser(usuario.id);
                                   setIsRoleDialogOpen(true);
                                 }}
+                                disabled={!canManageUser(usuario)}
+                                title={!canManageUser(usuario) ? "Você não tem permissão para gerenciar este usuário" : "Atribuir papel"}
                               >
                                 <Shield className="h-4 w-4" />
                               </Button>
@@ -405,6 +443,8 @@ export default function Usuarios() {
                                 variant="outline" 
                                 size="sm"
                                 onClick={() => openEditDialog(usuario)}
+                                disabled={!canManageUser(usuario)}
+                                title={!canManageUser(usuario) ? "Você não tem permissão para editar este usuário" : "Editar usuário"}
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -413,8 +453,8 @@ export default function Usuarios() {
                                 size="sm"
                                 onClick={() => openDeleteDialog(usuario)}
                                 className="text-red-600 hover:text-red-700"
-                                disabled={isSuperAdmin(usuario.email) && usuario.roles?.some(r => r.role === 'admin')}
-                                title={isSuperAdmin(usuario.email) ? "Não é possível remover papéis do Super Admin" : ""}
+                                disabled={!canManageUser(usuario) || usuario.roles?.some(r => r.role === 'super_admin')}
+                                title={usuario.roles?.some(r => r.role === 'super_admin') ? "Não é possível remover papéis do Super Admin" : !canManageUser(usuario) ? "Você não tem permissão para remover papéis deste usuário" : "Remover papéis"}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -617,5 +657,6 @@ export default function Usuarios() {
         </AlertDialog>
       </div>
     </MainLayout>
+    </RoleProtectedRoute>
   );
 }
