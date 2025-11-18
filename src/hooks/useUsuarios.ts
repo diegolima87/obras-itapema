@@ -77,7 +77,14 @@ export function useUsuarios() {
         })
       );
 
-      return usersWithRoles as UserProfile[];
+      // Filtrar super admins se o usuário atual não for super admin
+      const filteredUsers = isSuperAdmin 
+        ? usersWithRoles 
+        : usersWithRoles.filter(user => 
+            !user.roles?.some(role => role.role === 'super_admin')
+          );
+
+      return filteredUsers as UserProfile[];
     },
     enabled: isSuperAdmin || !!currentUserTenant?.tenant_id,
   });
