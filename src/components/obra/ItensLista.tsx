@@ -9,10 +9,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Upload, Search, Edit, Trash2 } from "lucide-react";
+import { Plus, Upload, Search, Edit, Trash2, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { ImportarItens } from "./ImportarItens";
 import { NovoItem } from "./NovoItem";
+import { useItensObra, useDeletarItemObra } from "@/hooks/useItensObra";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface ItensListaProps {
   obraId: string;
@@ -21,28 +25,32 @@ interface ItensListaProps {
 export function ItensLista({ obraId }: ItensListaProps) {
   const [showImport, setShowImport] = useState(false);
   const [showNew, setShowNew] = useState(false);
-  const [itens] = useState([
-    {
-      id: "1",
-      codigo: "001",
-      descricao: "Escavação mecânica de valas",
-      unidade: "m³",
-      quantidade_contratada: 150,
-      quantidade_executada: 45,
-      valor_unitario: 85.5,
-      valor_total: 12825,
-    },
-    {
-      id: "2",
-      codigo: "002",
-      descricao: "Aterro compactado",
-      unidade: "m³",
-      quantidade_contratada: 200,
-      quantidade_executada: 80,
-      valor_unitario: 62.3,
-      valor_total: 12460,
-    },
-  ]);
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  const { data: itens, isLoading, error } = useItensObra(obraId);
+  const deletarItem = useDeletarItemObra();
+  
+  const itensFiltrados = itens?.filter((item) =>
+    item.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.codigo?.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Tem certeza que deseja deletar este item?")) {
+      await deletarItem.mutateAsync({ id, obra_id: obraId });
+    }
+  };
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Erro ao carregar itens: {error.message}
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <>
@@ -65,10 +73,21 @@ export function ItensLista({ obraId }: ItensListaProps) {
         <CardContent className="space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar itens..." className="pl-9" />
+            <Input 
+              placeholder="Buscar itens..." 
+              className="pl-9" 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
 
-          {itens.length === 0 ? (
+          {isLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          ) : itensFiltrados.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">
               Nenhum item cadastrado. Adicione itens manualmente ou importe uma planilha.
             </p>
@@ -88,16 +107,16 @@ export function ItensLista({ obraId }: ItensListaProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {itens.map((item) => (
+                  {itensFiltrados.map((item) => (
                     <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.codigo}</TableCell>
+                      <TableCell className="font-medium">{item.codigo || "-"}</TableCell>
                       <TableCell>{item.descricao}</TableCell>
                       <TableCell>{item.unidade}</TableCell>
                       <TableCell className="text-right">
-                        {item.quantidade_contratada.toLocaleString("pt-BR")}
+                        {item.quantidade_total.toLocaleString("pt-BR")}
                       </TableCell>
                       <TableCell className="text-right">
-                        {item.quantidade_executada.toLocaleString("pt-BR")}
+                        {(item.quantidade_executada || 0).toLocaleString("pt-BR")}
                       </TableCell>
                       <TableCell className="text-right">
                         {new Intl.NumberFormat("pt-BR", {
@@ -109,15 +128,24 @@ export function ItensLista({ obraId }: ItensListaProps) {
                         {new Intl.NumberFormat("pt-BR", {
                           style: "currency",
                           currency: "BRL",
-                        }).format(item.valor_total)}
+                        }).format(item.valor_total || 0)}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon">
+                          <Button variant="ghost" size="icon" disabled>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon">
-                            <Trash2 className="h-4 w-4" />
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleDelete(item.id)}
+                            disabled={deletarItem.isPending}
+                          >
+                            {deletarItem.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
                           </Button>
                         </div>
                       </TableCell>
