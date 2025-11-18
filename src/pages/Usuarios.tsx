@@ -123,27 +123,45 @@ export default function Usuarios() {
     
     // Verificar permissão
     if (!canManageUser(editingUser)) {
-      toast.error('Você não tem permissão para remover papéis deste usuário');
+      toast.error('Você não tem permissão para excluir este usuário');
       setIsDeleteDialogOpen(false);
       return;
     }
     
     try {
-      // Remove all roles first
+      // 1. Remover todos os papéis
       if (editingUser.roles) {
         for (const role of editingUser.roles) {
           await removeRole.mutateAsync({ userId: editingUser.id, role: role.role });
         }
       }
       
+      // 2. Deletar o perfil do usuário (isso fará cascade no auth.users)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', editingUser.id);
+      
+      if (profileError) throw profileError;
+      
+      // 3. Deletar o usuário do Auth usando admin API
+      const { error: authError } = await supabase.auth.admin.deleteUser(editingUser.id);
+      
+      if (authError) {
+        console.warn('Aviso ao deletar do Auth:', authError);
+        // Não falhar se o usuário já foi deletado do auth
+      }
+      
+      toast.success('Usuário excluído com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['usuarios'] });
       setIsDeleteDialogOpen(false);
       setEditingUser(null);
     } catch (error: any) {
-      console.error('Erro ao remover papéis:', error);
+      console.error('Erro ao excluir usuário:', error);
       if (error.message?.includes('permission') || error.code === 'PGRST301') {
-        toast.error('Você não tem permissão para remover papéis deste usuário');
+        toast.error('Você não tem permissão para excluir este usuário');
       } else {
-        toast.error('Erro ao remover papéis do usuário');
+        toast.error(error.message || 'Erro ao excluir usuário');
       }
       setIsDeleteDialogOpen(false);
     }
@@ -638,10 +656,18 @@ export default function Usuarios() {
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <AlertDialogContent className="sm:max-w-[425px]">
             <AlertDialogHeader>
-              <AlertDialogTitle className="text-xl">Tem certeza?</AlertDialogTitle>
+              <AlertDialogTitle className="text-xl">Excluir Usuário?</AlertDialogTitle>
               <AlertDialogDescription className="text-base">
-                Esta ação removerá todos os papéis de <strong className="text-foreground">{editingUser?.nome}</strong>.
-                O usuário não será deletado do sistema, mas perderá todos os acessos.
+                <div className="space-y-2">
+                  <p>Esta ação é <strong className="text-red-600">PERMANENTE</strong> e excluirá completamente o usuário <strong className="text-foreground">{editingUser?.nome}</strong> do sistema.</p>
+                  <p className="text-muted-foreground">Isso incluirá:</p>
+                  <ul className="list-disc list-inside text-muted-foreground ml-2">
+                    <li>Conta de acesso</li>
+                    <li>Todos os papéis e permissões</li>
+                    <li>Perfil do usuário</li>
+                  </ul>
+                  <p className="text-red-600 font-semibold mt-3">Esta ação não pode ser desfeita!</p>
+                </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -650,7 +676,7 @@ export default function Usuarios() {
                 onClick={handleDelete}
                 className="bg-red-600 hover:bg-red-700 transition-colors duration-200"
               >
-                Remover Acessos
+                Sim, Excluir Permanentemente
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
