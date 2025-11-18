@@ -24,31 +24,36 @@ export default function Dashboard() {
       value: obras?.length || 0,
       icon: HardHat,
       subtitle: `${obrasAndamento} em andamento`,
-      color: "text-primary",
+      color: "text-blue-600 dark:text-blue-400",
+      bgGradient: "from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900"
     },
     {
       title: "Contratos Ativos",
       value: contratosAtivos,
       icon: FileText,
       subtitle: "Vigentes",
-      color: "text-primary",
+      color: "text-emerald-600 dark:text-emerald-400",
+      bgGradient: "from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900"
     },
     {
       title: "Medições Pendentes",
       value: medicoesPendentes,
       icon: TrendingUp,
       subtitle: "Aguardando aprovação",
-      color: "text-warning",
+      color: "text-amber-600 dark:text-amber-400",
+      bgGradient: "from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900"
     },
     {
       title: "Valor Total",
       value: new Intl.NumberFormat("pt-BR", {
         style: "currency",
         currency: "BRL",
+        maximumFractionDigits: 0,
       }).format(valorTotalObras),
       icon: DollarSign,
       subtitle: "Em obras",
-      color: "text-success",
+      color: "text-green-600 dark:text-green-400",
+      bgGradient: "from-green-50 to-green-100 dark:from-green-950 dark:to-green-900"
     },
   ];
 
@@ -62,16 +67,18 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (
-              <Card key={stat.title}>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">
+              <Card key={stat.title} className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-0 shadow-md overflow-hidden">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
                     {stat.title}
                   </CardTitle>
-                  <Icon className={`h-4 w-4 ${stat.color}`} />
+                  <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.bgGradient}`}>
+                    <Icon className={`h-6 w-6 ${stat.color}`} />
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {isLoading ? (
@@ -81,8 +88,8 @@ export default function Dashboard() {
                     </>
                   ) : (
                     <>
-                      <div className="text-2xl font-bold">{stat.value}</div>
-                      <p className="text-xs text-muted-foreground">
+                      <div className="text-2xl md:text-3xl font-bold tracking-tight break-words line-clamp-2">{stat.value}</div>
+                      <p className="text-xs text-muted-foreground mt-1">
                         {stat.subtitle}
                       </p>
                     </>
@@ -94,11 +101,14 @@ export default function Dashboard() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Obras por Status</CardTitle>
+          <Card className="hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
+            <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-transparent">
+              <CardTitle className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                Obras por Status
+              </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               {isLoading ? (
                 <div className="space-y-4">
                   {[1, 2, 3, 4].map((i) => (
@@ -116,9 +126,9 @@ export default function Dashboard() {
                     concluida: obras?.filter(o => o.status === "concluida").length || 0,
                     paralisada: obras?.filter(o => o.status === "paralisada").length || 0,
                   }).map(([status, count]) => (
-                    <div key={status} className="flex items-center justify-between">
-                      <span className="capitalize text-sm">{status.replace("_", " ")}</span>
-                      <span className="font-semibold">{count}</span>
+                    <div key={status} className="flex items-center justify-between group hover:bg-primary/5 p-2 rounded-lg transition-colors">
+                      <span className="capitalize text-sm group-hover:text-primary transition-colors">{status.replace("_", " ")}</span>
+                      <span className="font-semibold text-primary">{count}</span>
                     </div>
                   ))}
                 </div>
@@ -126,11 +136,14 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Obras Recentes</CardTitle>
+          <Card className="hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
+            <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-transparent">
+              <CardTitle className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                Obras Recentes
+              </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               {isLoading ? (
                 <div className="space-y-3">
                   {[1, 2, 3].map((i) => (
@@ -142,12 +155,22 @@ export default function Dashboard() {
                 </div>
               ) : obras && obras.length > 0 ? (
                 <div className="space-y-3">
-                  {obras.slice(0, 3).map((obra) => (
-                    <div key={obra.id} className="border-l-4 border-primary pl-3">
-                      <p className="font-medium text-sm">{obra.nome}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {obra.unidade_gestora}
-                      </p>
+                  {obras.slice(0, 3).map((obra, index) => (
+                    <div 
+                      key={obra.id} 
+                      className="group flex items-start gap-3 p-3 rounded-lg hover:bg-primary/5 transition-all duration-200 cursor-pointer border-l-4 border-primary"
+                    >
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm group-hover:text-primary transition-colors truncate">
+                          {obra.nome}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {obra.unidade_gestora}
+                        </p>
+                      </div>
                     </div>
                   ))}
                 </div>
