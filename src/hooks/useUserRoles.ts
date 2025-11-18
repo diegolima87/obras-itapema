@@ -25,7 +25,7 @@ export function useUserRoles() {
 
       return roles.map(r => r.role as UserRole);
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 1 * 60 * 1000, // Cache for 1 minute
   });
 }
 
