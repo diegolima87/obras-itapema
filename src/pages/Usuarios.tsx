@@ -129,36 +129,30 @@ export default function Usuarios() {
     }
     
     try {
-      // 1. Remover todos os papéis
-      if (editingUser.roles) {
-        for (const role of editingUser.roles) {
-          await removeRole.mutateAsync({ userId: editingUser.id, role: role.role });
-        }
+      console.log('🗑️ Iniciando exclusão do usuário:', editingUser.id);
+      
+      // Chamar a edge function para deletar o usuário de forma segura
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId: editingUser.id }
+      });
+
+      if (error) {
+        console.error('❌ Erro na edge function:', error);
+        throw new Error(error.message || 'Erro ao excluir usuário');
       }
-      
-      // 2. Deletar o perfil do usuário (isso fará cascade no auth.users)
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', editingUser.id);
-      
-      if (profileError) throw profileError;
-      
-      // 3. Deletar o usuário do Auth usando admin API
-      const { error: authError } = await supabase.auth.admin.deleteUser(editingUser.id);
-      
-      if (authError) {
-        console.warn('Aviso ao deletar do Auth:', authError);
-        // Não falhar se o usuário já foi deletado do auth
+
+      if (!data?.success) {
+        throw new Error(data?.error || 'Erro ao excluir usuário');
       }
-      
+
+      console.log('✅ Usuário excluído com sucesso');
       toast.success('Usuário excluído com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['usuarios'] });
       setIsDeleteDialogOpen(false);
       setEditingUser(null);
     } catch (error: any) {
-      console.error('Erro ao excluir usuário:', error);
-      if (error.message?.includes('permission') || error.code === 'PGRST301') {
+      console.error('❌ Erro ao excluir usuário:', error);
+      if (error.message?.includes('permission') || error.message?.includes('permissão')) {
         toast.error('Você não tem permissão para excluir este usuário');
       } else {
         toast.error(error.message || 'Erro ao excluir usuário');
