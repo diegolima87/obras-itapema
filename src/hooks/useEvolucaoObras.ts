@@ -15,10 +15,12 @@ export interface DadosEvolucaoMensal {
 export const useEvolucaoObras = (
   mesesRetroativos: number = 12,
   obraId?: string | null,
-  tipoObra?: string | null
+  tipoObra?: string | null,
+  dataInicial?: Date | null,
+  dataFinal?: Date | null
 ) => {
   return useQuery({
-    queryKey: ["evolucao-obras", mesesRetroativos, obraId, tipoObra],
+    queryKey: ["evolucao-obras", mesesRetroativos, obraId, tipoObra, dataInicial, dataFinal],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
@@ -31,8 +33,16 @@ export const useEvolucaoObras = (
       
       if (!profile?.tenant_id) return [];
 
-      const dataLimite = new Date();
-      dataLimite.setMonth(dataLimite.getMonth() - mesesRetroativos);
+      let dataLimite: Date;
+      let dataFim: Date = new Date();
+
+      if (dataInicial && dataFinal) {
+        dataLimite = dataInicial;
+        dataFim = dataFinal;
+      } else {
+        dataLimite = new Date();
+        dataLimite.setMonth(dataLimite.getMonth() - mesesRetroativos);
+      }
 
       let query = supabase
         .from("medicoes")
@@ -47,7 +57,8 @@ export const useEvolucaoObras = (
         `)
         .eq("tenant_id", profile.tenant_id)
         .eq("status", "aprovado")
-        .gte("competencia", dataLimite.toISOString().split('T')[0]);
+        .gte("competencia", dataLimite.toISOString().split('T')[0])
+        .lte("competencia", dataFim.toISOString().split('T')[0]);
 
       if (obraId) {
         query = query.eq("obra_id", obraId);

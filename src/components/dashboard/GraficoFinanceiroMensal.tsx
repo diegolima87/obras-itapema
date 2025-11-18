@@ -3,26 +3,41 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { useEvolucaoObras } from "@/hooks/useEvolucaoObras";
 import { useObrasParaFiltro } from "@/hooks/useObrasParaFiltro";
 import { useTiposObra } from "@/hooks/useTiposObra";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { DollarSign, X } from "lucide-react";
+import { DollarSign, X, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 export const GraficoFinanceiroMensal = () => {
   const [obraIdSelecionada, setObraIdSelecionada] = useState<string | null>(null);
   const [tipoObraSelecionado, setTipoObraSelecionado] = useState<string | null>(null);
+  const [dataInicial, setDataInicial] = useState<Date | undefined>();
+  const [dataFinal, setDataFinal] = useState<Date | undefined>();
 
   const { data: obras } = useObrasParaFiltro();
   const { data: tiposObra } = useTiposObra();
-  const { data: evolucao, isLoading } = useEvolucaoObras(12, obraIdSelecionada, tipoObraSelecionado);
+  const { data: evolucao, isLoading } = useEvolucaoObras(
+    12, 
+    obraIdSelecionada, 
+    tipoObraSelecionado,
+    dataInicial || null,
+    dataFinal || null
+  );
 
   const limparFiltros = () => {
     setObraIdSelecionada(null);
     setTipoObraSelecionado(null);
+    setDataInicial(undefined);
+    setDataFinal(undefined);
   };
 
-  const temFiltrosAtivos = obraIdSelecionada || tipoObraSelecionado;
+  const temFiltrosAtivos = obraIdSelecionada || tipoObraSelecionado || dataInicial || dataFinal;
 
   if (isLoading) {
     return (
@@ -116,6 +131,57 @@ export const GraficoFinanceiroMensal = () => {
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full sm:w-[200px] justify-start text-left font-normal",
+                  !dataInicial && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dataInicial ? format(dataInicial, "dd/MM/yyyy", { locale: ptBR }) : "Data inicial"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={dataInicial}
+                onSelect={setDataInicial}
+                initialFocus
+                locale={ptBR}
+              />
+            </PopoverContent>
+          </Popover>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full sm:w-[200px] justify-start text-left font-normal",
+                  !dataFinal && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dataFinal ? format(dataFinal, "dd/MM/yyyy", { locale: ptBR }) : "Data final"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={dataFinal}
+                onSelect={setDataFinal}
+                initialFocus
+                locale={ptBR}
+                disabled={(date) => dataInicial ? date < dataInicial : false}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </CardHeader>
       <CardContent className="pt-6">
