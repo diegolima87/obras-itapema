@@ -191,6 +191,7 @@ export default function Usuarios() {
     admin: 'Administrador',
     gestor: 'Gestor',
     fiscal: 'Fiscal',
+    engenheiro: 'Engenheiro',
     fornecedor: 'Fornecedor',
     cidadao: 'Cidadão',
   };
@@ -203,6 +204,7 @@ export default function Usuarios() {
       admin: 'bg-gradient-to-r from-red-900 to-red-600 text-white hover:from-red-800 hover:to-red-500',
       gestor: 'bg-gradient-to-r from-[#132A72] to-blue-600 text-white hover:from-[#1e3a8a] hover:to-blue-500',
       fiscal: 'bg-gradient-to-r from-green-900 to-green-600 text-white hover:from-green-800 hover:to-green-500',
+      engenheiro: 'bg-gradient-to-r from-orange-900 to-orange-600 text-white hover:from-orange-800 hover:to-orange-500',
       fornecedor: 'bg-gradient-to-r from-purple-900 to-purple-600 text-white hover:from-purple-800 hover:to-purple-500',
       cidadao: 'bg-gradient-to-r from-gray-700 to-gray-500 text-white hover:from-gray-600 hover:to-gray-400',
     };

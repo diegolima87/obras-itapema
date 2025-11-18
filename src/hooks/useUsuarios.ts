@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 export interface UserRole {
   id: string;
   user_id: string;
-  role: 'super_admin' | 'admin' | 'gestor' | 'fiscal' | 'fornecedor' | 'cidadao';
+  role: 'super_admin' | 'admin' | 'gestor' | 'fiscal' | 'engenheiro' | 'fornecedor' | 'cidadao';
   created_at: string;
 }
 
