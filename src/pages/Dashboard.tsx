@@ -4,6 +4,8 @@ import { HardHat, FileText, TrendingUp, DollarSign } from "lucide-react";
 import { useObras } from "@/hooks/useObras";
 import { useContratos } from "@/hooks/useContratos";
 import { useMedicoes } from "@/hooks/useMedicoes";
+import { GraficoEvolucaoObras } from "@/components/dashboard/GraficoEvolucaoObras";
+import { GraficoFinanceiroMensal } from "@/components/dashboard/GraficoFinanceiroMensal";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
@@ -179,6 +181,12 @@ export default function Dashboard() {
               )}
             </CardContent>
           </Card>
+        </div>
+
+        {/* Gráficos de Evolução Temporal */}
+        <div className="grid gap-4 lg:grid-cols-2">
+          <GraficoEvolucaoObras />
+          <GraficoFinanceiroMensal />
         </div>
       </div>
     </MainLayout>
