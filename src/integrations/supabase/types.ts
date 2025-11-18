@@ -1204,6 +1204,7 @@ export type Database = {
         | "fornecedor"
         | "cidadao"
         | "super_admin"
+        | "engenheiro"
       feature_type: "esfinge" | "portal_publico" | "integracao_tce"
       plano_tenant: "basico" | "premium" | "enterprise"
       status_esfinge: "pendente" | "processando" | "enviado" | "erro"
@@ -1351,6 +1352,7 @@ export const Constants = {
         "fornecedor",
         "cidadao",
         "super_admin",
+        "engenheiro",
       ],
       feature_type: ["esfinge", "portal_publico", "integracao_tce"],
       plano_tenant: ["basico", "premium", "enterprise"],
