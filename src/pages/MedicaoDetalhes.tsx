@@ -305,7 +305,7 @@ export default function MedicaoDetalhes() {
                 allowedTypes=".pdf,.jpg,.jpeg,.png,.webp"
                 maxSize="10MB"
               />
-              <DocumentoLista medicaoId={id} showDelete={false} />
+              <DocumentoLista medicaoId={id} showDelete={true} />
             </div>
           </TabsContent>
         </Tabs>

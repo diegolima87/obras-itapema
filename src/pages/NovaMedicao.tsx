@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, ChangeEvent, DragEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -7,13 +7,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, Upload } from "lucide-react";
+import { ArrowLeft, Save, Upload, FileText, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrencyInput, parseCurrency } from "@/lib/utils";
+import { useCriarMedicao } from "@/hooks/useMedicoes";
+import { useUploadDocumento } from "@/hooks/useUploadDocumento";
+import { useObras } from "@/hooks/useObras";
 
 export default function NovaMedicao() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  const { data: obras } = useObras();
+  const criarMedicao = useCriarMedicao();
+  const uploadDocumento = useUploadDocumento();
 
   const [formData, setFormData] = useState({
     obra_id: "",
@@ -25,21 +32,136 @@ export default function NovaMedicao() {
   });
 
   const [valorDisplay, setValorDisplay] = useState("R$ 0,00");
-
   const [loading, setLoading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isUploadingDocs, setIsUploadingDocs] = useState(false);
+
+  const validateAndAddFiles = (files: FileList | null) => {
+    if (!files) return;
+
+    const validFiles: File[] = [];
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+
+    Array.from(files).forEach((file) => {
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: "Tipo de arquivo inválido",
+          description: `${file.name} não é um tipo permitido (PDF, JPG, PNG, WEBP)`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (file.size > maxSize) {
+        toast({
+          title: "Arquivo muito grande",
+          description: `${file.name} excede o tamanho máximo de 10MB`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      validFiles.push(file);
+    });
+
+    setSelectedFiles((prev) => [...prev, ...validFiles]);
+  };
+
+  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    validateAndAddFiles(e.target.files);
+    e.target.value = '';
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    validateAndAddFiles(e.dataTransfer.files);
+  };
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.obra_id) {
+      toast({
+        title: "Erro",
+        description: "Selecione uma obra",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
-    setTimeout(() => {
+    try {
+      // Buscar contrato e fornecedor da obra selecionada
+      const obraSelecionada = obras?.find(o => o.id === formData.obra_id);
+      if (!obraSelecionada) {
+        throw new Error("Obra não encontrada");
+      }
+
+      // Aqui você precisa buscar o contrato e fornecedor vinculados à obra
+      // Por enquanto, vou usar valores mock - você precisa ajustar isso
+      const contratoId = "temp-contrato-id"; // TODO: Buscar do banco
+      const fornecedorId = "temp-fornecedor-id"; // TODO: Buscar do banco
+
+      // Criar a medição
+      const novaMedicao = await criarMedicao.mutateAsync({
+        numero_medicao: `MED-${Date.now()}`, // Gerar número automático
+        obra_id: formData.obra_id,
+        contrato_id: contratoId,
+        fornecedor_id: fornecedorId,
+        valor_medido: formData.valor_medicao,
+        percentual_executado: formData.percentual_executado,
+        observacoes: formData.observacoes,
+        competencia: formData.periodo_fim,
+        status: "pendente",
+      } as any);
+
+      // Fazer upload dos documentos se houver
+      if (selectedFiles.length > 0 && novaMedicao?.id) {
+        setIsUploadingDocs(true);
+        
+        for (let i = 0; i < selectedFiles.length; i++) {
+          const file = selectedFiles[i];
+          toast({
+            title: `Enviando documento ${i + 1} de ${selectedFiles.length}...`,
+          });
+          
+          await uploadDocumento.mutateAsync({
+            file,
+            medicaoId: novaMedicao.id,
+            tipo: "medicao",
+            bucketName: "documentos_medicoes",
+          });
+        }
+        
+        setIsUploadingDocs(false);
+      }
+
       toast({
         title: "Medição criada!",
         description: "A medição foi cadastrada com sucesso",
       });
+      
+      navigate(`/medicoes/${novaMedicao.id}`);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao criar medição",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
       setLoading(false);
-      navigate("/medicoes");
-    }, 1000);
+      setIsUploadingDocs(false);
+    }
   };
 
   return (
@@ -75,9 +197,11 @@ export default function NovaMedicao() {
                         <SelectValue placeholder="Selecione a obra" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="1">Construção de Ponte sobre o Rio Verde</SelectItem>
-                        <SelectItem value="2">Pavimentação da Rua das Flores</SelectItem>
-                        <SelectItem value="3">Reforma do Centro Cultural</SelectItem>
+                        {obras?.map((obra) => (
+                          <SelectItem key={obra.id} value={obra.id}>
+                            {obra.nome}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -155,26 +279,71 @@ export default function NovaMedicao() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                  <div
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors"
+                  >
                     <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                     <p className="text-sm text-muted-foreground mb-2">
                       Arraste arquivos ou clique para selecionar
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      Fotos e documentos da medição (máx. 10MB por arquivo)
+                    <p className="text-xs text-muted-foreground mb-4">
+                      PDF, JPG, PNG, WEBP (máx. 10MB por arquivo)
                     </p>
-                    <Button type="button" variant="outline" className="mt-4">
-                      Selecionar Arquivos
-                    </Button>
+                    <input
+                      type="file"
+                      multiple
+                      accept=".pdf,.jpg,.jpeg,.png,.webp"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      id="file-input-medicao"
+                    />
+                    <label htmlFor="file-input-medicao">
+                      <Button type="button" variant="outline" asChild>
+                        <span>Selecionar Arquivos</span>
+                      </Button>
+                    </label>
                   </div>
+
+                  {selectedFiles.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Arquivos selecionados ({selectedFiles.length})</Label>
+                      {selectedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <FileText className="h-5 w-5 text-blue-500" />
+                            <div>
+                              <p className="text-sm font-medium">{file.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {(file.size / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveFile(index)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
 
             <div className="flex gap-4">
-              <Button type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading || isUploadingDocs}>
                 <Save className="mr-2 h-4 w-4" />
-                {loading ? "Salvando..." : "Salvar Medição"}
+                {isUploadingDocs 
+                  ? "Enviando documentos..." 
+                  : loading 
+                    ? "Salvando..." 
+                    : "Salvar Medição"}
               </Button>
               <Link to="/medicoes">
                 <Button type="button" variant="outline">
