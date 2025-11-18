@@ -103,7 +103,7 @@ export function AppSidebar() {
             )}
             <div className={open ? "block" : "hidden"}>
               <h2 className="text-white font-bold text-lg">
-                {tenant?.nome_sistema || "Gestão de Obras"}
+                {(tenant?.nome_sistema || "Gestão de Obras").replace(/\s*Digital\s*/gi, '').trim()}
               </h2>
               <p className="text-white/60 text-xs">Sistema Integrado</p>
             </div>
