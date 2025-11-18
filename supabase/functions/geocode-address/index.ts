@@ -30,6 +30,8 @@ serve(async (req) => {
       );
     }
 
+    console.log('Using API key starting with:', apiKey.substring(0, 10) + '...');
+
     // Constrói a query de endereço completo
     const addressParts = [endereco, bairro, cidade, uf, cep].filter(Boolean);
     const fullAddress = addressParts.join(', ');
