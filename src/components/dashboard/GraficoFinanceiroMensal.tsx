@@ -1,11 +1,28 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { useEvolucaoObras } from "@/hooks/useEvolucaoObras";
+import { useObrasParaFiltro } from "@/hooks/useObrasParaFiltro";
+import { useTiposObra } from "@/hooks/useTiposObra";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { DollarSign } from "lucide-react";
+import { DollarSign, X } from "lucide-react";
 
 export const GraficoFinanceiroMensal = () => {
-  const { data: evolucao, isLoading } = useEvolucaoObras(12);
+  const [obraIdSelecionada, setObraIdSelecionada] = useState<string | null>(null);
+  const [tipoObraSelecionado, setTipoObraSelecionado] = useState<string | null>(null);
+
+  const { data: obras } = useObrasParaFiltro();
+  const { data: tiposObra } = useTiposObra();
+  const { data: evolucao, isLoading } = useEvolucaoObras(12, obraIdSelecionada, tipoObraSelecionado);
+
+  const limparFiltros = () => {
+    setObraIdSelecionada(null);
+    setTipoObraSelecionado(null);
+  };
+
+  const temFiltrosAtivos = obraIdSelecionada || tipoObraSelecionado;
 
   if (isLoading) {
     return (
@@ -42,14 +59,64 @@ export const GraficoFinanceiroMensal = () => {
 
   return (
     <Card className="hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
-      <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-transparent">
-        <CardTitle className="flex items-center gap-2">
-          <DollarSign className="h-5 w-5 text-primary" />
-          Execução Financeira Mensal
-        </CardTitle>
+      <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-transparent space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-primary" />
+            <CardTitle>Execução Financeira Mensal</CardTitle>
+          </div>
+          {temFiltrosAtivos && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={limparFiltros}
+              className="text-xs"
+            >
+              <X className="h-3 w-3 mr-1" />
+              Limpar Filtros
+            </Button>
+          )}
+        </div>
+        
         <CardDescription>
           Valor executado em obras ao longo dos últimos 12 meses
         </CardDescription>
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Select 
+            value={obraIdSelecionada || "todas"} 
+            onValueChange={(value) => setObraIdSelecionada(value === "todas" ? null : value)}
+          >
+            <SelectTrigger className="w-full sm:w-[250px]">
+              <SelectValue placeholder="Todas as obras" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas as obras</SelectItem>
+              {obras?.map(obra => (
+                <SelectItem key={obra.id} value={obra.id}>
+                  {obra.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select 
+            value={tipoObraSelecionado || "todos"} 
+            onValueChange={(value) => setTipoObraSelecionado(value === "todos" ? null : value)}
+          >
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue placeholder="Todos os tipos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os tipos</SelectItem>
+              {tiposObra?.map(tipo => (
+                <SelectItem key={tipo} value={tipo}>
+                  {tipo}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent className="pt-6">
         <ResponsiveContainer width="100%" height={300}>
