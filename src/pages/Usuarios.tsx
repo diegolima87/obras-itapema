@@ -127,6 +127,11 @@ export default function Usuarios() {
       return;
     }
 
+    if (newUserFormData.role === 'engenheiro' && !newUserFormData.crea) {
+      toast.error("CREA é obrigatório para engenheiros");
+      return;
+    }
+
     setIsCreatingUser(true);
 
     try {
@@ -266,6 +271,7 @@ export default function Usuarios() {
                     <SelectItem value="admin">Administrador</SelectItem>
                     <SelectItem value="gestor">Gestor</SelectItem>
                     <SelectItem value="fiscal">Fiscal</SelectItem>
+                    <SelectItem value="engenheiro">Engenheiro</SelectItem>
                     <SelectItem value="fornecedor">Fornecedor</SelectItem>
                     <SelectItem value="cidadao">Cidadão</SelectItem>
                   </SelectContent>
@@ -459,15 +465,17 @@ export default function Usuarios() {
                   placeholder="(00) 00000-0000"
                 />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="crea">CREA</Label>
-                <Input
-                  id="crea"
-                  value={newUserFormData.crea}
-                  onChange={(e) => setNewUserFormData({ ...newUserFormData, crea: e.target.value })}
-                  placeholder="CREA/UF 000000000-0"
-                />
-              </div>
+              {newUserFormData.role === 'engenheiro' && (
+                <div className="grid gap-2">
+                  <Label htmlFor="crea">CREA *</Label>
+                  <Input
+                    id="crea"
+                    value={newUserFormData.crea}
+                    onChange={(e) => setNewUserFormData({ ...newUserFormData, crea: e.target.value })}
+                    placeholder="CREA/UF 000000000-0"
+                  />
+                </div>
+              )}
               <div className="grid gap-2">
                 <Label htmlFor="senha">Senha Inicial *</Label>
                 <Input
@@ -492,7 +500,14 @@ export default function Usuarios() {
                 <Label htmlFor="role">Papel Inicial *</Label>
                 <Select
                   value={newUserFormData.role}
-                  onValueChange={(value) => setNewUserFormData({ ...newUserFormData, role: value as UserRole['role'] })}
+                  onValueChange={(value) => {
+                    const newRole = value as UserRole['role'];
+                    setNewUserFormData({ 
+                      ...newUserFormData, 
+                      role: newRole,
+                      crea: newRole === 'engenheiro' ? newUserFormData.crea : ''
+                    });
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -501,6 +516,7 @@ export default function Usuarios() {
                     <SelectItem value="admin">Administrador</SelectItem>
                     <SelectItem value="gestor">Gestor</SelectItem>
                     <SelectItem value="fiscal">Fiscal</SelectItem>
+                    <SelectItem value="engenheiro">Engenheiro</SelectItem>
                     <SelectItem value="fornecedor">Fornecedor</SelectItem>
                     <SelectItem value="cidadao">Cidadão</SelectItem>
                   </SelectContent>
