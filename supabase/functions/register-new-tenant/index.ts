@@ -119,36 +119,72 @@ Deno.serve(async (req) => {
 
     console.log('Tenant criado com sucesso:', tenant.id);
 
-    // Criar o usuário com metadata incluindo o tenant_id
-    const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
-      email,
-      password: senha,
-      email_confirm: true,
-      user_metadata: {
-        nome,
-        tenant_id: tenant.id,
-      }
-    });
+    // Verificar se o usuário já existe
+    const { data: existingUser } = await supabaseClient.auth.admin.listUsers();
+    const userExists = existingUser?.users.find(u => u.email === email);
 
-    if (authError) {
-      console.error('Erro ao criar usuário:', authError);
-      // Remover o tenant criado em caso de erro
-      await supabaseClient.from('tenants').delete().eq('id', tenant.id);
-      
-      return new Response(
-        JSON.stringify({ error: 'Erro ao criar usuário: ' + authError.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    let userId: string;
+
+    if (userExists) {
+      console.log('Usuário já existe, vinculando ao novo tenant:', userExists.id);
+      userId = userExists.id;
+
+      // Atualizar o metadata do usuário para incluir o tenant_id
+      const { error: updateError } = await supabaseClient.auth.admin.updateUserById(
+        userExists.id,
+        {
+          user_metadata: {
+            ...userExists.user_metadata,
+            nome,
+            tenant_id: tenant.id,
+          }
+        }
       );
+
+      if (updateError) {
+        console.error('Erro ao atualizar usuário:', updateError);
+        await supabaseClient.from('tenants').delete().eq('id', tenant.id);
+        
+        return new Response(
+          JSON.stringify({ error: 'Erro ao vincular usuário ao tenant: ' + updateError.message }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } else {
+      // Criar novo usuário
+      const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
+        email,
+        password: senha,
+        email_confirm: true,
+        user_metadata: {
+          nome,
+          tenant_id: tenant.id,
+        }
+      });
+
+      if (authError) {
+        console.error('Erro ao criar usuário:', authError);
+        await supabaseClient.from('tenants').delete().eq('id', tenant.id);
+        
+        return new Response(
+          JSON.stringify({ error: 'Erro ao criar usuário: ' + authError.message }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      userId = authData.user.id;
+      console.log('Usuário criado com sucesso:', userId);
     }
 
-    console.log('Usuário criado com sucesso:', authData.user.id);
-
-    // Atribuir role de admin ao usuário
+    // Atribuir role de admin ao usuário (se ainda não tiver)
     const { error: roleError } = await supabaseClient
       .from('user_roles')
-      .insert({
-        user_id: authData.user.id,
+      .upsert({
+        user_id: userId,
         role: 'admin'
+      }, {
+        onConflict: 'user_id,role',
+        ignoreDuplicates: true
       });
 
     if (roleError) {
@@ -170,8 +206,8 @@ Deno.serve(async (req) => {
           slug: tenant.slug,
         },
         user: {
-          id: authData.user.id,
-          email: authData.user.email,
+          id: userId,
+          email: email,
         }
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
