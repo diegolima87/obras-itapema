@@ -34,6 +34,8 @@ import { useTenant } from "@/contexts/TenantContext";
 import { geocodeAddress, fetchAddressByCep, GeocodingResult } from "@/lib/geocoding";
 import { MapaSelecaoLocalizacao } from "@/components/obra/MapaSelecaoLocalizacao";
 import { MiniMapPreview } from "@/components/obra/MiniMapPreview";
+import { useUploadDocumento } from "@/hooks/useUploadDocumento";
+import { X, FileText } from "lucide-react";
 
 const formSchema = z.object({
   nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
@@ -60,8 +62,11 @@ export default function NovaObra() {
   const [isFetchingCep, setIsFetchingCep] = useState(false);
   const [geocodingSource, setGeocodingSource] = useState<'google' | 'nominatim' | 'cidade_aproximada' | 'manual' | 'desconhecida' | 'google_maps'>('desconhecida');
   const [showMapModal, setShowMapModal] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isUploadingDocs, setIsUploadingDocs] = useState(false);
   const { data: engenheiros, isLoading: loadingEngenheiros } = useEngenheiros();
   const { tenant } = useTenant();
+  const { mutateAsync: uploadDocumento } = useUploadDocumento();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -174,6 +179,52 @@ export default function NovaObra() {
     form.setValue("latitude", lat.toString());
     form.setValue("longitude", lng.toString());
     setGeocodingSource('manual');
+    setShowMapModal(false);
+    toast.success("Coordenadas selecionadas no mapa!");
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    validateAndAddFiles(files);
+  };
+
+  const validateAndAddFiles = (files: File[]) => {
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+
+    const validFiles = files.filter(file => {
+      if (file.size > maxSize) {
+        toast.error(`${file.name}: Arquivo muito grande (máx 10MB)`);
+        return false;
+      }
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(`${file.name}: Tipo de arquivo não permitido`);
+        return false;
+      }
+      return true;
+    });
+
+    setSelectedFiles(prev => [...prev, ...validFiles]);
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files);
+    validateAndAddFiles(files);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -216,12 +267,44 @@ export default function NovaObra() {
       if (error) throw error;
 
       toast.success("Obra criada com sucesso!");
-      navigate("/obras");
+
+      // Upload de documentos se houver arquivos selecionados
+      if (selectedFiles.length > 0 && data) {
+        setIsUploadingDocs(true);
+        let uploadedCount = 0;
+        let failedCount = 0;
+
+        for (let i = 0; i < selectedFiles.length; i++) {
+          const file = selectedFiles[i];
+          try {
+            await uploadDocumento({
+              file,
+              tipo: 'projeto',
+              bucketName: 'documentos_obras',
+              obraId: data.id,
+            });
+            uploadedCount++;
+            toast.success(`Documento ${i + 1}/${selectedFiles.length} enviado`);
+          } catch (uploadError) {
+            console.error(`Erro ao enviar ${file.name}:`, uploadError);
+            failedCount++;
+          }
+        }
+
+        setIsUploadingDocs(false);
+
+        if (failedCount > 0) {
+          toast.warning(`${uploadedCount} documentos enviados, ${failedCount} falharam. Você pode adicionar manualmente depois.`);
+        }
+      }
+
+      navigate(`/obras/${data.id}`);
     } catch (error) {
       console.error("Erro ao criar obra:", error);
       toast.error("Erro ao criar obra. Verifique os dados e tente novamente.");
     } finally {
       setIsSubmitting(false);
+      setIsUploadingDocs(false);
     }
   }
 
@@ -603,20 +686,70 @@ export default function NovaObra() {
                 <CardTitle>Documentos Obrigatórios</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                <div 
+                  className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary/50 transition-colors"
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                >
                   <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
                   <div className="mt-4">
-                    <Button type="button" variant="outline">
+                    <input
+                      type="file"
+                      id="file-upload"
+                      multiple
+                      accept=".pdf,.doc,.docx,.xls,.xlsx"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={() => document.getElementById('file-upload')?.click()}
+                    >
                       Selecionar Arquivos
                     </Button>
                     <p className="mt-2 text-sm text-muted-foreground">
                       Arraste arquivos para esta área ou clique para selecionar
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      PDF, DOC, DOCX até 10MB
+                      PDF, DOC, DOCX, XLS, XLSX até 10MB
                     </p>
                   </div>
                 </div>
+
+                {selectedFiles.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Arquivos Selecionados ({selectedFiles.length})</p>
+                    <div className="space-y-2">
+                      {selectedFiles.map((file, index) => (
+                        <div 
+                          key={index}
+                          className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{file.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {(file.size / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveFile(index)}
+                            className="flex-shrink-0"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <p className="text-sm text-muted-foreground">
                   Documentos como projeto executivo, licenças, ART, etc.
                 </p>
@@ -629,9 +762,18 @@ export default function NovaObra() {
                   Cancelar
                 </Button>
               </Link>
-              <Button type="submit" disabled={isSubmitting}>
-                <Save className="mr-2 h-4 w-4" />
-                {isSubmitting ? "Salvando..." : "Salvar Obra"}
+              <Button type="submit" disabled={isSubmitting || isUploadingDocs}>
+                {isSubmitting || isUploadingDocs ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {isUploadingDocs ? "Enviando documentos..." : "Salvando..."}
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Salvar Obra
+                  </>
+                )}
               </Button>
             </div>
           </form>
