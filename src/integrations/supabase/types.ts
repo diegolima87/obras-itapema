@@ -1027,6 +1027,24 @@ export type Database = {
           },
         ]
       }
+      supabasenopause: {
+        Row: {
+          id: string
+          mensagem: string | null
+          ultima_atividade: string
+        }
+        Insert: {
+          id?: string
+          mensagem?: string | null
+          ultima_atividade?: string
+        }
+        Update: {
+          id?: string
+          mensagem?: string | null
+          ultima_atividade?: string
+        }
+        Relationships: []
+      }
       tenant_features: {
         Row: {
           created_at: string | null
@@ -1195,6 +1213,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      heartbeat_supabase: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role:
